@@ -2,14 +2,20 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const reviewSchema = new Schema(
     {
-        product_id: { type: String, ref: 'products' },
-        user_id: { type: String, ref: 'users' },
+        product_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'products',
+        },
+        user_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users',
+        },
         content: String,
     },
-    { timestamps: { createdAt: 'created_at' } }
+    { timestamps: true }
 )
 
-const Review = mongoose.model('reviews', reviewSchema)
+const ReviewModel = mongoose.model('reviews', reviewSchema)
 type Review = InferSchemaType<typeof reviewSchema>
-export default Review
+export default ReviewModel
 export type { Review }

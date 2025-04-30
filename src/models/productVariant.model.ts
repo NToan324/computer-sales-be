@@ -8,13 +8,19 @@ const productVariantSchema = new Schema(
         price: Number,
         discount: Number,
         quantity: Number,
-        product_id: { type: String, ref: 'products' },
+        product_id: {
+            type: String,
+            ref: 'products',
+        },
         isActive: Boolean,
     },
-    { timestamps: { createdAt: 'created_at' } }
+    { timestamps: true }
 )
 
-const ProductVariant = mongoose.model('product_variants', productVariantSchema)
+const ProductVariantModel = mongoose.model(
+    'product_variants',
+    productVariantSchema
+)
 type ProductVariant = InferSchemaType<typeof productVariantSchema>
-export default ProductVariant
+export default ProductVariantModel
 export type { ProductVariant }

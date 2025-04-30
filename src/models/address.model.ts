@@ -1,8 +1,15 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const addressSchema = new Schema({
-    user_id: { type: String, ref: 'users' },
-    address: { type: String, required: true },
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'users',
+    },
+    address: {
+        type: String,
+        required: true,
+    },
 })
 
 const Address = mongoose.model('addresses', addressSchema)
