@@ -20,7 +20,10 @@ const productSchema = new Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'categories',
         },
-        isActive: Boolean,
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
     },
     { timestamps: true }
 )

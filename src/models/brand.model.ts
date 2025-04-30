@@ -6,7 +6,10 @@ const brandSchema = new Schema({
         required: true,
     },
     brand_imageURL: String,
-    isActive: Boolean,
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
 })
 
 const BrandModel = mongoose.model('brands', brandSchema)

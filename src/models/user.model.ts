@@ -18,7 +18,10 @@ const userSchema = new Schema(
             default: 'CUSTOMER',
         },
         loyalty_points: Number,
-        isActive: Boolean,
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
     },
     { timestamps: { createdAt: 'created_at' } }
 )

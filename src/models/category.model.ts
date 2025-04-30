@@ -7,7 +7,10 @@ const categorySchema = new Schema(
             required: true,
         },
         category_description: String,
-        isActive: Boolean,
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
     },
     { timestamps: true }
 )

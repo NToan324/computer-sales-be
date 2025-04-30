@@ -12,7 +12,10 @@ const productVariantSchema = new Schema(
             type: String,
             ref: 'products',
         },
-        isActive: Boolean,
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
     },
     { timestamps: true }
 )
