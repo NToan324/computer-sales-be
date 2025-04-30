@@ -1,19 +1,15 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const categorySchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true
+    {
+        category_name: { type: String, required: true },
+        category_description: String,
+        isActive: Boolean,
     },
-    description: {
-      type: String
-    }
-  },
-  { timestamps: true }
+    { timestamps: { createdAt: 'created_at' } }
 )
 
-const category = mongoose.model('category', categorySchema)
+const Category = mongoose.model('categories', categorySchema)
 type Category = InferSchemaType<typeof categorySchema>
-export default category
+export default Category
 export type { Category }

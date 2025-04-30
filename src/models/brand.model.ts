@@ -1,25 +1,12 @@
-import mongoose, { InferSchemaType, Schema } from 'mongoose';
+import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
-const brandSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true
-    },
-    description: {
-      type: String
-    },
-    country: {
-      type: String
-    },
-    logo_url: {
-      type: String
-    }
-  },
-  { timestamps: true }
-);
+const brandSchema = new Schema({
+    brand_name: { type: String, required: true },
+    brand_imageURL: String,
+    isActive: Boolean,
+})
 
-const brand = mongoose.model('brand', brandSchema);
-type Brand = InferSchemaType<typeof brandSchema>;
-export default brand;
-export type { Brand };
+const Brand = mongoose.model('brands', brandSchema)
+type Brand = InferSchemaType<typeof brandSchema>
+export default Brand
+export type { Brand }

@@ -1,50 +1,22 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
-import bcrypt from 'bcrypt'
 
 const userSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true
+    {
+        email: { type: String, unique: true },
+        fullname: String,
+        password: { type: String, required: true },
+        role: {
+            type: String,
+            enum: ['CUSTOMER', 'ADMIN'],
+            default: 'CUSTOMER',
+        },
+        loyalty_points: Number,
+        isActive: Boolean,
     },
-    email: {
-      type: String
-    },
-    password: {
-      type: String,
-      required: true
-    },
-    phone: {
-      type: String,
-      unique: true,
-      required: true
-    },
-    role: [
-      {
-        type: String,
-        enum: ['MANAGER', 'SALESTAFF', 'CONSULTANT', 'CUSTOMER'],
-        default: 'CUSTOMER',
-        required: true
-      }
-    ],
-    active: {
-      type: Boolean,
-      default: true
-    }
-  },
-  { timestamps: true }
+    { timestamps: { createdAt: 'created_at' } }
 )
 
-userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    const saltRounds = await bcrypt.genSalt(10)
-    this.password = await bcrypt.hash(this.password, saltRounds)
-  }
-  next()
-})
-
-const user = mongoose.model('user', userSchema)
+const User = mongoose.model('users', userSchema)
 type User = InferSchemaType<typeof userSchema>
-
-export default user
+export default User
 export type { User }
