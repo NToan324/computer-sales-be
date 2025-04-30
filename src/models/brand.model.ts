@@ -6,14 +6,12 @@ const brandSchema = new Schema(
       type: String,
       required: true
     },
-    description: {
-      type: String
-    },
-    country: {
-      type: String
-    },
     logo_url: {
       type: String
+    },
+    isActive: {
+      type: Boolean,
+      default: true
     }
   },
   { timestamps: true }

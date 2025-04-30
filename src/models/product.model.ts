@@ -2,82 +2,33 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const productSchema = new Schema(
   {
-    name: {
-      type: String,
-      required: true
-    },
-    description: {
-      type: String,
-      required: true
-    },
-    code: {
+    product_code: {
       type: String,
       required: true,
       unique: true
     },
-    price: {
-      type: Number,
-      required: true
-    },
-    discount_price: {
-      type: Number
-    },
-    stock_quantity: {
-      type: Number,
-      default: 0,
-      required: true
-    },
-    units: {
+    name: {
       type: String,
-      enum: ['BOX', 'TUBE', 'PACK', 'PCS'],
+      required: true
+    },
+    image_url: {
+      type: String,
       required: true
     },
     category_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category',
+      ref: 'category',
       required: true
     },
     brand_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Brand',
+      ref: 'brand',
       required: true
     },
-    image_url: {
-      type: String
-    },
-    production_date: {
-      type: Date,
-      required: true
-    },
-    expiration_date: {
-      type: Date,
-      required: true
-    },
-    release_date: {
-      type: Date,
-      default: Date.now
-    },
-    discontinued_date: {
-      type: Date,
-      default: null
-    },
-    disable: {
+    isActive: {
       type: Boolean,
-      default: false
+      default: true
     },
-    created_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    edit_history: [
-      {
-        edited_at: { type: Date, default: Date.now },
-        edited_by: { type: String, required: true },
-        reason: { type: String, required: true },
-        changes: { type: Schema.Types.Mixed, required: true }
-      }
-    ]
   },
   { timestamps: true }
 )
