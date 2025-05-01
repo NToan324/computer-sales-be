@@ -6,10 +6,7 @@ const addressSchema = new Schema({
         required: true,
         ref: 'users',
     },
-    address: {
-        type: String,
-        required: true,
-    },
+    
 })
 
 const Address = mongoose.model('addresses', addressSchema)

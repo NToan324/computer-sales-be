@@ -2,14 +2,20 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const ratingSchema = new Schema(
     {
-        rating: Number,
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5,
+            required: true,
+        },
         user_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
+            required: true,
         },
-        product_id: {
+        product_variant_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'products',
+            ref: 'product_variants',
         },
     },
     { timestamps: true }

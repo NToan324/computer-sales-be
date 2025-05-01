@@ -4,7 +4,6 @@ class ProductValidation {
     createProduct() {
         return {
             body: z.object({
-                code: z.string().min(1, 'Product code is required'),
                 product_name: z.string().min(1, 'Product name is required'),
                 brand_id: z
                     .string()
@@ -23,7 +22,6 @@ class ProductValidation {
     updateProduct() {
         return {
             body: z.object({
-                code: z.string().min(1).optional(),
                 product_name: z.string().min(1).optional(),
                 brand_id: z
                     .string()

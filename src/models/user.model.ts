@@ -6,9 +6,17 @@ const userSchema = new Schema(
         email: {
             type: String,
             unique: true,
+            required: true,
         },
-        fullname: String,
+        fullname: {
+            type: String,
+            required: true
+        },
         password: {
+            type: String,
+            required: true,
+        },
+        address: {
             type: String,
             required: true,
         },
@@ -17,7 +25,12 @@ const userSchema = new Schema(
             enum: ['CUSTOMER', 'ADMIN'],
             default: 'CUSTOMER',
         },
-        loyalty_points: Number,
+        loyalty_points: {
+            type: Number,
+            default: 0,
+            min: 0,
+         },
+
         isActive: {
             type: Boolean,
             default: true,
