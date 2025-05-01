@@ -4,6 +4,9 @@ export class AuthValidation {
   static signupSchema() {
     return {
       body: z.object({
+        email: z.string().email('Email is not valid').nonempty('Email is required'),
+        password: z.string().nonempty('Password is required').min(6, 'Password must be at least 6 characters long'),
+        address: z.string().nonempty('Address is required'),
         phone: z
           .string()
           .min(10, 'Phone number must be at least 10 characters long')
@@ -20,18 +23,13 @@ export class AuthValidation {
           email: z.string().email('Email is not valid').optional(),
           password: z.string().nonempty('Password is required')
         })
-        .refine((data) => data.email, {
-          message: 'Either phone or email is required',
-          path: ['phone', 'email']
-        })
     }
   }
 
   static forgotPasswordSchema() {
     return {
       body: z.object({
-        phone: z.string().min(10, 'Phone number must be at least 10 characters long').optional(),
-        email: z.string().email('Email is not valid').optional()
+        email: z.string().email('Email is not valid')
       })
     }
   }
@@ -39,22 +37,19 @@ export class AuthValidation {
   static verifyOtp() {
     return {
       body: z.object({
+        id: z.string().nonempty('User ID is required'),
         otp_code: z.string().nonempty('OTP code is required')
       }),
-      query: z.object({
-        id: z.string().nonempty('User ID is required')
-      })
     }
   }
 
   static resetPassword() {
     return {
       body: z.object({
-        password: z.string().nonempty('Password is required')
+        id: z.string().nonempty('User ID is required'),
+        old_password: z.string().nonempty('old password is required'),
+        new_password: z.string().nonempty('new password is required')
       }),
-      query: z.object({
-        id: z.string().nonempty('User ID is required')
-      })
     }
   }
 }

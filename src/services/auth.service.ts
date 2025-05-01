@@ -123,7 +123,6 @@ class AuthService {
       phone: user.phone,
       name: user.fullname,
       role: user.role,
-
     }
 
     return new OkResponse('Get user successfully', userResponse)

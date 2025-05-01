@@ -8,11 +8,14 @@ const userSchema = new Schema(
             unique: true,
             required: true,
         },
+<<<<<<< HEAD
         phone: {
             type: String,
             unique: true,
             required: true,
         },
+=======
+>>>>>>> fef5ac3054e1b060efdb8798ca1f7c45e37ce7a9
         fullname: {
             type: String,
             required: true
@@ -25,6 +28,13 @@ const userSchema = new Schema(
             type: String,
             required: true,
         },
+<<<<<<< HEAD
+=======
+        phone: {
+            type: String,
+            required: false,
+        },
+>>>>>>> fef5ac3054e1b060efdb8798ca1f7c45e37ce7a9
         role: {
             type: String,
             enum: ['CUSTOMER', 'ADMIN'],
