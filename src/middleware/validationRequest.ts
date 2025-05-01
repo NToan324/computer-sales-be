@@ -17,10 +17,12 @@ export const validationRequest = ({ body, query, params, cookies }: ValidationSc
       if (query) Object.assign(req.query, query.parse(req.query))
       if (params) Object.assign(req.params, params.parse(req.params))
       if (cookies) Object.assign(req.cookies, cookies.parse(req.cookies))
-
+      
+      console.log(req.body)
       next()
     } catch (error) {
       if (error instanceof ZodError) {
+        console.log(error.issues)
         throw new BadRequestError(error.issues[0].message)
       }
       throw new InternalServerError()

@@ -4,10 +4,14 @@ import { BadRequestError } from '@/core/error.response'
 import productModel, { Product } from '@/models/product.model'
 import orderModel from '@/models/order.model'
 import { Cloudinary } from '@/helpers/uploadImageToCloudinary'
+import fs from 'fs'
 
 class ProductService {
     async createProduct(product_image: string, payload: Product) {
+        
         const uploadedImage = await Cloudinary.uploadImage(product_image)
+
+        fs.unlinkSync(product_image);
 
         const newProduct = await productModel.create({
             ...payload,

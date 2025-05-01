@@ -7,6 +7,7 @@ class ProductController {
     async createProduct(req: Request, res: Response) {
         const product_image = req.file?.path as string
         const payload = req.body
+       
         res.send(await productService.createProduct(product_image, payload))
     }
 

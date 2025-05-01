@@ -43,6 +43,15 @@ export class AuthValidation {
     }
   }
 
+  static forgotPasswordReset() {
+    return {
+      body: z.object({
+        id: z.string().nonempty('User ID is required'),
+        new_password: z.string().nonempty('New password is required')
+      }),
+    }
+  }
+  
   static resetPassword() {
     return {
       body: z.object({
