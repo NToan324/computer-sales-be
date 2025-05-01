@@ -4,9 +4,8 @@ import type { Request, Response } from 'express'
 class ProductController {
     //Thêm sản phẩm
     async createProduct(req: Request, res: Response) {
-        const { id } = req.user as { id: string }
         const payload = req.body
-        res.send(await productService.createProduct({ payload, id }))
+        res.send(await productService.createProduct(payload))
     }
 
     async getProducts(req: Request, res: Response) {

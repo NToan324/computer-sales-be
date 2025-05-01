@@ -4,10 +4,9 @@ import { BadRequestError } from '@/core/error.response'
 import productModel, { Product } from '@/models/product.model'
 import orderModel from '@/models/order.model'
 class ProductService {
-    async createProduct(data: { payload: Product; id: string }) {
+    async createProduct( payload: Product ) {
         const newProduct = await productModel.create({
-            ...data.payload,
-            created_by: data.id,
+            ...payload,
         })
         return new CreatedResponse('Product created successfully', newProduct)
     }

@@ -14,7 +14,7 @@ const billSchema = new Schema(
     },
     payment_status: {
         type: String,
-        enum: ["PENDING", "PAID", "failed"],
+        enum: ["PENDING", "PAID", "FAIL"],
         default: "PENDING",
     },
   },

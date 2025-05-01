@@ -1,7 +1,13 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
+import { ref } from 'process'
 
 const productVariantSchema = new Schema(
     {
+        product_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'products',
+            required: true,
+        },
         variant_name: {
             type: String,
             required: true,
@@ -25,10 +31,6 @@ const productVariantSchema = new Schema(
             min: 0
         },
         images_url: [String],
-        product_id: {
-            type: String,
-            required: true,
-        },
         isActive: {
             type: Boolean,
             default: true,

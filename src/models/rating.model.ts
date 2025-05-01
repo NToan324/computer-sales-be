@@ -13,9 +13,9 @@ const ratingSchema = new Schema(
             ref: 'users',
             required: true,
         },
-        product_id: {
+        product_variant_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'products',
+            ref: 'product_variants',
         },
     },
     { timestamps: true }

@@ -2,12 +2,7 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const productSchema = new Schema(
     {
-        //code for product to use easily in the system
-        code: {
-            type: String,
-            required: true,
-            unique: true,
-        },
+        
         product_name: {
             type: String,
             required: true,

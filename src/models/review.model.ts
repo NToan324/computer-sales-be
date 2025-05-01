@@ -2,9 +2,9 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const reviewSchema = new Schema(
     {
-        product_id: {
+        product_variant_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'products',
+            ref: 'product_variants',
             required: false,
         },
         user_id: {
