@@ -12,8 +12,16 @@ const cartSchema = new Schema(
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'product_variants',
                 },
-                quantity: Number,
-                price: Number,
+                quantity: {
+                    type: Number,
+                    required: true,
+                    min: 1,
+                },
+                unit_price: {
+                    type: Number,
+                    required: true,
+                    min: 0,
+                },
             },
         ],
     },

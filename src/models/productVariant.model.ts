@@ -2,17 +2,37 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const productVariantSchema = new Schema(
     {
-        variant_name: String,
+        variant_name: {
+            type: String,
+            required: true,
+        },
         variant_color: String,
-        variant_description: String,
-        price: Number,
-        discount: Number,
-        quantity: Number,
+        variant_description: {
+            type: String,
+            required: true,
+        },
+        price: {
+            type: Number,
+            min: 0,
+        },
+        discount: {
+            type: Number,
+            min: 0,
+            max: 0.5,
+        },
+        quantity: {
+            type: Number,
+            min: 0
+        },
+        images_url: [String],
         product_id: {
             type: String,
-            ref: 'products',
+            required: true,
         },
-        isActive: Boolean,
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
     },
     { timestamps: true }
 )

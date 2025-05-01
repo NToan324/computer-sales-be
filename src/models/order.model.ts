@@ -6,7 +6,10 @@ const orderSchema = new Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
         },
-        address: String,
+        address: {
+            type: String,
+            required: true,
+        },
         total_amount: Number,
         items: [
             {
@@ -14,12 +17,34 @@ const orderSchema = new Schema(
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'product_variants',
                 },
-                quantity: Number,
-                price: Number,
+                quantity: {
+                    type: Number,
+                    min: 1,
+                },
+                price: {
+                    type: Number,
+                    min: 0,
+                },
             },
         ],
-        discount_amount: Number,
-        loyalty_points_earned: Number,
+        discount_amount: {
+            type: Number,
+            min: 0,
+            default: 0,
+        },
+        loyalty_points_earned: {
+            type: Number,
+        },
+        status: {
+            type: String,
+            enum: [
+                'PENDING',
+                'SHIPPING',
+                'DELIVERED',
+                'CANCELLED',
+            ],
+            default: 'PENDING',
+        },
     },
     { timestamps: true }
 )

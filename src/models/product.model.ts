@@ -12,6 +12,10 @@ const productSchema = new Schema(
             type: String,
             required: true,
         },
+        product_image: {
+            type: String,
+            required: true,
+        },
         brand_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'brands',
@@ -20,7 +24,10 @@ const productSchema = new Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'categories',
         },
-        isActive: Boolean,
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
     },
     { timestamps: true }
 )

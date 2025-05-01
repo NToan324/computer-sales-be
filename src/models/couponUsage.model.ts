@@ -3,14 +3,16 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 const couponUsageSchema = new Schema({
     coupon_code: {
         type: String,
-        ref: 'coupons',
+        required: true,
     },
     order_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'orders',
+        required: true,
     },
-    used_at: Date,
-})
+},
+    { timestamps: true, }
+)
 
 const CouponUsageModel = mongoose.model('coupon_usages', couponUsageSchema)
 type CouponUsage = InferSchemaType<typeof couponUsageSchema>
