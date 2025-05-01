@@ -2,10 +2,12 @@ import productService from '@/services/product.service'
 import type { Request, Response } from 'express'
 
 class ProductController {
+    // ========================Product========================
     //Thêm sản phẩm
     async createProduct(req: Request, res: Response) {
+        const product_image = req.file?.path as string
         const payload = req.body
-        res.send(await productService.createProduct(payload))
+        res.send(await productService.createProduct(product_image, payload))
     }
 
     async getProducts(req: Request, res: Response) {
@@ -36,19 +38,14 @@ class ProductController {
     }
 
     async updateProduct(req: Request, res: Response) {
-        const { id } = req.user as { id: string }
         const productId = req.params.id
         const payload = req.body
-        res.send(await productService.updateProduct({ payload, id, productId }))
+        res.send(await productService.updateProduct({ payload, productId }))
     }
 
     async searchProduct(req: Request, res: Response) {
-        const { code } = req.query as { code: string }
-        res.send(await productService.searchProduct(code))
-    }
-
-    async deleteManyProduct(req: Request, res: Response) {
-        res.send(await productService.deleteManyProduct())
+        const { product_name } = req.query as { product_name: string }
+        res.send(await productService.searchProduct(product_name))
     }
 }
 

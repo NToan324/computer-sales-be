@@ -5,7 +5,16 @@ const brandSchema = new Schema({
         type: String,
         required: true,
     },
-    brand_imageURL: String,
+    brand_image: {
+        url: {
+            type: String,
+            required: true,
+        },
+        public_id: {
+            type: String,
+            default: '',
+        },
+    },
     isActive: {
         type: Boolean,
         default: true,

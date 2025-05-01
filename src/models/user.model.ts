@@ -25,6 +25,23 @@ const userSchema = new Schema(
             type: String,
             required: true,
         },
+<<<<<<< HEAD
+        phone: {
+            type: String,
+            required: false,
+        },
+        avatar: {
+            url: {
+                type: String,
+                default: 'https://www.svgrepo.com/show/452030/avatar-default.svg',
+            },
+            public_id: {
+                type: String,
+                default: "",
+            },
+        },
+=======
+>>>>>>> b6b5a13d9efafc1acc5e3d4b73df2fecb778fd63
         role: {
             type: String,
             enum: ['CUSTOMER', 'ADMIN'],

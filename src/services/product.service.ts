@@ -3,12 +3,21 @@ import { convertToObjectId } from '@/helpers/convertObjectId'
 import { BadRequestError } from '@/core/error.response'
 import productModel, { Product } from '@/models/product.model'
 import orderModel from '@/models/order.model'
+import { Cloudinary } from '@/helpers/uploadImageToCloudinary'
+
 class ProductService {
-    async createProduct( payload: Product ) {
+    async createProduct(product_image: string, payload: Product) {
+        const uploadedImage = await Cloudinary.uploadImage(product_image)
+
         const newProduct = await productModel.create({
             ...payload,
+            product_image: {
+                url: uploadedImage.url,
+                public_id: uploadedImage.public_id,
+            },
         })
-        return new CreatedResponse('Product created successfully', newProduct)
+
+        return new CreatedResponse('Tạo sản phẩm thành công', newProduct)
     }
 
     async getProducts({
@@ -60,18 +69,15 @@ class ProductService {
 
     async updateProduct({
         payload,
-        id,
         productId,
     }: {
         payload: Product
-        id: string
         productId: string
     }) {
         const updatedProduct = await productModel.findByIdAndUpdate(
             { _id: convertToObjectId(productId) },
             {
                 ...payload,
-                updated_by: id,
             },
             { new: true }
         )
