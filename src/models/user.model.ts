@@ -1,5 +1,5 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 const userSchema = new Schema(
     {
@@ -8,7 +8,12 @@ const userSchema = new Schema(
             unique: true,
             required: true,
         },
-        fullname: {
+        phone: {
+            type: String,
+            unique: true,
+            required: true,
+        },
+        fullName: {
             type: String,
             required: true
         },
@@ -19,10 +24,6 @@ const userSchema = new Schema(
         address: {
             type: String,
             required: true,
-        },
-        phone: {
-            type: String,
-            required: false,
         },
         role: {
             type: String,

@@ -11,7 +11,7 @@ export class AuthValidation {
           .string()
           .min(10, 'Phone number must be at least 10 characters long')
           .nonempty('Phone number is required'),
-        name: z.string().nonempty('User name is required')
+        fullName: z.string().nonempty('User name is required')
       })
     }
   }
@@ -20,8 +20,7 @@ export class AuthValidation {
     return {
       body: z
         .object({
-          phone: z.string().min(10, 'Phone number must be at least 10 characters long').optional(),
-          email: z.string().email('Email is not valid').optional(),
+          email: z.string().email('Email is not valid'),          
           password: z.string().nonempty('Password is required')
         })
     }
@@ -43,7 +42,15 @@ export class AuthValidation {
       }),
     }
   }
-
+  static forgotPasswordReset() {
+    return {
+      body: z.object({
+        id: z.string().nonempty('User ID is required'),
+        new_password: z.string().nonempty('New password is required')
+      }),
+    }
+  }
+  
   static resetPassword() {
     return {
       body: z.object({
