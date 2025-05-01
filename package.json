@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
+    "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.0",
     "@types/node": "^22.15.3",
     "@types/nodemailer": "^6.4.17",

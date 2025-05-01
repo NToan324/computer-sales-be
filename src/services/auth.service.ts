@@ -1,9 +1,6 @@
 import { BadRequestError, ForbiddenError } from '@/core/error.response'
 import { CreatedResponse, OkResponse } from '@/core/success.response'
 import userModel from '@/models/user.model'
-import customerModel, { Customer } from '@/models/customer.model'
-import employeeModel from '@/models/employee.model'
-import otpModel from '@/models/otp.model'
 import bcrypt from 'bcryptjs'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import dotenv from 'dotenv'
@@ -31,47 +28,31 @@ class AuthService {
       role: ['CUSTOMER']
     })
 
-    const newCustomer = (await customerModel.create({
-      userId: newUser._id,
-    })) as Customer
-
     const userResponse = {
       id: newUser._id,
       phone: newUser.phone,
       email: newUser.email,
-      name: newUser.name,
+      name: newUser.fullname,
       role: newUser.role,
-      loyaltyPoint: newCustomer.point
+      loyaltyPoint: newUser.loyalty_points,
     }
 
     return new CreatedResponse('User created successfully', userResponse)
   }
 
-  async login(data: { email: string; phone: string; password: string }) {
-    const { email, phone, password } = data
-    const foundUser = await userModel.findOne(email ? { email } : { phone })
+  async login(data: { email: string; password: string }) {
+    const { email, password } = data
+    const foundUser = await userModel.findOne({email})
     if (!foundUser) {
       throw new BadRequestError('User not found')
     }
-    if (phone && !email) {
-      const isCustomer = await customerModel.findOne({ userId: foundUser._id })
-      if (!isCustomer) {
-        throw new BadRequestError('Customer not found')
-      }
-    } else if (email) {
-      const isEmployee = await employeeModel.findOne({ userId: foundUser._id })
-      if (!isEmployee) {
-        throw new BadRequestError('Employee not found')
-      }
-    }
+    
     const isPasswordMatch = await bcrypt.compare(password, foundUser.password)
     if (!isPasswordMatch) {
       throw new BadRequestError('Password is incorrect')
     }
     //check if user is active
-    if (!foundUser.active) {
-      throw new ForbiddenError('UnverifiedAccount')
-    }
+
     const accessToken = jwt.sign(
       {
         id: foundUser._id,
@@ -81,7 +62,7 @@ class AuthService {
       },
       process.env.ACCESS_TOKEN_SECRETE as string,
       {
-        expiresIn: '1h'
+        expiresIn: '1d'
       }
     )
     const refreshToken = jwt.sign(
@@ -93,22 +74,17 @@ class AuthService {
       },
       process.env.REFRESH_TOKEN_SECRETE as string,
       {
-        expiresIn: '1d'
+        expiresIn: '10d'
       }
     )
 
-    const customer = await customerModel.findOne({ userId: foundUser._id })
-    let point
-    if (customer) {
-      point = customer.point
-    }
 
     const user = {
       id: foundUser._id,
       phone: foundUser.phone,
-      name: foundUser.name,
+      name: foundUser.fullname,
       role: foundUser.role,
-      point: point
+      point: foundUser.loyalty_points,
     }
     return { accessToken, refreshToken, user }
   }
@@ -128,22 +104,28 @@ class AuthService {
 
   async getMe(payload: { phone?: string; email?: string }) {
     const { phone, email } = payload
-    const user = await userModel.findOne({ $or: [{ phone }, { email }] })
+
+    const conditions = []
+    if (phone) conditions.push({ phone })
+    if (email) conditions.push({ email })
+
+    if (conditions.length === 0) {
+      throw new BadRequestError('Phone or email is required')
+    }
+
+    const user = await userModel.findOne({ $or: conditions })
     if (!user) {
       throw new BadRequestError('User not found')
     }
-    const customer = await customerModel.findOne({ userId: user._id })
-    let point
-    if (customer) {
-      point = customer.point
-    }
+
     const userResponse = {
       id: user._id,
       phone: user.phone,
-      name: user.name,
+      name: user.fullname,
       role: user.role,
-      point: point
+
     }
+
     return new OkResponse('Get user successfully', userResponse)
   }
 
@@ -180,35 +162,17 @@ class AuthService {
     }
   }
 
-  async getOtp() {
-    const otp = await otpModel.find({}).sort({ createdAt: -1 })
-    if (!otp) {
-      throw new BadRequestError('OTP not found')
-    }
-    return new OkResponse('Get OTP successfully', otp)
-  }
+  // async getOtp() {
+  //   const otp = await otpModel.find({}).sort({ createdAt: -1 })
+  //   if (!otp) {
+  //     throw new BadRequestError('OTP not found')
+  //   }
+  //   return new OkResponse('Get OTP successfully', otp)
+  // }
 
-  async forgotPassword(payload: { phone?: string; email?: string }) {
-    const { phone, email } = payload
-
+  async forgotPassword( email: string ) {
     let findUser
-
-    if (phone && !email) {
-      findUser = await userModel.findOne({ phone })
-      if (!findUser) throw new BadRequestError('User not found')
-
-      const findCustomer = await customerModel.findOne({ userId: findUser._id })
-      if (!findCustomer) throw new BadRequestError('Customer not found')
-    } else if (email) {
-      findUser = await userModel.findOne({ email })
-      if (!findUser) throw new BadRequestError('User not found')
-
-      const findEmployee = await employeeModel.findOne({ userId: findUser._id })
-      if (!findEmployee) throw new BadRequestError('Employee not found')
-    } else {
-      throw new BadRequestError('Phone or Email is required')
-    }
-
+  
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
 
     //send email
@@ -220,14 +184,14 @@ class AuthService {
       }
     }
 
-    const otp = await otpModel.create({
-      user_id: findUser._id,
-      otp_code: otpCode,
-      expiration: new Date(Date.now() + 10 * 60 * 1000),
-      is_verified: false
-    })
+    // const otp = await otpModel.create({
+    //   user_id: findUser._id,
+    //   otp_code: otpCode,
+    //   expiration: new Date(Date.now() + 2 * 60 * 1000),
+    //   is_verified: false
+    // })
 
-    return new OkResponse('Get OTP successfully', otp)
+    // return new OkResponse('Get OTP successfully', otp)
   }
 
   async verifyOtp({ otp_code, id }: { otp_code: string; id: string }) {
@@ -235,36 +199,42 @@ class AuthService {
       _id: id
     })
 
+    console.log('user', user)
+
     if (!user) {
       throw new BadRequestError('User not found')
     }
 
     // Tìm OTP theo user_id và otp_code, sắp xếp theo thời gian tạo mới nhất
-    const otpRecord = await otpModel
-      .findOne({
-        user_id: user._id,
-        otp_code
-      })
-      .sort({ created_at: -1 })
+    // const otpRecord = await otpModel
+    //   .findOne({
+    //     user_id: user._id,
+    //     otp_code
+    //   })
+    //   .sort({ created_at: -1 })
 
-    if (!otpRecord) {
-      throw new BadRequestError('OTP code is not valid')
-    }
+    // if (!otpRecord) {
+    //   throw new BadRequestError('OTP code is not valid')
+    // }
 
-    if (otpRecord.expiration < new Date()) {
-      throw new BadRequestError('OTP code is expired')
-    }
+    // if (otpRecord.expiration < new Date()) {
+    //   throw new BadRequestError('OTP code is expired')
+    // }
 
-    if (otpRecord.is_verified) {
-      throw new BadRequestError('OTP code is already verified')
-    }
+    // if (otpRecord.is_verified) {
+    //   throw new BadRequestError('OTP code is already verified')
+    // }
 
-    otpRecord.is_verified = true
-    user.active = true
-    await user.save()
-    await otpRecord.save()
+    // if (user.active) {
+    //   console.log('active')
+    //   user.active = true
+    // }
 
-    return new OkResponse('Verify OTP successfully', otpRecord)
+    // otpRecord.is_verified = true
+    // await user.save()
+    // await otpRecord.save()
+
+    // return new OkResponse('Verify OTP successfully', otpRecord)
   }
 
   async resetPassword({ password, id }: { password: string; id: string }) {
@@ -277,15 +247,15 @@ class AuthService {
     }
 
     // Kiểm tra OTP đã được xác thực hay chưa
-    const otp = await otpModel.findOne({
-      user_id: user._id,
-      is_verified: true,
-      expiration: { $gt: new Date() }
-    })
+    // const otp = await otpModel.findOne({
+    //   user_id: user._id,
+    //   is_verified: true,
+    //   expiration: { $gt: new Date() }
+    // })
 
-    if (!otp) {
-      throw new BadRequestError('OTP is not verified or expired')
-    }
+    // if (!otp) {
+    //   throw new BadRequestError('OTP is not verified or expired')
+    // }
 
     //check if password is old password
     const isPasswordMatch = await bcrypt.compare(password, user.password)
@@ -295,10 +265,11 @@ class AuthService {
 
     // Cập nhật mật khẩu
     user.password = password
+    user.isActive = true
     await user.save()
 
     // Xoá OTP sau khi đổi mật khẩu (tuỳ ý)
-    await otpModel.deleteMany({ user_id: user._id })
+    // await otpModel.deleteMany({ user_id: user._id })
 
     return new OkResponse('Password has been reset successfully')
   }
@@ -308,38 +279,38 @@ class AuthService {
     if (!user) {
       throw new BadRequestError('User not found')
     }
-    const checkOtp = await otpModel.updateMany(
-      {
-        user_id: user._id,
-        is_verified: false
-      },
-      {
-        $set: {
-          expiration: new Date(Date.now())
-        }
-      }
-    )
+    // const checkOtp = await otpModel.updateMany(
+    //   {
+    //     user_id: user._id,
+    //     is_verified: false
+    //   },
+    //   {
+    //     $set: {
+    //       expiration: new Date(Date.now())
+    //     }
+    //   }
+    // )
 
-    if (!checkOtp) {
-      throw new BadRequestError('OTP not found')
-    }
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
-    const otp = await otpModel.create({
-      user_id: user._id,
-      otp_code: otpCode,
-      expiration: new Date(Date.now() + 10 * 60 * 1000),
-      is_verified: false
-    })
+    // if (!checkOtp) {
+    //   throw new BadRequestError('OTP not found')
+    // }
+    // const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+    // const otp = await otpModel.create({
+    //   user_id: user._id,
+    //   otp_code: otpCode,
+    //   expiration: new Date(Date.now() + 10 * 60 * 1000),
+    //   is_verified: false
+    // })
     //check user is employee
-    if (user.email) {
-      const email = user.email
-      const mailOptions = emailConfig.mailOptions({ email, otpCode })
-      const sendMail = await emailConfig.transporter.sendMail(mailOptions)
-      if (!sendMail) {
-        throw new BadRequestError('Error sending email')
-      }
-    }
-    return new OkResponse('Resend OTP successfully', otp)
+    // if (user.email) {
+    //   const email = user.email
+    //   const mailOptions = emailConfig.mailOptions({ email, otpCode })
+    //   const sendMail = await emailConfig.transporter.sendMail(mailOptions)
+    //   if (!sendMail) {
+    //     throw new BadRequestError('Error sending email')
+    //   }
+    // }
+    // return new OkResponse('Resend OTP successfully', otp)
   }
 }
 

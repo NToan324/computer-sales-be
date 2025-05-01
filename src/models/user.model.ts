@@ -2,53 +2,63 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 import bcrypt from 'bcryptjs'
 
 const userSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true
-    },
-    email: {
-      type: String
-    },
-    password: {
-      type: String,
-      required: true
-    },
-    phone: {
-      type: String,
-      unique: true,
-      required: true
-    },
-    role: [
-      {
-        type: String,
-        enum: ['CUSTOMER', 'ADMIN'],
-        default: 'CUSTOMER',
-        required: true
-      }
-    ],
-    
+    {
+        email: {
+            type: String,
+            unique: true,
+            required: true,
+        },
+        phone: {
+            type: String,
+            unique: true,
+            required: true,
+        },
+        fullname: {
+            type: String,
+            required: true
+        },
+        password: {
+            type: String,
+            required: true,
+        },
+        address: {
+            type: String,
+            required: true,
+        },
+        role: {
+            type: String,
+            enum: ['CUSTOMER', 'ADMIN'],
+            default: 'CUSTOMER',
+        },
+        loyalty_points: {
+            type: Number,
+            default: 0,
+            min: 0,
+         },
 
-    active: {
-      type: Boolean,
-      default: true
-    }
-
-
-  },
-  { timestamps: true }
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+    },
+    { timestamps: { createdAt: 'created_at' } }
 )
 
 userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    const saltRounds = await bcrypt.genSalt(10)
-    this.password = await bcrypt.hash(this.password, saltRounds)
-  }
-  next()
+    if (!this.isModified('password')) {
+        return next()
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10)
+        this.password = await bcrypt.hash(this.password, salt)
+        next()
+    } catch (err) {
+        next(err as Error)
+    }
 })
 
-const user = mongoose.model('user', userSchema)
+const UserModel = mongoose.model('users', userSchema)
 type User = InferSchemaType<typeof userSchema>
-
-export default user
+export default UserModel
 export type { User }
