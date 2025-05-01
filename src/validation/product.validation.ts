@@ -1,7 +1,4 @@
 import z from 'zod'
-import { Request, Response } from 'express'
-import { ZodError } from 'zod'
-import productService from '@/services/product.service'
 
 class ProductValidation {
     createProduct() {
