@@ -4,23 +4,28 @@ import userModel from '@/models/user.model'
 import customerModel, { Customer } from '@/models/customer.model'
 import employeeModel from '@/models/employee.model'
 import otpModel from '@/models/otp.model'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import emailConfig from '@/config/email'
 dotenv.config()
-class AuthService {
-  async signup(payload: { phone: string; name: string }) {
-    const password = '123456'
-    const { phone, name } = payload
-    const isPhoneNumberExist = await userModel.exists({ phone })
 
+class AuthService {
+  async signup(payload: { email: string; phone: string; name: string }) {
+    const password = '123456'
+    const { email, phone, name } = payload
+    const isPhoneNumberExist = await userModel.exists({ phone })
+    const isEmailExist = await userModel.exists({ email })
+    if (isEmailExist) {
+      throw new BadRequestError('Email already exists')
+    }
     if (isPhoneNumberExist) {
-      throw new BadRequestError('Phone number already exists')
+      throw new BadRequestError('Email already exists')
     }
 
     const newUser = await userModel.create({
       name,
+      email,
       phone,
       password,
       role: ['CUSTOMER']
@@ -28,16 +33,15 @@ class AuthService {
 
     const newCustomer = (await customerModel.create({
       userId: newUser._id,
-      rank: 'MEMBER'
     })) as Customer
 
     const userResponse = {
       id: newUser._id,
       phone: newUser.phone,
+      email: newUser.email,
       name: newUser.name,
       role: newUser.role,
-      rank: newCustomer.rank,
-      point: newCustomer.point
+      loyaltyPoint: newCustomer.point
     }
 
     return new CreatedResponse('User created successfully', userResponse)
@@ -94,10 +98,8 @@ class AuthService {
     )
 
     const customer = await customerModel.findOne({ userId: foundUser._id })
-    let rank
     let point
     if (customer) {
-      rank = customer.rank
       point = customer.point
     }
 
@@ -106,7 +108,6 @@ class AuthService {
       phone: foundUser.phone,
       name: foundUser.name,
       role: foundUser.role,
-      rank: rank,
       point: point
     }
     return { accessToken, refreshToken, user }
@@ -132,10 +133,8 @@ class AuthService {
       throw new BadRequestError('User not found')
     }
     const customer = await customerModel.findOne({ userId: user._id })
-    let rank
     let point
     if (customer) {
-      rank = customer.rank
       point = customer.point
     }
     const userResponse = {
@@ -143,7 +142,6 @@ class AuthService {
       phone: user.phone,
       name: user.name,
       role: user.role,
-      rank: rank,
       point: point
     }
     return new OkResponse('Get user successfully', userResponse)

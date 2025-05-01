@@ -3,8 +3,8 @@ import authService from '@/services/auth.service'
 
 class AuthController {
   async signup(req: Request, res: Response) {
-    const { phone, name } = req.body
-    res.send(await authService.signup({ phone, name }))
+    const { email, phone, name } = req.body
+    res.send(await authService.signup({ email, phone, name }))
   }
 
   async login(req: Request, res: Response) {

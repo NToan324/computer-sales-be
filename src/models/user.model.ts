@@ -1,5 +1,5 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 const userSchema = new Schema(
   {
@@ -22,15 +22,19 @@ const userSchema = new Schema(
     role: [
       {
         type: String,
-        enum: ['MANAGER', 'SALESTAFF', 'CONSULTANT', 'CUSTOMER'],
+        enum: ['CUSTOMER', 'ADMIN'],
         default: 'CUSTOMER',
         required: true
       }
     ],
+    
+
     active: {
       type: Boolean,
       default: true
     }
+
+
   },
   { timestamps: true }
 )

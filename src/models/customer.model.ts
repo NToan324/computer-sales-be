@@ -6,10 +6,7 @@ const customerSchema = new Schema(
       required: true,
       unique: true
     },
-    rank: {
-      type: String,
-      enum: ['MEMBER', 'BRONZE', 'SILVER', 'GOLD', 'DIAMOND', 'PLATINUM']
-    },
+
     point: {
       type: Number,
       default: 0
@@ -19,7 +16,7 @@ const customerSchema = new Schema(
     },
     skin_issues: {
       type: String
-    },
+    },  
     age: {
       type: Number
     }
