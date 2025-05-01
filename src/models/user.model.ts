@@ -15,7 +15,7 @@ const userSchema = new Schema(
         },
         fullName: {
             type: String,
-            required: true
+            required: true,
         },
         password: {
             type: String,
@@ -25,23 +25,17 @@ const userSchema = new Schema(
             type: String,
             required: true,
         },
-<<<<<<< HEAD
-        phone: {
-            type: String,
-            required: false,
-        },
         avatar: {
             url: {
                 type: String,
-                default: 'https://www.svgrepo.com/show/452030/avatar-default.svg',
+                default:
+                    'https://www.svgrepo.com/show/452030/avatar-default.svg',
             },
             public_id: {
                 type: String,
-                default: "",
+                default: '',
             },
         },
-=======
->>>>>>> b6b5a13d9efafc1acc5e3d4b73df2fecb778fd63
         role: {
             type: String,
             enum: ['CUSTOMER', 'ADMIN'],
@@ -51,7 +45,7 @@ const userSchema = new Schema(
             type: Number,
             default: 0,
             min: 0,
-         },
+        },
 
         isActive: {
             type: Boolean,

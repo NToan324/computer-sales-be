@@ -1,8 +1,4 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
-<<<<<<< HEAD
-import { ref } from 'process'
-=======
->>>>>>> fef5ac3054e1b060efdb8798ca1f7c45e37ce7a9
 
 const productVariantSchema = new Schema(
     {
@@ -32,7 +28,7 @@ const productVariantSchema = new Schema(
         },
         quantity: {
             type: Number,
-            min: 0
+            min: 0,
         },
         images: [{
             url: {
