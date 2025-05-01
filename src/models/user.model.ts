@@ -20,6 +20,10 @@ const userSchema = new Schema(
             type: String,
             required: true,
         },
+        phone: {
+            type: String,
+            required: false,
+        },
         role: {
             type: String,
             enum: ['CUSTOMER', 'ADMIN'],

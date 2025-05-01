@@ -1,5 +1,4 @@
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
-import { ref } from 'process'
 
 const productVariantSchema = new Schema(
     {
