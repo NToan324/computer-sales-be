@@ -24,6 +24,16 @@ const userSchema = new Schema(
             type: String,
             required: false,
         },
+        avatar: {
+            url: {
+                type: String,
+                default: 'https://www.svgrepo.com/show/452030/avatar-default.svg',
+            },
+            public_id: {
+                type: String,
+                default: "",
+            },
+        },
         role: {
             type: String,
             enum: ['CUSTOMER', 'ADMIN'],

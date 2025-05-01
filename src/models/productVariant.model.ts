@@ -24,12 +24,22 @@ const productVariantSchema = new Schema(
             type: Number,
             min: 0,
             max: 0.5,
+            default: 0,
         },
         quantity: {
             type: Number,
             min: 0
         },
-        images_url: [String],
+        images: [{
+            url: {
+                type: String,
+                required: true,
+            },
+            public_id: {
+                type: String,
+                default: '',
+            },
+        }],
         isActive: {
             type: Boolean,
             default: true,
