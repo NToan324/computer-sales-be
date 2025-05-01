@@ -3,63 +3,23 @@ import authService from '@/services/auth.service'
 
 class AuthController {
   async signup(req: Request, res: Response) {
-    const { email, phone, name } = req.body
-    res.send(await authService.signup({ email, phone, name }))
+    const { email, phone, fullName, password, address } = req.body
+    res.send(await authService.signup({ email, phone, fullName, password, address }))
   }
 
   async login(req: Request, res: Response) {
-    const { email, phone, password } = req.body
-    const { accessToken, refreshToken, user } = await authService.login({
+    const { email, password } = req.body
+    const { accessToken, user } = await authService.login({
       email,
-      phone,
       password
     })
-    res.cookie('jwt', refreshToken, {
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000
-    })
+
     res.send({ message: 'Login successfully', accessToken, user })
-  }
-
-  refreshToken(req: Request, res: Response) {
-    const { jwt } = req.cookies
-    const accessToken = authService.refreshToken(jwt)
-    res.send(accessToken)
-  }
-
-  async deleteUser(req: Request, res: Response) {
-    const { id } = req.params
-    res.send(await authService.deleteUser(id))
-  }
-
-  async getUser(req: Request, res: Response) {
-    const { id } = req.params
-    res.send(await authService.getUser(id))
-  }
-
-  async getMe(req: Request, res: Response) {
-    const { phone, email } = req.user as { phone?: string; email?: string }
-    res.send(await authService.getMe({ phone, email }))
-  }
-
-  async getUserByPhoneOrEmail(req: Request, res: Response) {
-    const email = req.query.email as string
-    const phone = req.query.phone as string
-    res.send(await authService.getUserByPhoneOrEmail({ email, phone }))
-  }
-
-  async getOtp(req: Request, res: Response) {
-    res.send(await authService.getOtp())
   }
 
   async forgotPassword(req: Request, res: Response) {
     const payload = req.body
     res.send(await authService.forgotPassword(payload))
-  }
-
-  async resendOtp(req: Request, res: Response) {
-    const { id } = req.body
-    res.send(await authService.resendOtp(id))
   }
 
   async verifyOtp(req: Request, res: Response) {
@@ -68,10 +28,10 @@ class AuthController {
     res.send(await authService.verifyOtp({ otp_code, id }))
   }
 
-  async resetPassword(req: Request, res: Response) {
+  async forgotPasswordReset(req: Request, res: Response) {
     const { password } = req.body
     const { id } = req.query as { id: string }
-    res.send(await authService.resetPassword({ password, id }))
+    res.send(await authService.forgotPasswordReset({ password, id }))
   }
 }
 const authController = new AuthController()
