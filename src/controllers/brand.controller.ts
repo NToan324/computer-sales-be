@@ -1,4 +1,5 @@
 import brandService from '@/services/brand.service'
+import { UploadService } from '@/services/upload.service'
 import type { Request, Response } from 'express'
 
 class BrandController {
@@ -25,6 +26,12 @@ class BrandController {
   async deleteBrand(req: Request, res: Response) {
     const { id } = req.params
     res.send(await brandService.deleteBrand(id))
+  }
+
+  async uploadImage(req: Request, res: Response) {
+    const { public_id } = req.body
+    const image = req.file?.path as string
+    res.send(await UploadService.uploadImage(image, public_id))
   }
 }
 

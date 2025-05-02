@@ -11,22 +11,38 @@ const router = Router()
 
 router.get(
     '/',
-    verifyJWT, 
+    verifyJWT,
     verifyRole(['ADMIN']),
     asyncHandler(productController.getProducts)
 )
-router.get('/:id',
-    verifyJWT, 
+
+router.get('/search',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(productController.searchProduct))
+
+router.post(
+    '/upload',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    upload.single('file'),
+    asyncHandler(productController.uploadImage))
+
+router.post(
+    '/',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    validationRequest(ProductValidation.createProduct()),
+    asyncHandler(productController.createProduct)
+)
+
+router.get(
+    '/:id',
+    verifyJWT,
     verifyRole(['ADMIN']),
     asyncHandler(productController.getProductById)
 )
-router.post(
-    '/',
-    verifyJWT, 
-    verifyRole(['ADMIN']),
-    validationRequest(ProductValidation.createProduct()), upload.single('product_image'),
-    asyncHandler(productController.createProduct)
-)
+
 router.put(
     '/:id',
     verifyJWT,
@@ -34,8 +50,12 @@ router.put(
     validationRequest(ProductValidation.updateProduct()),
     asyncHandler(productController.updateProduct)
 )
-router.delete('/:id', verifyJWT, verifyRole(['ADMIN']), asyncHandler(productController.deleteProduct))
+router.delete(
+    '/:id',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(productController.deleteProduct)
+)
 
-router.get('/search', asyncHandler(productController.searchProduct))
 
 export default router

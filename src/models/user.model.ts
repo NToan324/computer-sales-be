@@ -15,7 +15,7 @@ const userSchema = new Schema(
         },
         fullName: {
             type: String,
-            required: true
+            required: true,
         },
         password: {
             type: String,
@@ -28,11 +28,12 @@ const userSchema = new Schema(
         avatar: {
             url: {
                 type: String,
-                default: 'https://www.svgrepo.com/show/452030/avatar-default.svg',
+                default:
+                    'https://www.svgrepo.com/show/452030/avatar-default.svg',
             },
             public_id: {
                 type: String,
-                default: "",
+                default: '',
             },
         },
         role: {
@@ -44,7 +45,7 @@ const userSchema = new Schema(
             type: Number,
             default: 0,
             min: 0,
-         },
+        },
 
         isActive: {
             type: Boolean,

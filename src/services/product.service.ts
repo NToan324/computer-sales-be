@@ -1,25 +1,23 @@
-import { CreatedResponse, OkResponse } from '@/core/success.response' // Giả sử bạn có class này
+import { CreatedResponse, OkResponse } from '@/core/success.response'
 import { convertToObjectId } from '@/helpers/convertObjectId'
 import { BadRequestError } from '@/core/error.response'
 import productModel, { Product } from '@/models/product.model'
-import orderModel from '@/models/order.model'
-import { Cloudinary } from '@/helpers/uploadImageToCloudinary'
-import fs from 'fs'
+import elasticsearchService from './elasticsearch.service'
 
 class ProductService {
-    async createProduct(product_image: string, payload: Product) {
-        
-        const uploadedImage = await Cloudinary.uploadImage(product_image)
 
-        fs.unlinkSync(product_image);
-
+    async createProduct(payload: Partial<Product>) {
         const newProduct = await productModel.create({
             ...payload,
-            product_image: {
-                url: uploadedImage.url,
-                public_id: uploadedImage.public_id,
-            },
         })
+
+        const { _id, ...productWithoutId } = newProduct; 
+        
+        await elasticsearchService.indexDocument(
+            'products',
+            _id.toString(),
+            productWithoutId,
+        )
 
         return new CreatedResponse('Tạo sản phẩm thành công', newProduct)
     }
@@ -34,7 +32,7 @@ class ProductService {
         const skip = (page - 1) * limit
 
         const [products, total] = await Promise.all([
-            productModel.find().skip(skip).limit(limit),
+            productModel.find({isActive: true}).skip(skip).limit(limit),
             productModel.countDocuments(),
         ])
 
@@ -53,22 +51,31 @@ class ProductService {
 
     async getProductById(id: string) {
         const product = await productModel.findById(id)
-        if (!product) throw new BadRequestError('Sản phẩm không tồn tại')
+        if (!product || !product.isActive) throw new BadRequestError('Sản phẩm không tồn tại')
         return new OkResponse('Get product successfully', product)
     }
 
     async deleteProduct(id: string) {
-        const isSoldProduct = await orderModel.findOne({
-            'items.product_id': convertToObjectId(id),
-            status: 'Completed',
-        })
-        if (isSoldProduct) {
-            throw new Error('Sản phẩm đã được bán không thể xóa')
-        }
+        const deletedProduct = await productModel.findByIdAndUpdate(
+            { _id: convertToObjectId(id) },
+            {
+                isActive: false,
+            },
+            { new: true }
+        )
+        
+        if (!deletedProduct) throw new BadRequestError('Sản phẩm không tồn tại')
+        
+        const { _id, ...productWithoutId } = deletedProduct;
+        
+        // Remove the product from Elasticsearch
+        await elasticsearchService.updateDocument(
+            'products',
+            _id.toString(),
+            productWithoutId
+        )
 
-        const product = await productModel.findByIdAndDelete(id)
-        if (!product) throw new Error('Sản phẩm không tồn tại')
-        return new OkResponse('Xóa sản phẩm thành công', product)
+        return new OkResponse('Xóa sản phẩm thành công', deletedProduct)
     }
 
     async updateProduct({
@@ -87,21 +94,75 @@ class ProductService {
         )
 
         if (!updatedProduct) throw new BadRequestError('Sản phẩm không tồn tại')
+
+        const { _id, ...productWithoutId } = updatedProduct; 
+
+        // Update the product in Elasticsearch
+        await elasticsearchService.indexDocument(
+            'products',
+            _id.toString(),
+            productWithoutId,
+        )
+
         return new OkResponse('Cập nhật sản phẩm thành công', updatedProduct)
     }
 
-    async searchProduct(code: string) {
-        const products = await productModel
-            .find({
-                code: { $regex: code, $options: 'i' },
-            })
-            .limit(5)
-        return new OkResponse('Tìm kiếm sản phẩm thành công', products)
-    }
+    async searchProduct({
+        name,
+        category_id,
+        brand_id,
+    }: {
+        name?: string
+        category_id?: string
+        brand_id?: string
+    }) {
+        const must: any[] = [];
 
-    async deleteManyProduct() {
-        const products = await productModel.deleteMany()
-        return new OkResponse('Xóa sản phẩm thành công', products)
+        // Add filters dynamically based on the provided parameters
+        if (name) {
+            must.push({
+                wildcard: {
+                    "_doc.product_name.keyword": {
+                        value: `*${name}*`,
+                    },
+                },
+            });
+        }
+
+        if (category_id) {
+            must.push({
+                term: {
+                    "_doc.category_id.keyword": category_id,
+                },
+            });
+        }
+
+        if (brand_id) {
+            must.push({
+                term: {
+                    "_doc.brand_id.keyword": brand_id,
+                },
+            });
+        }
+
+        const response = await elasticsearchService.searchDocuments(
+            'products',
+            {
+                query: {
+                    bool: {
+                        must,
+                    },
+                },
+            }
+        );
+
+        console.log('response', response);
+        const products = response.map((hit: any) => {
+            // Check if data is in the nested _doc structure or directly in _source
+            return hit._source._doc || hit._source;
+        });
+
+        return new OkResponse('Tìm kiếm sản phẩm thành công', products);
     }
 }
 
