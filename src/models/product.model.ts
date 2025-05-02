@@ -1,23 +1,31 @@
+import { url } from 'inspector'
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const productSchema = new Schema(
     {
-        
         product_name: {
             type: String,
             required: true,
         },
         product_image: {
-            type: String,
-            required: true,
+            url: {
+                type: String,
+                required: true,
+            },
+            public_id: {
+                type: String,
+                default: "",
+            },
         },
         brand_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'brands',
+            required: true,
         },
         category_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'categories',
+            required: true,
         },
         isActive: {
             type: Boolean,
