@@ -30,8 +30,6 @@ class ElasticsearchService {
                 body: query ,
             });
 
-            console.log('Elasticsearch raw response:', JSON.stringify(response.hits, null, 2));
-
             return response.hits.hits;
         } catch (error) {
             throw new BadRequestError('Error searching documents: ' + (error as any).message);

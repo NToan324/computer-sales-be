@@ -11,6 +11,7 @@ class ProductController {
         res.send(await productService.createProduct(payload))
     }
 
+    //Lấy danh sách sản phẩm
     async getProducts(req: Request, res: Response) {
         const { page = '1', limit = '10' } = req.query as {
             page?: string
@@ -28,22 +29,26 @@ class ProductController {
         )
     }
 
+    //Lấy sản phẩm theo id
     async getProductById(req: Request, res: Response) {
         const { id } = req.params
         res.send(await productService.getProductById(id))
     }
 
+    //Xóa sản phẩm theo id
     async deleteProduct(req: Request, res: Response) {
         const { id } = req.params
         res.send(await productService.deleteProduct(id))
     }
 
+    //Cập nhật sản phẩm theo id
     async updateProduct(req: Request, res: Response) {
         const productId = req.params.id
         const payload = req.body
         res.send(await productService.updateProduct({ payload, productId }))
     }
 
+    //Tìm kiếm sản phẩm theo tên, danh mục, thương hiệu
     async searchProduct(req: Request, res: Response) {
         const { name, category_id, brand_id } = req.query as {
             name?: string
@@ -54,6 +59,14 @@ class ProductController {
         res.send(await productService.searchProduct({ name, category_id, brand_id }))
     }
 
+    // =========================Product Variant========================
+    //Thêm biến thể sản phẩm
+    async createProductVariant(req: Request, res: Response) {
+        const payload = req.body
+        res.send(await productService.createProductVariant(payload))
+    }
+
+    //Tải lên ảnh sản phẩm
     async uploadImage(req: Request, res: Response) {
         const { public_id } = req.body
         const image = req.file?.path as string

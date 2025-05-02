@@ -14,7 +14,7 @@ export class ProductValidation {
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id'),
                 product_image: z.object({
                     url: z.string().url('Invalid image URL'),
-                    public_id: z.string().optional(),
+                    public_id: z.string(),
                 }),
             }),
         }
@@ -34,8 +34,8 @@ export class ProductValidation {
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
                     .optional(),
                 product_image: z.object({
-                    url: z.string().url('Invalid image URL').optional(),
-                    public_id: z.string().optional(),
+                    url: z.string().url('Invalid image URL'),
+                    public_id: z.string(),
                 }).optional(),
             }),
         }
@@ -58,6 +58,7 @@ export class ProductValidation {
         }
     }
 
+    // =========================Product Variant========================
     // Schema dùng để tạo sản phẩm biến thể
     static createProductVariant() {
         return {
@@ -72,12 +73,17 @@ export class ProductValidation {
                     .min(1, 'Variant description is required'),
                 price: z.number().min(1, 'Price must be greater than 0'),
                 quantity: z.number().min(1, 'Quantity must be greater than 0'),
+                discount: z
+                    .number()
+                    .min(0, 'Discount must be greater than or equal to 0')
+                    .max(0.5, 'Discount must be less than or equal to 0.5')
+                    .optional(),
                 images: z.array(
                     z.object({
                         url: z.string().url('Invalid image URL'),
-                        public_id: z.string().optional(),
+                        public_id: z.string(),
                     })
-                ).min(3, 'At least 3 images are required').optional(),
+                ).min(3, 'At least 3 images are required'),
             }),
         }
     }
@@ -97,6 +103,19 @@ export class ProductValidation {
                     .number()
                     .min(1, 'Quantity must be greater than 0')
                     .optional(),
+                discount: z
+                    .number()
+                    .min(0, 'Discount must be greater than or equal to 0')
+                    .max(0.5, 'Discount must be less than or equal to 0.5')
+                    .optional(),
+                images: z
+                    .array(
+                        z.object({
+                            url: z.string().url('Invalid image URL'),
+                            public_id: z.string(),
+                        })
+                    )
+                    .min(3, 'At least 3 images are required').optional(),
             }),
         }
     }
