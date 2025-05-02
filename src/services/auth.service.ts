@@ -10,7 +10,7 @@ dotenv.config()
 
 class AuthService {
   async signup(payload: Partial<User>) {
-    const {fullName, email, phone, address, password, role } = payload
+    const { fullName, email, phone, address, password, role } = payload
     const isPhoneNumberExist = await userModel.exists({ phone })
     const isEmailExist = await userModel.exists({ email })
     if (isEmailExist) {
@@ -33,7 +33,7 @@ class AuthService {
       id: newUser._id,
       phone: newUser.phone,
       email: newUser.email,
-      name: newUser.fullName, 
+      name: newUser.fullName,
       role: newUser.role,
       loyaltyPoint: newUser.loyalty_points,
     }
@@ -43,7 +43,7 @@ class AuthService {
 
   async login(data: { email: string; password: string }) {
     const { email, password } = data
-    const foundUser = await userModel.findOne({email})
+    const foundUser = await userModel.findOne({ email })
     if (!foundUser) {
       throw new BadRequestError('User not found')
     }
@@ -78,74 +78,53 @@ class AuthService {
     return { accessToken, user }
   }
 
-  async forgotPassword( email: string ) {
-    let findUser = await userModel.findOne({ email })
-    if (!findUser) {
-      throw new BadRequestError('User not found')
-    }
+  async forgotPassword(email: string) {
+    const user = await userModel.findOne({ email });
+    if (!user) throw new BadRequestError('User not found');
     
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-    //send email
-    if (email) {
-      const mailOptions = emailConfig.mailOptions({ email, otpCode })
-      const sendMail = await emailConfig.transporter.sendMail(mailOptions)
-      if (!sendMail) {
-        throw new BadRequestError('Error sending email')
-      }
-    }
-    
-    const otp = await otpModel.create({
-      user_id: findUser._id,
-      otp_code: otpCode,
-      expiration: new Date(Date.now() + 2 * 60 * 1000),
-      is_verified: false
-    })
+    // 1) Gửi mail
+    const mailOptions = emailConfig.mailOptions({ email, otpCode });
+    await emailConfig.transporter.sendMail(mailOptions);
 
-    return new OkResponse('Get OTP successfully', otp)
+    // 2) Cập nhật hoặc tạo mới record OTP
+    await otpModel.updateOne(
+      { user_id: user._id },            // tìm theo user
+      {
+        $set: {
+          otp_code: otpCode,
+          expiration: new Date(Date.now() + 5 * 60 * 1000), // 5 phút
+          is_verified: false,
+        }
+      },
+      { upsert: true }                  // nếu không có thì tạo mới
+    );
+
+    return new OkResponse('OTP sent successfully', { id: user._id });
   }
 
-  async verifyOtp({ otp_code, id }: { otp_code: string; id: string }) {
-    const user = await userModel.findOne({
-      _id: id
-    })
+  async verifyOtp({ otp_code, user_id }: { otp_code: string; user_id: string }) {
+    const user = await userModel.findById(user_id);
+    if (!user) throw new BadRequestError('User not found');
 
-    console.log('user', user)
+    const otpRecord = await otpModel.findOne({
+      user_id: user._id,
+      otp_code
+    });
 
-    if (!user) {
-      throw new BadRequestError('User not found')
-    }
+    if (!otpRecord) throw new BadRequestError('OTP code is not valid');
+    if (otpRecord.expiration < new Date()) throw new BadRequestError('OTP code is expired');
+    if (otpRecord.is_verified) throw new BadRequestError('OTP code is already verified');
 
-    // Tìm OTP theo user_id và otp_code, sắp xếp theo thời gian tạo mới nhất
-    const otpRecord = await otpModel
-      .findOne({
-        user_id: user._id,
-        otp_code
-      })
-      .sort({ created_at: -1 })
+    otpRecord.is_verified = true;
+    await otpRecord.save();
 
-    if (!otpRecord) {
-      throw new BadRequestError('OTP code is not valid')
-    }
-
-    if (otpRecord.expiration < new Date()) {
-      throw new BadRequestError('OTP code is expired')
-    }
-
-    if (otpRecord.is_verified) {
-      throw new BadRequestError('OTP code is already verified')
-    }
-
-    otpRecord.is_verified = true
-    await user.save()
-    await otpRecord.save()
-
-    return new OkResponse('Verify OTP successfully', otpRecord)
+    return new OkResponse('Verify OTP successfully', otpRecord);
   }
+
   async forgotPasswordReset({ password, id }: { password: string; id: string }) {
-    const user = await userModel.findOne({
-      _id: id
-    })
+    const user = await userModel.findById(id);
     if (!user) {
       throw new BadRequestError('User not found')
     }
