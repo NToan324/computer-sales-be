@@ -9,7 +9,8 @@ import upload from '@/storage/multerConfig'
 
 const router = Router()
 
-// Lấy danh sách sản phẩm
+router.get('/search', asyncHandler(productController.searchProduct))
+
 router.get(
     '/',
     verifyJWT,

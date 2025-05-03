@@ -1,13 +1,13 @@
-import { Client } from '@elastic/elasticsearch';
-import { BadRequestError } from '@/core/error.response';
+import { Client } from '@elastic/elasticsearch'
+import { BadRequestError } from '@/core/error.response'
 
 class ElasticsearchService {
-    private client: Client;
+    private client: Client
 
     constructor() {
         this.client = new Client({
-            node: 'http://localhost:9200', 
-         });
+            node: 'http://localhost:9200',
+        })
     }
 
     public getClient() {
@@ -20,10 +20,12 @@ class ElasticsearchService {
                 index,
                 id,
                 body: document,
-            });
-            return response;
+            })
+            return response
         } catch (error) {
-            throw new BadRequestError('Error indexing document: ' + (error as any).message);
+            throw new BadRequestError(
+                'Error indexing document: ' + (error as any).message
+            )
         }
     }
 
@@ -31,12 +33,14 @@ class ElasticsearchService {
         try {
             const response = await this.client.search({
                 index,
-                body: query ,
-            });
+                body: query,
+            })
 
-            return response.hits.hits;
+            return response.hits.hits
         } catch (error) {
-            throw new BadRequestError('Error searching documents: ' + (error as any).message);
+            throw new BadRequestError(
+                'Error searching documents: ' + (error as any).message
+            )
         }
     }
 
@@ -48,10 +52,12 @@ class ElasticsearchService {
                 body: {
                     doc: document,
                 },
-            });
-            return response;
+            })
+            return response
         } catch (error) {
-            throw new BadRequestError('Error updating document: ' + (error as any).message);
+            throw new BadRequestError(
+                'Error updating document: ' + (error as any).message
+            )
         }
     }
 
@@ -60,10 +66,12 @@ class ElasticsearchService {
             const response = await this.client.delete({
                 index,
                 id,
-            });
-            return response;
+            })
+            return response
         } catch (error) {
-            throw new BadRequestError('Error deleting document: ' + (error as any).message);
+            throw new BadRequestError(
+                'Error deleting document: ' + (error as any).message
+            )
         }
     }
     
@@ -80,5 +88,5 @@ class ElasticsearchService {
     }
 }
 
-const elasticsearchService = new ElasticsearchService();
-export default elasticsearchService;
+const elasticsearchService = new ElasticsearchService()
+export default elasticsearchService
