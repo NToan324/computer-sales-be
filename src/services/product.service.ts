@@ -372,6 +372,329 @@ class ProductService {
 
         return new OkResponse('Cập nhật biến thể sản phẩm thành công', { _id, ...productVariantWithoutId })
     }
+
+    //Lấy danh sách biến thể sản phẩm mới nhất
+    async getNewestProductVariants({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit;
+        const response = await elasticsearchService.searchDocuments(
+            'products',
+            {
+                from,
+                size: limit,
+                query: {
+                    term: {
+                        isActive: true,
+                    },
+                },
+                sort: [
+                    {
+                        createdAt: {
+                            order: 'desc',
+                        },
+                    },
+                ],
+            }
+        );
+
+        if (response.length === 0) {
+            return new OkResponse('No new products found', []);
+        }
+
+        const products = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }));
+        const total = products.length;
+        
+        return new OkResponse('Get new products successfully', {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            data: products,
+        });
+    }
+
+    //Lấy danh sách biến thể sản phẩm theo id sản phẩm
+    async getProductVariantsByProductId({
+        page = 1,
+        limit = 10,
+        productId,
+    }: {
+        page?: number
+        limit?: number
+        productId: string
+    }) {
+        const response = await elasticsearchService.searchDocuments(
+            'product_variants',
+            {
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                product_id: productId,
+                            },
+                        },
+                        filter: {
+                            term: {
+                                isActive: true,
+                            },
+                        },
+                    },
+                },
+            }
+        );
+
+        if (response.length === 0) {
+            return new OkResponse('No product variants found for this product ID', []);
+        }
+
+        const productVariants = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }));
+        const total = productVariants.length;
+        
+        return new OkResponse('Get product variants by product ID successfully', {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            data: productVariants,
+        })
+    }
+
+    //Lấy danh sách sản phẩm bán chạy nhất
+    async getBestSellingProductVariants({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit;
+
+        // Bước 1: Lấy danh sách các sản phẩm bán chạy từ chỉ mục orders
+        const bestSellingProducts: any = await elasticsearchService.searchDocuments(
+            'orders',
+            {
+                size: 0, 
+                aggs: {
+                    best_selling_products: {
+                        terms: {
+                            field: "items.product_variant_id.keyword",
+                            size: limit,
+                            order: { totalSold: "desc" }, 
+                        },
+                        aggs: {
+                            totalSold: {
+                                sum: {
+                                    field: "items.quantity",
+                                },
+                            },
+                        },
+                    },
+                },
+            }
+        );
+
+        // Lấy danh sách product_variant_id từ kết quả aggregation
+        const buckets = bestSellingProducts?.aggregations?.best_selling_products?.buckets || [];
+        const productVariantIds = buckets.map((bucket: any) => bucket.key);
+
+        if (productVariantIds.length === 0) {
+            return new OkResponse('No best-selling product variants found', []);
+        }
+
+        // Bước 2: Tìm kiếm thông tin chi tiết từ chỉ mục product_variants
+        const response = await elasticsearchService.searchDocuments(
+            'product_variants',
+            {
+                from,
+                size: limit,
+                query: {
+                    terms: {
+                        _id: productVariantIds, // Tìm kiếm theo danh sách product_variant_id
+                    },
+                },
+            }
+        );
+
+        if (response.length === 0) {
+            return new OkResponse('No product variants found', []);
+        }
+
+        // Kết hợp dữ liệu
+        const productVariants = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+            totalSold: buckets.find((bucket: any) => bucket.key === hit._id)?.totalSold.value || 0,
+        }));
+
+        return new OkResponse('Get best-selling product variants successfully', {
+            total: productVariants.length,
+            page,
+            limit,
+            data: productVariants,
+        });
+    }
+
+    //Lấy danh sách sản phẩm khuyến mãi
+    async getDiscountedProductVariants({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit; 
+
+        // Tìm kiếm biến thể sản phẩm trong Elasticsearch
+        const response = await elasticsearchService.searchDocuments(
+            'product_variants',
+            {
+                from,
+                size: limit,
+                query: {
+                    bool: {
+                        must: {
+                            range: {
+                                discount: {
+                                    gt: 0,
+                                },
+                            },
+                        },
+                        filter: {
+                            term: {
+                            isActive: true,
+                            },
+                        },
+                    },
+                },
+                sort: [
+                    {
+                        discount: {
+                            order: 'desc',
+                        },
+                    },
+                ],
+            }
+        );
+
+        if (response.length === 0) {
+            return new OkResponse('No discounted product variants found', []);
+        }
+
+        const productVariants = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }));
+        const total = productVariants.length;
+
+        return new OkResponse('Get discounted product variants successfully', {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            data: productVariants,
+        });
+    }
+
+    //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, xếp hạng rating trung bình
+    async searchProductVariant({
+        name,
+        category_id,
+        brand_id,
+        min_price,
+        max_price,
+        rating,
+    }: {
+        name?: string
+        category_id?: string
+        brand_id?: string
+        min_price?: number
+        max_price?: number
+        rating?: number
+    }) {
+        const must: any[] = [];
+
+        // Add filters dynamically based on the provided parameters
+        if (name) {
+            must.push({
+                wildcard: {
+                    "product_name.keyword": {
+                        value: `*${name}*`,
+                    },
+                },
+            });
+        }
+
+        if (category_id) {
+            must.push({
+                term: {
+                    "category_id.keyword": category_id,
+                },
+            });
+        }
+
+        if (brand_id) {
+            must.push({
+                term: {
+                    "brand_id.keyword": brand_id,
+                },
+            });
+        }
+
+        if (min_price || max_price) {
+            must.push({
+                range: {
+                    price: {
+                        ...(min_price && { gte: min_price }),
+                        ...(max_price && { lte: max_price }),
+                    },
+                },
+            });
+        }
+
+        if (rating) {
+            must.push({
+                range: {
+                    average_rating: {
+                        gte: rating,
+                    },
+                },
+            });
+        }
+
+        const response = await elasticsearchService.searchDocuments(
+            'product_variants',
+            {
+                query: {
+                    bool: {
+                        must,
+                        filter: {
+                            term: {
+                                isActive: true,
+                            },
+                        },
+                    },
+                },
+            }
+        );
+
+        const productVariants = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }));
+
+        return new OkResponse('Tìm kiếm biến thể sản phẩm thành công', productVariants);
+    }
 }
 
 const productService = new ProductService()

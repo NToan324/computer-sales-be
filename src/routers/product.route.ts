@@ -9,6 +9,7 @@ import upload from '@/storage/multerConfig'
 
 const router = Router()
 
+// Lấy danh sách sản phẩm
 router.get(
     '/',
     verifyJWT,
@@ -16,11 +17,13 @@ router.get(
     asyncHandler(productController.getProducts)
 )
 
+// Tìm kiêma sản phẩm theo tên, danh mục, thương hiệu
 router.get('/search',
     verifyJWT,
     verifyRole(['ADMIN']),
     asyncHandler(productController.searchProduct))
 
+// tải lên ảnh sản phẩm
 router.post(
     '/upload',
     verifyJWT,
@@ -28,6 +31,7 @@ router.post(
     upload.single('file'),
     asyncHandler(productController.uploadImage))
 
+// Tạo sản phẩm
 router.post(
     '/',
     verifyJWT,
@@ -36,13 +40,7 @@ router.post(
     asyncHandler(productController.createProduct)
 )
 
-router.get(
-    '/:id',
-    verifyJWT,
-    verifyRole(['ADMIN']),
-    asyncHandler(productController.getProductById)
-)
-
+// Cập nhật sản phẩm theo id
 router.put(
     '/:id',
     verifyJWT,
@@ -50,6 +48,8 @@ router.put(
     validationRequest(ProductValidation.updateProduct()),
     asyncHandler(productController.updateProduct)
 )
+
+// Xóa sản phẩm theo id
 router.delete(
     '/:id',
     verifyJWT,
@@ -57,5 +57,18 @@ router.delete(
     asyncHandler(productController.deleteProduct)
 )
 
+// Lấy danh sách biến thể sản phẩm theo id sản phẩm
+router.get('/:id/variants',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(productController.getProductVariantsByProductId))
+
+// Lấy sản phẩm theo id sản phẩm
+router.get(
+    '/:id',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(productController.getProductById)
+)
 
 export default router

@@ -30,6 +30,12 @@ const productVariantSchema = new Schema(
             type: Number,
             min: 0,
         },
+        avarage_rating: {
+            type: Number,
+            min: 0,
+            max: 5,
+            default: 0,
+        },
         images: [{
             url: {
                 type: String,
