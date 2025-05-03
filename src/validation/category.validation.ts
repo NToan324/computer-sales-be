@@ -4,8 +4,8 @@ export class CategoryValidation {
   static createCategory() {
     return {
       body: z.object({
-        name: z.string().nonempty('Tên danh mục không được để trống'),
-        description: z.string().optional()
+        category_name: z.string().nonempty('Tên danh mục không được để trống'),
+        category_description: z.string().optional()
       })
     }
   }
@@ -13,8 +13,8 @@ export class CategoryValidation {
   static updateCategory() {
     return {
       body: z.object({
-        name: z.string().optional(),
-        description: z.string().optional()
+        category_name: z.string().optional(),
+        category_description: z.string().optional()
       })
     }
   }
