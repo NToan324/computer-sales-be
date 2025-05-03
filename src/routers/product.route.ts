@@ -15,20 +15,34 @@ router.get(
     verifyRole(['ADMIN']),
     asyncHandler(productController.getProducts)
 )
+
+router.get('/search',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(productController.searchProduct))
+
+router.post(
+    '/upload',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    upload.single('file'),
+    asyncHandler(productController.uploadImage))
+
+router.post(
+    '/',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    validationRequest(ProductValidation.createProduct()),
+    asyncHandler(productController.createProduct)
+)
+
 router.get(
     '/:id',
     verifyJWT,
     verifyRole(['ADMIN']),
     asyncHandler(productController.getProductById)
 )
-router.post(
-    '/',
-    verifyJWT,
-    verifyRole(['ADMIN']),
-    validationRequest(ProductValidation.createProduct()),
-    upload.single('product_image'),
-    asyncHandler(productController.createProduct)
-)
+
 router.put(
     '/:id',
     verifyJWT,
@@ -43,6 +57,5 @@ router.delete(
     asyncHandler(productController.deleteProduct)
 )
 
-router.get('/search', asyncHandler(productController.searchProduct))
 
 export default router

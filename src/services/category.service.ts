@@ -5,6 +5,7 @@ import categoryModel, { Category } from '@/models/category.model'
 class CategoryService {
     async createCategory(payload: Category) {
         const newCategory = await categoryModel.create(payload)
+
         return new CreatedResponse('Category created successfully', newCategory)
     }
 

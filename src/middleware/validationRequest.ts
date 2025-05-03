@@ -24,7 +24,6 @@ export const validationRequest = ({
             if (cookies) Object.assign(req.cookies, cookies.parse(req.cookies))
             next()
         } catch (error) {
-            console.log('Validation error:', error)
             if (error instanceof ZodError) {
                 throw new BadRequestError(error.issues[0].message)
             }
