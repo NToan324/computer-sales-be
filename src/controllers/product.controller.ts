@@ -3,6 +3,13 @@ import { UploadService } from '@/services/upload.service'
 import type { Request, Response } from 'express'
 
 class ProductController {
+    //Tải lên ảnh sản phẩm
+    async uploadImage(req: Request, res: Response) {
+        const { public_id } = req.body
+        const image = req.file?.path as string
+        res.send(await UploadService.uploadImage(image, public_id))
+    }
+
     // ========================Product========================
     //Thêm sản phẩm
     async createProduct(req: Request, res: Response) {
@@ -66,11 +73,138 @@ class ProductController {
         res.send(await productService.createProductVariant(payload))
     }
 
-    //Tải lên ảnh sản phẩm
-    async uploadImage(req: Request, res: Response) {
-        const { public_id } = req.body
-        const image = req.file?.path as string
-        res.send(await UploadService.uploadImage(image, public_id))
+    //Lấy danh sách biến thể sản phẩm
+    async getProductVariants(req: Request, res: Response) {
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
+        }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        res.send(
+            await productService.getProductVariants({
+                page: pageNumber,
+                limit: limitNumber,
+            })
+        )
+    }
+
+    //Lấy biến thể sản phẩm theo id
+    async getProductVariantById(req: Request, res: Response) {
+        const { id } = req.params
+        res.send(await productService.getProductVariantById(id))
+    }
+
+    //Xóa biến thể sản phẩm theo id
+    async deleteProductVariant(req: Request, res: Response) {
+        const { id } = req.params
+        res.send(await productService.deleteProductVariant(id))
+    }
+    
+    //Cập nhật biến thể sản phẩm theo id
+    async updateProductVariant(req: Request, res: Response) {
+        const productVariantId = req.params.id
+        const payload = req.body
+        res.send(await productService.updateProductVariant({ payload, productVariantId }))
+    }
+
+    //Lấy danh sách biến thể sản phẩm theo id sản phẩm
+    async getProductVariantsByProductId(req: Request, res: Response) {
+        const { id } = req.params
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
+        }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        res.send(
+            await productService.getProductVariantsByProductId({
+                productId: id,
+                page: pageNumber,
+                limit: limitNumber,
+            })
+        )
+    }
+
+    //Lấy danh sách sản phẩm bán chạy nhất
+    async getBestSellingProductVariants(req: Request, res: Response) {
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
+        }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        res.send(
+            await productService.getBestSellingProductVariants({
+                page: pageNumber,
+                limit: limitNumber,
+            })
+        )
+    }
+
+    //Lấy danh sách biến thể sản phẩm giảm giá
+    async getDiscountedProductVariants(req: Request, res: Response) {
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
+        }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        res.send(
+            await productService.getDiscountedProductVariants({
+                page: pageNumber,
+                limit: limitNumber,
+            })
+        )
+    }
+
+    //Lấy danh sách biến thể sản phẩm mới nhất
+    async getNewestProductVariants(req: Request, res: Response) {
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
+        }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        res.send(
+            await productService.getNewestProductVariants({
+                page: pageNumber,
+                limit: limitNumber,
+            })
+        )
+    }
+
+    //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình
+    async searchProductVariant(req: Request, res: Response) {
+        const { name, category_id, brand_id, min_price, max_price, rating } = req.query as {
+            name?: string
+            category_id?: string
+            brand_id?: string
+            min_price?: number
+            max_price?: number
+            rating?: number
+        }
+
+        res.send(
+            await productService.searchProductVariant({
+                name,
+                category_id,
+                brand_id,
+                min_price,
+                max_price,
+                rating,
+            })
+        )
     }
 }
 
