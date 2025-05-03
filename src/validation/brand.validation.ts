@@ -4,10 +4,11 @@ export class BrandValidation {
   static createBrand() {
     return {
       body: z.object({
-        name: z.string().nonempty('Tên thương hiệu không được để trống'),
-        description: z.string().optional(),
-        country: z.string().optional(),
-        logo_url: z.string().optional()
+        brand_name: z.string().nonempty('Tên thương hiệu không được để trống'),
+        brand_image: z.object({
+          url: z.string().nonempty('URL không được để trống'),
+          public_id: z.string()
+        }),
       })
     }
   }
@@ -15,10 +16,11 @@ export class BrandValidation {
   static updateBrand() {
     return {
       body: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        country: z.string().optional(),
-        logo_url: z.string().optional()
+        brand_name: z.string().nonempty('Tên thương hiệu không được để trống').optional(),
+        brand_image: z.object({
+          url: z.string().nonempty('URL không được để trống'),
+          public_id: z.string()
+        }).optional(),
       })
     }
   }

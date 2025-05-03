@@ -62,6 +62,16 @@ class ElasticsearchService {
             throw new BadRequestError('Error deleting document: ' + (error as any).message);
         }
     }
+    
+    async getDocumentById(index: string, id: string) {
+        
+            const response = await this.client.get({
+                index,
+                id,
+            });
+            return response._source;
+        
+    }
 }
 
 const elasticsearchService = new ElasticsearchService();

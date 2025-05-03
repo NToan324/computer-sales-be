@@ -6,6 +6,8 @@ import { validationRequest } from '@/middleware/validationRequest'
 
 const router = Router()
 
+router.get('/search', asyncHandler(categoryController.searchCategories))
+
 router.post(
   '/',
   validationRequest(CategoryValidation.createCategory()),
@@ -16,12 +18,14 @@ router.get('/', asyncHandler(categoryController.getCategories))
 
 router.get('/:id', asyncHandler(categoryController.getCategoryById))
 
-router.patch(
+router.put(
   '/:id',
   validationRequest(CategoryValidation.updateCategory()),
   asyncHandler(categoryController.updateCategory)
 )
 
-router.delete('/categories/:id', asyncHandler(categoryController.deleteCategory))
+router.delete('/:id', asyncHandler(categoryController.deleteCategory))
+
+
 
 export default router

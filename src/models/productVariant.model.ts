@@ -36,6 +36,11 @@ const productVariantSchema = new Schema(
             max: 5,
             default: 0,
         },
+        review_count: {
+            type: Number,
+            min: 0,
+            default: 0,
+        },
         images: [{
             url: {
                 type: String,

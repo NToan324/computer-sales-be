@@ -113,7 +113,6 @@ class ProductService {
         
         const { _id, ...productWithoutId } = deletedProduct.toObject();
         
-        // Remove the product from Elasticsearch
         await elasticsearchService.updateDocument(
             'products',
             _id.toString(),
