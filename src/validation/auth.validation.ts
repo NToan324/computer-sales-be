@@ -25,7 +25,11 @@ export class AuthValidation {
     static loginSchema() {
         return {
             body: z.object({
-                email: z.string().email('Email is not valid'),
+                email: z
+                    .string()
+                    .email('Email is not valid')
+                    .nonempty('Email is required'),
+                    
                 password: z.string().nonempty('Password is required'),
             }),
         }
@@ -42,7 +46,7 @@ export class AuthValidation {
     static verifyOtp() {
         return {
             body: z.object({
-                id: z.string().nonempty('User ID is required'),
+                user_id: z.string().nonempty('User ID is required'),
                 otp_code: z.string().nonempty('OTP code is required'),
             }),
         }
@@ -52,7 +56,7 @@ export class AuthValidation {
         return {
             body: z.object({
                 id: z.string().nonempty('User ID is required'),
-                new_password: z.string().nonempty('New password is required'),
+                password: z.string().nonempty('New password is required'),
             }),
         }
     }

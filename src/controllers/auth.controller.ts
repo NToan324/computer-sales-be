@@ -26,19 +26,20 @@ class AuthController {
     }
 
     async forgotPassword(req: Request, res: Response) {
-        const payload = req.body
-        res.send(await authService.forgotPassword(payload))
+        const {email} = req.body
+        res.send(await authService.forgotPassword(email))
     }
 
     async verifyOtp(req: Request, res: Response) {
         const { otp_code } = req.body
-        const { id } = req.query as { id: string }
-        res.send(await authService.verifyOtp({ otp_code, id }))
+        const { user_id } = req.body
+        
+        res.send(await authService.verifyOtp({ otp_code, user_id }))
     }
 
     async forgotPasswordReset(req: Request, res: Response) {
         const { password } = req.body
-        const { id } = req.query as { id: string }
+        const { id } = req.body
         res.send(await authService.forgotPasswordReset({ password, id }))
     }
 }
