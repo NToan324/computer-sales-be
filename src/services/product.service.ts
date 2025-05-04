@@ -131,7 +131,7 @@ class ProductService {
         productId: string
     }) {
         const updatedProduct = await productModel.findByIdAndUpdate(
-            { _id: convertToObjectId(productId) },
+            { _id: convertToObjectId(productId), isActive: true },
             {
                 ...payload,
             },
@@ -227,13 +227,11 @@ class ProductService {
         // Gộp thêm brand_id và category_id từ sản phẩm gốc
         var newProductVariant = await ProductVariantModel.create({
             ...payload,
-        });
-        
-        const { _id, ...productVariantWithoutId } = {
-            ...newProductVariant.toObject(),
             brand_id: product.brand_id,
             category_id: product.category_id,
-        };
+        });
+        
+        const { _id, ...productVariantWithoutId } = newProductVariant.toObject();
 
         // Thêm vào Elasticsearch
         await elasticsearchService.indexDocument(
@@ -351,7 +349,7 @@ class ProductService {
         productVariantId: string
     }) {
         const updatedProductVariant = await ProductVariantModel.findByIdAndUpdate(
-            { _id: convertToObjectId(productVariantId) },
+            { _id: convertToObjectId(productVariantId), isActive: true },
             {
                 ...payload,
             },
@@ -613,6 +611,7 @@ class ProductService {
         min_price,
         max_price,
         rating,
+        sort_price, // "asc" for low to high, "desc" for high to low
     }: {
         name?: string
         category_id?: string
@@ -620,6 +619,7 @@ class ProductService {
         min_price?: number
         max_price?: number
         rating?: number
+        sort_price?: 'asc' | 'desc'
     }) {
         const must: any[] = [];
 
@@ -671,20 +671,33 @@ class ProductService {
             });
         }
 
-        const response = await elasticsearchService.searchDocuments(
-            'product_variants',
-            {
-                query: {
-                    bool: {
-                        must,
-                        filter: {
-                            term: {
-                                isActive: true,
-                            },
+        const query: any = {
+            query: {
+                bool: {
+                    must,
+                    filter: {
+                        term: {
+                            isActive: true,
                         },
                     },
                 },
-            }
+            },
+        };
+
+        // Add sorting by price if specified
+        if (sort_price) {
+            query.sort = [
+                {
+                    price: {
+                        order: sort_price,
+                    },
+                },
+            ];
+        }
+
+        const response = await elasticsearchService.searchDocuments(
+            'product_variants',
+            query
         );
 
         const productVariants = response.map((hit: any) => ({

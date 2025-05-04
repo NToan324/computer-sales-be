@@ -47,13 +47,33 @@ class CategoryService {
 
     async getCategoryById(id: string) {
         
-        try {
-            const category = await elasticsearchService.getDocumentById('categories', id)
-            return new OkResponse('Get category successfully', {_id: id, category})
+        const response = await elasticsearchService.searchDocuments(
+            'categories',
+            {
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                _id: id,
+                            },
+                        },
+                        filter: {
+                            term: {
+                                isActive: true,
+                            },
+                        },
+                    },
+                },
+            }
+        );
+
+        if (response.length === 0) {
+            return new BadRequestError('Category not found')
         }
-        catch (error) {
-            throw new BadRequestError('Category not found')
-        }
+
+        const category = { _id: response[0]._id, ...(response[0]._source || {}) }
+
+        return new OkResponse('Get category successfully', category)
     }
 
     async updateCategory({

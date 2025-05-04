@@ -7,6 +7,7 @@ import errorHandler from '@/middleware/errorHandler'
 import bodyParser from 'body-parser'
 import dotEnv from 'dotenv'
 import cookieParser from 'cookie-parser'
+import { syncElasticsearch } from './utils/syncElasticsearch'
 
 dotEnv.config()
 
@@ -30,6 +31,11 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser())
 //connect database
 connectDB()
+
+//sync elasticsearch
+syncElasticsearch().catch((error) => {
+    console.error('Error syncing Elasticsearch:', error)
+})
 
 //import routes
 app.use(router)
