@@ -9,6 +9,7 @@ export class BrandValidation {
           url: z.string().nonempty('URL không được để trống'),
           public_id: z.string().optional()
         }),
+
       })
     }
   }
