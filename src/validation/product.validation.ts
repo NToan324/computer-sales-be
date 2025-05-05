@@ -14,7 +14,7 @@ export class ProductValidation {
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id'),
                 product_image: z.object({
                     url: z.string().url('Invalid image URL'),
-                    public_id: z.string(),
+                    public_id: z.string().optional(),
                 }),
             }),
         }
@@ -81,7 +81,7 @@ export class ProductValidation {
                 images: z.array(
                     z.object({
                         url: z.string().url('Invalid image URL'),
-                        public_id: z.string(),
+                        public_id: z.string().optional(),
                     })
                 ).min(3, 'At least 3 images are required'),
             }),

@@ -10,6 +10,10 @@ class ElasticsearchService {
          });
     }
 
+    public getClient() {
+        return this.client;
+    }
+
     async indexDocument(index: string, id: string, document: any) {
         try {
             const response = await this.client.index({
@@ -60,6 +64,18 @@ class ElasticsearchService {
             return response;
         } catch (error) {
             throw new BadRequestError('Error deleting document: ' + (error as any).message);
+        }
+    }
+    
+    async getDocumentById(index: string, id: string) {
+        try {
+            const response = await this.client.get({
+                index,
+                id,
+            });
+            return response._source;
+        } catch (error) {
+            throw new BadRequestError('Error getting document: ' + (error as any).message);
         }
     }
 }

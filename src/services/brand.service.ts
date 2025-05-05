@@ -1,22 +1,75 @@
 import { BadRequestError } from '@/core/error.response'
-import { CreatedResponse, OkResponse } from '@/core/success.response' // Giả sử bạn có class này
+import { CreatedResponse, OkResponse } from '@/core/success.response'
 import { convertToObjectId } from '@/helpers/convertObjectId'
 import brandModel, { Brand } from '@/models/brand.model'
+import elasticsearchService from './elasticsearch.service'
 
 class BrandService {
     async createBrand(payload: Brand) {
         const newBrand = await brandModel.create(payload)
-        return new CreatedResponse('Brand created successfully', newBrand)
+
+        const { _id, ...brandWithoutId } = newBrand.toObject()
+
+        await elasticsearchService.indexDocument(
+            'brands',
+            _id.toString(),
+            brandWithoutId,
+        )
+
+        return new CreatedResponse('Brand created successfully', { _id, ...brandWithoutId })
     }
 
     async getBrands() {
-        const brands = await brandModel.find()
+        const response = await elasticsearchService.searchDocuments(
+            'brands',
+            {
+                query: {
+                    term: {
+                        isActive: true,
+                    },
+                },
+            }
+        )
+
+        if (response.length === 0) {
+            return new OkResponse('No brands found', [])
+        }
+
+        const brands = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }))
+
         return new OkResponse('Get all brands successfully', brands)
     }
 
     async getBrandById(id: string) {
-        const brand = await brandModel.findById(convertToObjectId(id))
-        if (!brand) throw new BadRequestError('Brand not found')
+        const response = await elasticsearchService.searchDocuments(
+            'brands',
+            {
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                _id: id,
+                            },
+                        },
+                        filter: {
+                            term: {
+                                isActive: true,
+                            },
+                        },
+                    },
+                },
+            }
+        )
+
+        if (response.length === 0) {
+            throw new BadRequestError('Brand not found')
+        }
+
+        const brand = { _id: response[0]._id, ...(response[0]._source || {}) }
+
         return new OkResponse('Get brand successfully', brand)
     }
 
@@ -27,19 +80,80 @@ class BrandService {
         id: string
         payload: Partial<Brand>
     }) {
-        const brand = await brandModel.findByIdAndUpdate(
-            convertToObjectId(id),
+        const brand = await brandModel.findOneAndUpdate(
+            { _id: convertToObjectId(id), isActive: true },
             payload,
             { new: true }
         )
+
         if (!brand) throw new BadRequestError('Brand not found')
-        return new OkResponse('Brand updated successfully', brand)
+
+        const { _id, ...brandWithoutId } = brand.toObject()
+
+        await elasticsearchService.updateDocument(
+            'brands',
+            _id.toString(),
+            brandWithoutId,
+        )
+
+        return new OkResponse('Brand updated successfully', { _id, ...brandWithoutId })
     }
 
     async deleteBrand(id: string) {
-        const brand = await brandModel.findByIdAndDelete(id)
+        const brand = await brandModel.findByIdAndUpdate(
+            id,
+            { isActive: false },
+            { new: true }
+        )
+
         if (!brand) throw new Error('Brand not found')
-        return new OkResponse('Brand deleted successfully', brand)
+
+        const { _id, ...brandWithoutId } = brand.toObject()
+
+        await elasticsearchService.indexDocument(
+            'brands',
+            _id.toString(),
+            brandWithoutId,
+        )
+
+        return new OkResponse('Brand deleted successfully', { _id, ...brandWithoutId })
+    }
+
+    async searchBrands(name: string) {
+        const response = await elasticsearchService.searchDocuments(
+            'brands',
+            {
+                query: {
+                    bool: {
+                        must: [
+                            {
+                                wildcard: {
+                                    "category_name.keyword": {
+                                        value: `*${name}*`,
+                                    },
+                                },
+                            },
+                            {
+                                term: {
+                                    isActive: true,
+                                },
+                            },
+                        ],
+                    },
+                },
+            }
+        )
+
+        if (response.length === 0) {
+            return new OkResponse('No brands found', [])
+        }
+
+        const brands = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }))
+
+        return new OkResponse('Get all brands successfully', brands)
     }
 }
 

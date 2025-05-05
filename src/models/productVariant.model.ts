@@ -7,6 +7,16 @@ const productVariantSchema = new Schema(
             ref: 'products',
             required: true,
         },
+        brand_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'brands',
+            required: true,
+        },
+        category_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'categories',
+            required: true,
+        },
         variant_name: {
             type: String,
             required: true,
@@ -34,6 +44,11 @@ const productVariantSchema = new Schema(
             type: Number,
             min: 0,
             max: 5,
+            default: 0,
+        },
+        review_count: {
+            type: Number,
+            min: 0,
             default: 0,
         },
         images: [{

@@ -27,7 +27,14 @@ class CategoryController {
     const { id } = req.params
     res.send(await categoryService.deleteCategory(id))
   }
+
+  async searchCategories(req: Request, res: Response) {
+    const { category_name } = req.query
+    res.send(await categoryService.searchCategories(category_name as string))
+  }
 }
+
+
 
 const categoryController = new CategoryController()
 export default categoryController
