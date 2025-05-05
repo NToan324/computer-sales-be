@@ -6,7 +6,7 @@ export class CategoryValidation {
       body: z.object({
         category_name: z.string().nonempty('Tên danh mục không được để trống'),
         category_description: z.string().optional()
-      })
+      }).strict('Invalid field')
     }
   }
 
@@ -15,7 +15,15 @@ export class CategoryValidation {
       body: z.object({
         category_name: z.string().optional(),
         category_description: z.string().optional()
-      })
+      }).strict('Invalid field')
+    }
+  }
+
+  static searchCategory() {
+    return {
+      query: z.object({
+        name: z.string()
+      }).strict('Invalid field')
     }
   }
 }

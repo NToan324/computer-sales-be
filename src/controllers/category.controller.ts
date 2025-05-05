@@ -29,8 +29,10 @@ class CategoryController {
   }
 
   async searchCategories(req: Request, res: Response) {
-    const { category_name } = req.query
-    res.send(await categoryService.searchCategories(category_name as string))
+    const { name } = req.query as { name?: string }
+
+    
+    res.send(await categoryService.searchCategories(name || ''))
   }
 }
 

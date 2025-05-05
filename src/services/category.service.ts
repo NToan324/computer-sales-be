@@ -6,7 +6,7 @@ import { BadRequestError } from '@/core/error.response'
 
 class CategoryService {
     async createCategory(payload: Category) {
-        const newCategory = await categoryModel.create(payload)
+        const newCategory = await categoryModel.create({...payload})
 
         const { _id, ...categoryWithoutId } = newCategory.toObject()
 
@@ -85,7 +85,7 @@ class CategoryService {
     }) {
         const category = await categoryModel.findOneAndUpdate(
             { _id: convertToObjectId(id), isActive: true },
-            payload,
+            {...payload},
             { new: true }
         )
 

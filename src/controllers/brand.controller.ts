@@ -33,6 +33,13 @@ class BrandController {
     const image = req.file?.path as string
     res.send(await UploadService.uploadImage(image, public_id))
   }
+
+  async searchBrands(req: Request, res: Response) {
+    const { name } = req.query as {
+      name?: string
+    }
+    res.send(await brandService.searchBrands(name || ''))
+  }
 }
 
 const brandController = new BrandController()

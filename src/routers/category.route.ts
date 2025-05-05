@@ -22,8 +22,6 @@ router.post(
 )
 
 router.get('/',
-  verifyJWT,
-  verifyRole(['ADMIN']),
   asyncHandler(categoryController.getCategories))
 
 router.get('/:id',
