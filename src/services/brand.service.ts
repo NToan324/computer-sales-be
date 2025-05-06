@@ -142,11 +142,6 @@ class BrandService {
                                     },
                                 },
                             },
-                            {
-                                term: {
-                                    isActive: true,
-                                },
-                            },
                         ],
                     },
                 },
