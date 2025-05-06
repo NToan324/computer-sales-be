@@ -13,10 +13,10 @@ export class ProductValidation {
                     .string()
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id'),
                 product_image: z.object({
-                    url: z.string().url('Invalid image URL'),
+                    url: z.string().url('Invalid image URL').nonempty('Image URL is required'),
                     public_id: z.string().optional(),
                 }),
-            }),
+            }).strict("Invalid field"),
         }
     }
 
@@ -37,7 +37,7 @@ export class ProductValidation {
                     url: z.string().url('Invalid image URL'),
                     public_id: z.string(),
                 }).optional(),
-            }),
+            }).strict("Invalid field"),
         }
     }
 
@@ -54,7 +54,7 @@ export class ProductValidation {
                     .string()
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
                     .optional(),
-            }),
+            }).strict("Invalid field"),
         }
     }
 
@@ -80,11 +80,11 @@ export class ProductValidation {
                     .optional(),
                 images: z.array(
                     z.object({
-                        url: z.string().url('Invalid image URL'),
+                        url: z.string().url('Invalid image URL').nonempty('Image URL is required'),
                         public_id: z.string().optional(),
                     })
                 ).min(3, 'At least 3 images are required'),
-            }),
+            }).strict("Invalid field"),
         }
     }
 
@@ -116,7 +116,41 @@ export class ProductValidation {
                         })
                     )
                     .min(3, 'At least 3 images are required').optional(),
-            }),
+                isActive: z.never()
+            }).strict("Invalid field"),
         }
+    }
+
+    // Schema dùng để tìm kiếm sản phẩm biến thể
+    static searchProductVariant() {
+        return {
+            query: z.object({
+                name: z.string().optional(),
+                category_id: z
+                    .string()
+                    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id') 
+                    .optional(),
+                brand_id: z
+                    .string()
+                    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id') 
+                    .optional(),
+                min_price: z
+                    .number()
+                    .min(0, 'Minimum price must be greater than or equal to 0') 
+                    .optional(),
+                max_price: z
+                    .number()
+                    .min(0, 'Maximum price must be greater than or equal to 0') 
+                    .optional(),
+                rating: z
+                    .number()
+                    .min(0, 'Rating must be greater than or equal to 0') 
+                    .max(5, 'Rating must be less than or equal to 5') 
+                    .optional(),
+                sort_price: z
+                    .enum(['asc', 'desc']) 
+                    .optional(),
+            }).strict("Invalid field"), 
+        };
     }
 }

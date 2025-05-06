@@ -5,8 +5,9 @@ import brandModel, { Brand } from '@/models/brand.model'
 import elasticsearchService from './elasticsearch.service'
 
 class BrandService {
-    async createBrand(payload: Brand) {
-        const newBrand = await brandModel.create(payload)
+    async createBrand(payload: Partial<Brand>) {
+        
+        const newBrand = await brandModel.create({...payload})
 
         const { _id, ...brandWithoutId } = newBrand.toObject()
 
@@ -82,7 +83,7 @@ class BrandService {
     }) {
         const brand = await brandModel.findOneAndUpdate(
             { _id: convertToObjectId(id), isActive: true },
-            payload,
+            {...payload},
             { new: true }
         )
 
