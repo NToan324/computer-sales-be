@@ -22,6 +22,10 @@ const productVariantSchema = new Schema(
             required: true,
         },
         variant_color: String,
+        variant_size: String,
+        variant_RAM: String,
+        variant_Storage: String,
+        variant_CPU: String,
         variant_description: {
             type: String,
             required: true,
@@ -40,7 +44,7 @@ const productVariantSchema = new Schema(
             type: Number,
             min: 0,
         },
-        avarage_rating: {
+        average_rating: {
             type: Number,
             min: 0,
             max: 5,

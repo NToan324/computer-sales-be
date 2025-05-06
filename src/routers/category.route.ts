@@ -8,9 +8,21 @@ import verifyRole from '@/middleware/verifyRoles'
 
 const router = Router()
 
+router.post('/upload',
+  verifyJWT,
+  verifyRole(['ADMIN']),
+  asyncHandler(categoryController.uploadImage))
+
+router.post('/search',
+  verifyJWT,
+  verifyRole(['ADMIN']),
+  validationRequest(CategoryValidation.searchCategory()),
+  asyncHandler(categoryController.searchCategories))
+
 router.get('/search',
   verifyJWT,
   verifyRole(['ADMIN']),
+  validationRequest(CategoryValidation.searchCategory()),
   asyncHandler(categoryController.searchCategories))
 
 router.post(

@@ -7,6 +7,16 @@ const categorySchema = new Schema(
             required: true,
         },
         category_description: String,
+        category_image: {
+            url: {
+                type: String,
+                required: true,
+            },
+            public_id: {
+                type: String,
+                default: '',
+            },
+        },
         isActive: {
             type: Boolean,
             default: true,

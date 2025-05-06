@@ -37,6 +37,7 @@ export class ProductValidation {
                     url: z.string().url('Invalid image URL'),
                     public_id: z.string(),
                 }).optional(),
+                isActive: z.boolean().optional(),
             }).strict("Invalid field"),
         }
     }
@@ -68,6 +69,10 @@ export class ProductValidation {
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid product_id'),
                 variant_name: z.string().min(1, 'Variant name is required'),
                 variant_color: z.string().optional(),
+                variant_size: z.string().optional(),
+                variant_RAM: z.string().optional(),
+                variant_Storage: z.string().optional(),
+                variant_CPU: z.string().optional(),
                 variant_description: z
                     .string()
                     .min(1, 'Variant description is required'),
@@ -94,6 +99,10 @@ export class ProductValidation {
             body: z.object({
                 variant_name: z.string().min(1).optional(),
                 variant_color: z.string().optional(),
+                variant_size: z.string().optional(),
+                variant_RAM: z.string().optional(),
+                variant_Storage: z.string().optional(),
+                variant_CPU: z.string().optional(),
                 variant_description: z.string().min(1).optional(),
                 price: z
                     .number()
@@ -116,7 +125,7 @@ export class ProductValidation {
                         })
                     )
                     .min(3, 'At least 3 images are required').optional(),
-                isActive: z.never()
+                isActive: z.boolean().optional(),
             }).strict("Invalid field"),
         }
     }
@@ -125,31 +134,37 @@ export class ProductValidation {
     static searchProductVariant() {
         return {
             query: z.object({
-                name: z.string().optional(),
-                category_id: z
-                    .string()
-                    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id') 
-                    .optional(),
-                brand_id: z
-                    .string()
-                    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id') 
-                    .optional(),
-                min_price: z
-                    .number()
-                    .min(0, 'Minimum price must be greater than or equal to 0') 
-                    .optional(),
-                max_price: z
-                    .number()
-                    .min(0, 'Maximum price must be greater than or equal to 0') 
-                    .optional(),
-                rating: z
-                    .number()
+            name: z.string().optional(),
+            category_id: z
+                .array(
+                    z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
+                )
+                .optional(),
+            brand_id: z
+                .array(
+                    z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
+                )
+                .optional(),
+            min_price: z
+                .number()
+                .min(0, 'Minimum price must be greater than or equal to 0') 
+                .optional(),
+            max_price: z
+                .number()
+                .min(0, 'Maximum price must be greater than or equal to 0') 
+                .optional(),
+            rating: z.array(
+                    z.number()
                     .min(0, 'Rating must be greater than or equal to 0') 
-                    .max(5, 'Rating must be less than or equal to 5') 
-                    .optional(),
-                sort_price: z
-                    .enum(['asc', 'desc']) 
-                    .optional(),
+                    .max(5, 'Rating must be less than or equal to 5')
+                )
+                .optional(),
+            sort_price: z
+                .enum(['asc', 'desc']) 
+                .optional(),
+            sort_name: z
+                .enum(['asc', 'desc'])
+                .optional(),
             }).strict("Invalid field"), 
         };
     }

@@ -4,7 +4,7 @@ import brandModel from '@/models/brand.model'
 import productModel from '@/models/product.model'
 import ProductVariantModel from '@/models/productVariant.model'
 
-let isSynced = false // Cờ kiểm soát đồng bộ
+let isSynced = true // Cờ kiểm soát đồng bộ
 
 export async function syncElasticsearch() {
     if (isSynced) {
@@ -39,7 +39,7 @@ async function syncCollectionToIndex(model: any, index: string) {
     console.log(`Syncing data for index: ${index}`)
     const documents = await model.find({ isActive: true }).lean()
     for (const doc of documents) {
-        const { _id, ...rest } = doc.toObject()
+        const { _id, ...rest } = doc
         await elasticsearchService.indexDocument(index, _id.toString(), rest)
     }
     console.log(`Synced ${documents.length} documents to index: ${index}`)
