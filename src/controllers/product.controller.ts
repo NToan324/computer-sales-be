@@ -186,25 +186,43 @@ class ProductController {
 
     //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình
     async searchProductVariant(req: Request, res: Response) {
-        const { name, category_id, brand_id, min_price, max_price, rating } = req.query as {
-            name?: string
-            category_id?: string
-            brand_id?: string
-            min_price?: number
-            max_price?: number
-            rating?: number
-        }
+        const {
+            name,
+            category_ids,
+            brand_ids,
+            min_price,
+            max_price,
+            ratings,
+            sort_price,
+            sort_name,
+        } = req.query as {
+            name?: string;
+            category_ids?: string | string[]; // Có thể là một chuỗi hoặc mảng
+            brand_ids?: string | string[];   // Có thể là một chuỗi hoặc mảng
+            min_price?: string;
+            max_price?: string;
+            ratings?: string | string[];    // Có thể là một chuỗi hoặc mảng
+            sort_price?: 'asc' | 'desc';
+            sort_name?: 'asc' | 'desc';
+        };
+
+        // Đảm bảo các tham số là mảng
+        const categoryIdsArray = Array.isArray(category_ids) ? category_ids : category_ids ? [category_ids] : [];
+        const brandIdsArray = Array.isArray(brand_ids) ? brand_ids : brand_ids ? [brand_ids] : [];
+        const ratingsArray = Array.isArray(ratings) ? ratings.map(Number) : ratings ? [Number(ratings)] : [];
 
         res.send(
             await productService.searchProductVariant({
                 name,
-                category_id,
-                brand_id,
-                min_price,
-                max_price,
-                rating,
+                category_ids: categoryIdsArray,
+                brand_ids: brandIdsArray,
+                min_price: min_price ? Number(min_price) : undefined,
+                max_price: max_price ? Number(max_price) : undefined,
+                ratings: ratingsArray,
+                sort_price,
+                sort_name,
             })
-        )
+        );
     }
 }
 

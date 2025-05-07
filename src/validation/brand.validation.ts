@@ -21,6 +21,7 @@ export class BrandValidation {
           url: z.string().url('Invalid image URL').nonempty('Image URL is required'),
           public_id: z.string()
         }).optional(),
+        isActive: z.boolean().optional()
       }).strict('Invalid field')
     }
   }

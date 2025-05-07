@@ -8,6 +8,17 @@ import { Router } from 'express'
 
 const router = Router()
 
+router.post('/upload',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(brandController.uploadImage))
+
+router.get('/search',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    validationRequest(BrandValidation.searchBrand()),
+    asyncHandler(brandController.searchBrands))
+
 router.post('/',
     verifyJWT,
     verifyRole(['ADMIN']),
@@ -31,9 +42,6 @@ router.delete('/:id',
     verifyRole(['ADMIN']),
     asyncHandler(brandController.deleteBrand))
 
-router.post('/upload',
-    verifyJWT,
-    verifyRole(['ADMIN']),
-    asyncHandler(brandController.uploadImage))
+
 
 export default router

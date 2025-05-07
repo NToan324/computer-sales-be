@@ -1,7 +1,6 @@
 import categoryService from '@/services/category.service'
 import type { Request, Response } from 'express'
-import { ZodError } from 'zod'
-
+import { UploadService } from '@/services/upload.service'
 class CategoryController {
   async createCategory(req: Request, res: Response) {
     const payload = req.body
@@ -33,6 +32,12 @@ class CategoryController {
 
     
     res.send(await categoryService.searchCategories(name || ''))
+  }
+
+  async uploadImage(req: Request, res: Response) {
+    const { public_id } = req.body
+    const image = req.file?.path as string
+    res.send(await UploadService.uploadImage(image, public_id))
   }
 }
 

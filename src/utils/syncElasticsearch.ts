@@ -3,8 +3,9 @@ import categoryModel from '@/models/category.model'
 import brandModel from '@/models/brand.model'
 import productModel from '@/models/product.model'
 import ProductVariantModel from '@/models/productVariant.model'
+import UserModel from '@/models/user.model'
 
-let isSynced = false // Cờ kiểm soát đồng bộ
+let isSynced = true // Cờ kiểm soát đồng bộ
 
 export async function syncElasticsearch() {
     if (isSynced) {
@@ -15,7 +16,7 @@ export async function syncElasticsearch() {
     console.log('Starting Elasticsearch synchronization...')
 
     // Xóa toàn bộ các index hiện có
-    const indices = ['categories', 'brands', 'products', 'product_variants']
+    const indices = ['users', 'categories', 'brands', 'products', 'product_variants']
     for (const index of indices) {
         try {
             await elasticsearchService.getClient().indices.delete({ index })
@@ -26,6 +27,7 @@ export async function syncElasticsearch() {
     }
 
     // Đồng bộ dữ liệu từ MongoDB lên Elasticsearch
+    await syncCollectionToIndex(UserModel, 'users')
     await syncCollectionToIndex(categoryModel, 'categories')
     await syncCollectionToIndex(brandModel, 'brands')
     await syncCollectionToIndex(productModel, 'products')
@@ -37,9 +39,9 @@ export async function syncElasticsearch() {
 
 async function syncCollectionToIndex(model: any, index: string) {
     console.log(`Syncing data for index: ${index}`)
-    const documents = await model.find({ isActive: true }).lean()
+    const documents = await model.find().lean()
     for (const doc of documents) {
-        const { _id, ...rest } = doc.toObject()
+        const { _id, ...rest } = doc
         await elasticsearchService.indexDocument(index, _id.toString(), rest)
     }
     console.log(`Synced ${documents.length} documents to index: ${index}`)

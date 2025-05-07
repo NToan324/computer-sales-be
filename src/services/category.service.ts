@@ -25,9 +25,7 @@ class CategoryService {
             'categories',
             {
                 query: {
-                    term: {
-                        isActive: true,
-                    },
+                    match_all: {},
                 },
             }
         );
@@ -57,18 +55,13 @@ class CategoryService {
                                 _id: id,
                             },
                         },
-                        filter: {
-                            term: {
-                                isActive: true,
-                            },
-                        },
                     },
                 },
             }
         );
 
         if (response.length === 0) {
-            return new BadRequestError('Category not found')
+            throw new BadRequestError('Category not found')
         }
 
         const category = { _id: response[0]._id, ...(response[0]._source || {}) }
@@ -103,21 +96,37 @@ class CategoryService {
     }
 
     async deleteCategory(id: string) {
-        const category = await categoryModel.findByIdAndUpdate(id, {
-            isActive: false
-        }, { new: true })
+        // Kiểm tra trong Elasticsearch index products
+        const productResponse = await elasticsearchService.searchDocuments(
+            'products',
+            {
+                size: 1,
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                category_id: id,
+                            },
+                        },
+                    },
+                },
+            }
+        );
 
-        if (!category) throw new Error('Category not found')
-        
-        const { _id, ...categoryWithoutId } = category.toObject()
+        // Nếu tồn tại ít nhất một sản phẩm, không cho phép xóa category
+        if (productResponse.length > 0) {
+            throw new BadRequestError('Không thể xóa danh mục vì tồn tại sản phẩm liên quan');
+        }
 
-        await elasticsearchService.indexDocument(
-            'categories',
-            _id.toString(),
-            categoryWithoutId,
-        )
+        // Tiến hành xóa category khỏi MongoDB
+        const deletedCategory = await categoryModel.findByIdAndDelete(convertToObjectId(id));
 
-        return new OkResponse('Category deleted successfully', {_id: _id, ...categoryWithoutId})
+        if (!deletedCategory) throw new BadRequestError('Danh mục không tồn tại');
+
+        // Xóa category khỏi Elasticsearch index
+        await elasticsearchService.deleteDocument('categories', id);
+
+        return new OkResponse('Xóa danh mục thành công', { _id: id });
     }
 
     async searchCategories(name: string) {
@@ -132,14 +141,10 @@ class CategoryService {
                                 wildcard: {
                                     "category_name.keyword": {
                                         value: `*${name}*`,
+                                        case_insensitive: true,
                                     },
                                 },
-                            },
-                            {
-                                term: {
-                                    isActive: true,
-                                },
-                            },
+                            }
                         ],
                     },
                 },

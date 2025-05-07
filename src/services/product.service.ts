@@ -42,9 +42,7 @@ class ProductService {
                 from,
                 size: limit,
                 query: {
-                    term: {
-                        isActive: true,
-                    },
+                    match_all: {}
                 },
             }
         );
@@ -81,11 +79,6 @@ class ProductService {
                                 _id: id,
                             },
                         },
-                        filter: {
-                            term: {
-                                isActive: true,
-                            },
-                        },
                     },
                 },
             }
@@ -101,25 +94,38 @@ class ProductService {
 
     //Xóa sản phẩm theo id
     async deleteProduct(id: string) {
-        const deletedProduct = await productModel.findByIdAndUpdate(
-            { _id: convertToObjectId(id) },
+        // Kiểm tra trong Elasticsearch index product_variants
+        const variantResponse = await elasticsearchService.searchDocuments(
+            'product_variants',
             {
-                isActive: false,
-            },
-            { new: true }
-        )
-        
-        if (!deletedProduct) throw new BadRequestError('Sản phẩm không tồn tại')
-        
-        const { _id, ...productWithoutId } = deletedProduct.toObject();
-        
-        await elasticsearchService.updateDocument(
-            'products',
-            _id.toString(),
-            productWithoutId
-        )
+                size: 1,
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                product_id: id, // Tìm các biến thể có product_id khớp với id sản phẩm
+                            },
+                        },
+                    },
+                },
+            }
+        );
 
-        return new OkResponse('Xóa sản phẩm thành công', {_id, ...productWithoutId})
+        // Nếu tồn tại ít nhất một biến thể, không cho phép xóa sản phẩm
+        if (variantResponse.length > 0) {
+            throw new BadRequestError('Không thể xóa sản phẩm vì tồn tại biến thể sản phẩm liên quan');
+        }
+
+        // Tiến hành xóa sản phẩm khỏi MongoDB
+        const deletedProduct = await productModel.findByIdAndDelete(convertToObjectId(id));
+
+        if (!deletedProduct) throw new BadRequestError('Sản phẩm không tồn tại');
+
+        // Xóa sản phẩm khỏi Elasticsearch index
+        await elasticsearchService.deleteDocument('products', id);
+
+        return new OkResponse('Xóa sản phẩm thành công', { _id: id });
+    
     }
 
     //Cập nhật sản phẩm theo id
@@ -170,6 +176,7 @@ class ProductService {
                 wildcard: {
                     "product_name.keyword": {
                         value: `*${name}*`,
+                        case_insensitive: true,
                     },
                 },
             });
@@ -197,11 +204,6 @@ class ProductService {
                 query: {
                     bool: {
                         must,
-                        filter: {
-                            term: {
-                                isActive: true,
-                            },
-                        },
                     },
                     
                 },
@@ -288,6 +290,7 @@ class ProductService {
 
     //Lấy biến thể sản phẩm theo id
     async getProductVariantById(id: string) {
+        // Bước 1: Tìm biến thể sản phẩm theo ID
         const response = await elasticsearchService.searchDocuments(
             'product_variants',
             {
@@ -309,35 +312,93 @@ class ProductService {
         );
 
         if (response.length === 0) {
-            throw new BadRequestError('Biến thể sản phẩm không tồn tại')
+            throw new BadRequestError('Biến thể sản phẩm không tồn tại');
         }
 
-        const productVariant = { _id: response[0]._id, ...(response[0]._source || {}) }
-        return new OkResponse('Get product variant successfully', productVariant)
+        // Lấy thông tin của biến thể sản phẩm được tìm thấy
+        const productVariant = { 
+            _id: response[0]._id, 
+            ...(response[0]._source || {}) 
+        } as unknown as ProductVariant;
+
+        // Bước 2: Tìm các biến thể khác có cùng product_id
+        const relatedVariantsResponse = await elasticsearchService.searchDocuments(
+            'product_variants',
+            {
+                size: 5,
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                product_id: productVariant.product_id,
+                            },
+                        },
+                        filter: {
+                            term: {
+                                isActive: true,
+                            },
+                        },
+                    },
+                },
+            }
+        );
+
+        // Lọc bỏ biến thể hiện tại khỏi danh sách các biến thể liên quan
+        const relatedVariants = relatedVariantsResponse
+            .filter((variant: any) => variant._id !== id)
+            .map((hit: any) => ({
+                _id: hit._id,
+                ...hit._source,
+            }));
+
+        return new OkResponse('Get product variant successfully', {
+            productVariant,
+            relatedVariants,
+        });
     }
 
     //Xóa biến thể sản phẩm theo id
     async deleteProductVariant(id: string) {
-        const deletedProductVariant = await ProductVariantModel.findByIdAndUpdate(
-            { _id: convertToObjectId(id) },
+        // Bước 1: Kiểm tra xem biến thể sản phẩm đã được bán hay chưa
+        const orderResponse = await elasticsearchService.searchDocuments(
+            'orders',
             {
-                isActive: false,
-            },
-            { new: true }
-        )
-        
-        if (!deletedProductVariant) throw new BadRequestError('Biến thể sản phẩm không tồn tại')
-        
-        const { _id, ...productVariantWithoutId } = deletedProductVariant.toObject();
-        
-        // Remove the product variant from Elasticsearch
-        await elasticsearchService.updateDocument(
-            'product_variants',
-            _id.toString(),
-            productVariantWithoutId
-        )
+                size: 1,
+                query: {
+                    nested: {
+                        path: 'items',
+                        query: {
+                            bool: {
+                                must: [
+                                    {
+                                        term: {
+                                            'items.product_variant_id.keyword': id,
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            }
+        );
 
-        return new OkResponse('Xóa biến thể sản phẩm thành công', {_id, ...productVariantWithoutId})
+        // Nếu tồn tại ít nhất một đơn hàng chứa biến thể sản phẩm, không cho phép xóa
+        if (orderResponse.length > 0) {
+            throw new BadRequestError('Không thể xóa biến thể sản phẩm vì đã được bán trong đơn hàng');
+        }
+
+        // Bước 2: Xóa biến thể sản phẩm khỏi MongoDB
+        const deletedProductVariant = await ProductVariantModel.findByIdAndDelete(id);
+
+        if (!deletedProductVariant) {
+            throw new BadRequestError('Biến thể sản phẩm không tồn tại');
+        }
+
+        // Bước 3: Xóa biến thể sản phẩm khỏi Elasticsearch
+        await elasticsearchService.deleteDocument('product_variants', id);
+
+        return new OkResponse('Xóa biến thể sản phẩm thành công', { _id: id });
     }
 
     //Cập nhật biến thể sản phẩm theo id
@@ -438,11 +499,6 @@ class ProductService {
                                 product_id: productId,
                             },
                         },
-                        filter: {
-                            term: {
-                                isActive: true,
-                            },
-                        },
                     },
                 },
             }
@@ -518,6 +574,11 @@ class ProductService {
                 query: {
                     terms: {
                         _id: productVariantIds, // Tìm kiếm theo danh sách product_variant_id
+                    },
+                    filter: {
+                        term: {
+                            isActive: true,
+                        },
                     },
                 },
             }
@@ -603,53 +664,59 @@ class ProductService {
         });
     }
 
-    //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, xếp hạng rating trung bình
+    //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, xếp hạng rating trung bình, sort theo giá, sort theo tên
     async searchProductVariant({
         name,
-        category_id,
-        brand_id,
+        category_ids,
+        brand_ids,
         min_price,
         max_price,
-        rating,
+        ratings,
         sort_price, // "asc" for low to high, "desc" for high to low
+        sort_name,  // "asc" for A-Z, "desc" for Z-A
     }: {
         name?: string
-        category_id?: string
-        brand_id?: string
+        category_ids?: string[] // Danh sách ID danh mục
+        brand_ids?: string[]    // Danh sách ID thương hiệu
         min_price?: number
         max_price?: number
-        rating?: number
+        ratings?: number[]      // Danh sách mức rating trung bình
         sort_price?: 'asc' | 'desc'
+        sort_name?: 'asc' | 'desc'
     }) {
         const must: any[] = [];
 
-        // Add filters dynamically based on the provided parameters
+        // Tìm kiếm theo tên
         if (name) {
             must.push({
                 wildcard: {
                     "product_name.keyword": {
                         value: `*${name}*`,
+                        case_insensitive: true,
                     },
                 },
             });
         }
 
-        if (category_id) {
+        // Lọc theo danh mục (nhiều danh mục)
+        if (category_ids && category_ids.length > 0) {
             must.push({
-                term: {
-                    "category_id.keyword": category_id,
+                terms: {
+                    "category_id.keyword": category_ids,
                 },
             });
         }
 
-        if (brand_id) {
+        // Lọc theo thương hiệu (nhiều thương hiệu)
+        if (brand_ids && brand_ids.length > 0) {
             must.push({
-                term: {
-                    "brand_id.keyword": brand_id,
+                terms: {
+                    "brand_id.keyword": brand_ids,
                 },
             });
         }
 
+        // Lọc theo khoảng giá
         if (min_price || max_price) {
             must.push({
                 range: {
@@ -661,14 +728,32 @@ class ProductService {
             });
         }
 
-        if (rating) {
-            must.push({
-                range: {
-                    average_rating: {
-                        gte: rating,
+        // Lọc theo mức rating trung bình (nhiều mức rating hoặc khoảng giá trị)
+        if (ratings && ratings.length > 0) {
+            const numericRatings = ratings.map(Number); // Chuyển đổi tất cả giá trị sang số
+            const minRating = Math.min(...numericRatings); // Giá trị nhỏ nhất
+            const maxRating = Math.max(...numericRatings); // Giá trị lớn nhất
+
+            // Nếu chỉ có một giá trị, tìm kiếm từ giá trị đó trở lên
+            if (numericRatings.length === 1) {
+                must.push({
+                    range: {
+                        average_rating: {
+                            gte: minRating, // Tìm kiếm các giá trị lớn hơn hoặc bằng giá trị duy nhất
+                        },
                     },
-                },
-            });
+                });
+            } else {
+                // Nếu có nhiều giá trị, tìm kiếm trong khoảng từ min đến max
+                must.push({
+                    range: {
+                        average_rating: {
+                            gte: minRating, // Giá trị nhỏ nhất
+                            lte: maxRating, // Giá trị lớn nhất
+                        },
+                    },
+                });
+            }
         }
 
         const query: any = {
@@ -684,15 +769,24 @@ class ProductService {
             },
         };
 
-        // Add sorting by price if specified
+        // Sắp xếp theo giá hoặc tên
+        const sort: any[] = [];
         if (sort_price) {
-            query.sort = [
-                {
-                    price: {
-                        order: sort_price,
-                    },
+            sort.push({
+                price: {
+                    order: sort_price,
                 },
-            ];
+            });
+        }
+        if (sort_name) {
+            sort.push({
+                "product_name.keyword": {
+                    order: sort_name,
+                },
+            });
+        }
+        if (sort.length > 0) {
+            query.sort = sort;
         }
 
         const response = await elasticsearchService.searchDocuments(

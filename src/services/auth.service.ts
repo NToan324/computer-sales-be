@@ -6,11 +6,12 @@ import bcrypt from 'bcryptjs'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import emailConfig from '@/config/email'
+import elasticsearchService from './elasticsearch.service'
 dotenv.config()
 
 class AuthService {
   async signup(payload: Partial<User>) {
-    const { fullName, email, phone, address, password, role } = payload
+    const { fullName, email, phone, address, password } = payload
     const isPhoneNumberExist = await userModel.exists({ phone })
     const isEmailExist = await userModel.exists({ email })
     if (isEmailExist) {
@@ -26,8 +27,15 @@ class AuthService {
       phone,
       address,
       password,
-      role
     })
+
+    const { _id, ...userWithoutId } = newUser.toObject()
+
+    await elasticsearchService.indexDocument(
+      'users',
+      _id.toString(),
+      userWithoutId,
+    )
 
     const userResponse = {
       id: newUser._id,
