@@ -77,7 +77,7 @@ export class ProductValidation {
                     .string()
                     .min(1, 'Variant description is required'),
                 price: z.number().min(1, 'Price must be greater than 0'),
-                quantity: z.number().min(1, 'Quantity must be greater than 0'),
+                quantity: z.number().int('Quantity must be an integer').min(1, 'Quantity must be greater than 0'),
                 discount: z
                     .number()
                     .min(0, 'Discount must be greater than or equal to 0')
@@ -109,7 +109,7 @@ export class ProductValidation {
                     .min(1, 'Price must be greater than 0')
                     .optional(),
                 quantity: z
-                    .number()
+                    .number().int('Quantity must be an integer')
                     .min(1, 'Quantity must be greater than 0')
                     .optional(),
                 discount: z
@@ -134,38 +134,38 @@ export class ProductValidation {
     static searchProductVariant() {
         return {
             query: z.object({
-            name: z.string().optional(),
-            category_id: z
-                .array(
-                    z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
-                )
-                .optional(),
-            brand_id: z
-                .array(
-                    z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
-                )
-                .optional(),
-            min_price: z
-                .number()
-                .min(0, 'Minimum price must be greater than or equal to 0') 
-                .optional(),
-            max_price: z
-                .number()
-                .min(0, 'Maximum price must be greater than or equal to 0') 
-                .optional(),
-            rating: z.array(
+                name: z.string().optional(),
+                category_id: z
+                    .array(
+                        z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
+                    )
+                    .optional(),
+                brand_id: z
+                    .array(
+                        z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
+                    )
+                    .optional(),
+                min_price: z
+                    .number()
+                    .min(0, 'Minimum price must be greater than or equal to 0')
+                    .optional(),
+                max_price: z
+                    .number()
+                    .min(0, 'Maximum price must be greater than or equal to 0')
+                    .optional(),
+                rating: z.array(
                     z.number()
-                    .min(0, 'Rating must be greater than or equal to 0') 
-                    .max(5, 'Rating must be less than or equal to 5')
+                        .min(0, 'Rating must be greater than or equal to 0')
+                        .max(5, 'Rating must be less than or equal to 5')
                 )
-                .optional(),
-            sort_price: z
-                .enum(['asc', 'desc']) 
-                .optional(),
-            sort_name: z
-                .enum(['asc', 'desc'])
-                .optional(),
-            }).strict("Invalid field"), 
+                    .optional(),
+                sort_price: z
+                    .enum(['asc', 'desc'])
+                    .optional(),
+                sort_name: z
+                    .enum(['asc', 'desc'])
+                    .optional(),
+            }).strict("Invalid field"),
         };
     }
 }

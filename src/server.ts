@@ -7,7 +7,7 @@ import errorHandler from '@/middleware/errorHandler'
 import bodyParser from 'body-parser'
 import dotEnv from 'dotenv'
 import cookieParser from 'cookie-parser'
-import { syncElasticsearch } from './utils/syncElasticsearch'
+import { syncElasticsearch } from './helpers/syncElasticsearch'
 
 dotEnv.config()
 
