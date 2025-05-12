@@ -18,6 +18,17 @@ app.use(
         credentials: true,
     })
 )
+
+// Demo setup socket.io
+// const app = express();
+// const server = http.createServer(app); // Tạo HTTP server
+// const io = new Server(server, {
+//     cors: {
+//         origin: '*',
+//         credentials: true,
+//     },
+// });
+
 const port =
     process.env.NODE_ENV === 'development'
         ? process.env.DEV_PORT || 3000
@@ -39,6 +50,11 @@ syncElasticsearch().catch((error) => {
 
 //import routes
 app.use(router)
+
+
+// import WebSocket routes
+// setupWebSocketRoutes(io);
+
 
 //handler error
 app.use(errorHandler.notFoundError)
