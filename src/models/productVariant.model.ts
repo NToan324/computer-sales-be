@@ -64,6 +64,7 @@ const productVariantSchema = new Schema(
                 type: String,
                 default: '',
             },
+            _id: false,
         }],
         isActive: {
             type: Boolean,

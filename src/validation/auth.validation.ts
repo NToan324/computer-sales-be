@@ -60,13 +60,13 @@ export class AuthValidation {
         }
     }
 
-  static resetPassword() {
-    return {
-      body: z.object({
-        id: z.string().nonempty('User ID is required'),
-        old_password: z.string().nonempty('old password is required'),
-        new_password: z.string().nonempty('new password is required')
-      }).strict("Invalid field"),
+    static resetPassword() {
+        return {
+            body: z.object({
+                id: z.string().nonempty('User ID is required'),
+                old_password: z.string().nonempty('old password is required'),
+                new_password: z.string().nonempty('new password is required')
+            }).strict("Invalid field"),
+        }
     }
-  }
 }

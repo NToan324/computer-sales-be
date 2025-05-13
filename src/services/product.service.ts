@@ -15,7 +15,7 @@ class ProductService {
         })
 
         const { _id, ...productWithoutId } = newProduct.toObject();
-        
+
         await elasticsearchService.indexDocument(
             'products',
             _id.toString(),
@@ -68,7 +68,7 @@ class ProductService {
 
     //Lấy sản phẩm theo id
     async getProductById(id: string) {
-        
+
         const response = await elasticsearchService.searchDocuments(
             'products',
             {
@@ -125,7 +125,7 @@ class ProductService {
         await elasticsearchService.deleteDocument('products', id);
 
         return new OkResponse('Xóa sản phẩm thành công', { _id: id });
-    
+
     }
 
     //Cập nhật sản phẩm theo id
@@ -205,7 +205,7 @@ class ProductService {
                     bool: {
                         must,
                     },
-                    
+
                 },
             }
         );
@@ -232,7 +232,7 @@ class ProductService {
             brand_id: product.brand_id,
             category_id: product.category_id,
         });
-        
+
         const { _id, ...productVariantWithoutId } = newProductVariant.toObject();
 
         // Thêm vào Elasticsearch
@@ -316,9 +316,9 @@ class ProductService {
         }
 
         // Lấy thông tin của biến thể sản phẩm được tìm thấy
-        const productVariant = { 
-            _id: response[0]._id, 
-            ...(response[0]._source || {}) 
+        const productVariant = {
+            _id: response[0]._id,
+            ...(response[0]._source || {})
         } as unknown as ProductVariant;
 
         // Bước 2: Tìm các biến thể khác có cùng product_id
@@ -469,7 +469,7 @@ class ProductService {
             ...hit._source,
         }));
         const total = products.length;
-        
+
         return new OkResponse('Get new products successfully', {
             total,
             page,
@@ -513,7 +513,7 @@ class ProductService {
             ...hit._source,
         }));
         const total = productVariants.length;
-        
+
         return new OkResponse('Get product variants by product ID successfully', {
             total,
             page,
@@ -537,13 +537,13 @@ class ProductService {
         const bestSellingProducts: any = await elasticsearchService.searchDocuments(
             'orders',
             {
-                size: 0, 
+                size: 0,
                 aggs: {
                     best_selling_products: {
                         terms: {
                             field: "items.product_variant_id.keyword",
                             size: limit,
-                            order: { totalSold: "desc" }, 
+                            order: { totalSold: "desc" },
                         },
                         aggs: {
                             totalSold: {
@@ -611,7 +611,7 @@ class ProductService {
         page?: number
         limit?: number
     }) {
-        const from = (page - 1) * limit; 
+        const from = (page - 1) * limit;
 
         // Tìm kiếm biến thể sản phẩm trong Elasticsearch
         const response = await elasticsearchService.searchDocuments(
@@ -630,7 +630,7 @@ class ProductService {
                         },
                         filter: {
                             term: {
-                            isActive: true,
+                                isActive: true,
                             },
                         },
                     },
@@ -780,7 +780,7 @@ class ProductService {
         }
         if (sort_name) {
             sort.push({
-                "product_name.keyword": {
+                "variant_name.keyword": {
                     order: sort_name,
                 },
             });
