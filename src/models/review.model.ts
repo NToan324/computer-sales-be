@@ -5,16 +5,28 @@ const reviewSchema = new Schema(
         product_variant_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'product_variants',
-            required: false,
+            required: true,
         },
         user_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
+            required: false,
         },
-        content: String,
+        content: {
+            type: String,
+            required: false,
+        },
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5,
+            required: false,
+        },
     },
     { timestamps: true }
 )
+
+reviewSchema.index({ product_variant_id: 1, user_id: 1 }, { unique: true })
 
 const ReviewModel = mongoose.model('reviews', reviewSchema)
 type Review = InferSchemaType<typeof reviewSchema>

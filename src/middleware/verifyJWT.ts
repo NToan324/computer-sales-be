@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import type { Request, Response, NextFunction } from 'express'
 import { ForbiddenError, UnauthorizedError } from '@/core/error.response'
+import elasticsearchService from '@/services/elasticsearch.service'
 
 dotenv.config()
 declare global {
@@ -23,12 +24,22 @@ const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
     return next(new UnauthorizedError('No token provided'))
   }
 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE as string, (err: any, decoded: any) => {
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE as string, async (err: any, decoded: any) => {
     if (err) {
       return next(new ForbiddenError('Invalid token'))
     }
 
     req.user = decoded
+
+    // Check if the user is active
+    const user = await elasticsearchService.getDocumentById(
+      'users',
+      decoded.user_id
+    ) as any
+
+    if (!user || !user.isActive) {
+      return next(new ForbiddenError('User is not found or inactive'))
+    }
 
     next()
   })
