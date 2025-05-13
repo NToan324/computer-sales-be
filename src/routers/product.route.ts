@@ -19,10 +19,12 @@ router.get(
 )
 
 // Tìm kiêma sản phẩm theo tên, danh mục, thương hiệu
-router.get('/search',
+router.get(
+    '/search',
     verifyJWT,
     verifyRole(['ADMIN']),
-    asyncHandler(productController.searchProduct))
+    asyncHandler(productController.searchProduct)
+)
 
 // tải lên ảnh sản phẩm
 router.post(
@@ -30,7 +32,8 @@ router.post(
     verifyJWT,
     verifyRole(['ADMIN']),
     upload.single('file'),
-    asyncHandler(productController.uploadImage))
+    asyncHandler(productController.uploadImage)
+)
 
 // Tạo sản phẩm
 router.post(
@@ -59,10 +62,12 @@ router.delete(
 )
 
 // Lấy danh sách biến thể sản phẩm theo id sản phẩm
-router.get('/:id/variants',
+router.get(
+    '/:id/variants',
     verifyJWT,
     verifyRole(['ADMIN']),
-    asyncHandler(productController.getProductVariantsByProductId))
+    asyncHandler(productController.getProductVariantsByProductId)
+)
 
 // Lấy sản phẩm theo id sản phẩm
 router.get(

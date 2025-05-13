@@ -192,7 +192,6 @@ class ProductController {
     }
 
     //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình
-
     async searchProductVariant(req: Request, res: Response) {
         const {
             name,
