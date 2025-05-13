@@ -6,8 +6,8 @@ import elasticsearchService from './elasticsearch.service'
 
 class BrandService {
     async createBrand(payload: Partial<Brand>) {
-        
-        const newBrand = await brandModel.create({...payload})
+
+        const newBrand = await brandModel.create({ ...payload })
 
         const { _id, ...brandWithoutId } = newBrand.toObject()
 
@@ -76,7 +76,7 @@ class BrandService {
     }) {
         const brand = await brandModel.findOneAndUpdate(
             { _id: convertToObjectId(id), isActive: true },
-            {...payload},
+            { ...payload },
             { new: true }
         )
 
@@ -136,7 +136,7 @@ class BrandService {
                         must: [
                             {
                                 wildcard: {
-                                    "category_name.keyword": {
+                                    "brand_name.keyword": {
                                         value: `*${name}*`,
                                         case_insensitive: true,
                                     },

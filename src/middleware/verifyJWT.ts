@@ -34,7 +34,7 @@ const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
     // Check if the user is active
     const user = await elasticsearchService.getDocumentById(
       'users',
-      decoded.user_id
+      decoded.id
     ) as any
 
     if (!user || !user.isActive) {

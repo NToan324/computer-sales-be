@@ -2,7 +2,7 @@ import elasticsearchService from './elasticsearch.service';
 import { OkResponse, CreatedResponse } from '@/core/success.response';
 import { BadRequestError } from '@/core/error.response';
 import productVariantModel from '@/models/productVariant.model';
-import reviewModel from '@/models/review.model';
+import reviewModel, { Review } from '@/models/review.model';
 
 class ReviewService {
     // Thêm review cho sản phẩm
@@ -69,6 +69,19 @@ class ReviewService {
             reviewWithoutId,
         );
 
+        if (userId) {
+            const user: any = await elasticsearchService.getDocumentById('users', userId);
+
+            newReview = {
+                ...newReview.toObject(),
+                user: {
+                    id: userId,
+                    name: user.fullName,
+                    avatar: user.avatar.url,
+                },
+            };
+        }
+
         socket.emit('review_added', { message: 'Review added successfully', review: newReview });
     }
 
@@ -101,7 +114,33 @@ class ReviewService {
     }
 
 
-}
+    async deleteReview({
+        reviewId,
+        socket,
+    }: {
+        reviewId: string;
+        socket?: any;
+    }) {
+        // Kiểm tra xem review có tồn tại hay không
+        const review = await reviewModel.findById(reviewId);
+        if (!review) {
+            socket.emit('error', { message: 'Review not found' });
+            return;
+        }
 
+        const deletedReview = await reviewModel.findByIdAndDelete(reviewId);
+        if (!deletedReview) {
+            socket.emit('error', { message: 'Failed to delete review' });
+            return;
+        }
+
+        // Cập nhật average_rating và số lượng review của product variant
+        await this.updateProductVariantStats(deletedReview.product_variant_id.toString());
+
+        await elasticsearchService.deleteDocument('reviews', reviewId);
+
+        socket.emit('review_deleted', { message: 'Review deleted successfully', deletedReview: deletedReview.toObject() });
+    }
+}
 const reviewService = new ReviewService();
 export default reviewService;

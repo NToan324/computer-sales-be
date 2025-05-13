@@ -29,7 +29,7 @@ const userSchema = new Schema(
             url: {
                 type: String,
                 default:
-                    'https://www.svgrepo.com/show/452030/avatar-default.svg',
+                    'https://www.gravatar.com/avatar/?d=mp',
             },
             public_id: {
                 type: String,
