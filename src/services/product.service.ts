@@ -730,12 +730,11 @@ class ProductService {
 
         // Lọc theo mức rating trung bình (nhiều mức rating hoặc khoảng giá trị)
         if (ratings && ratings.length > 0) {
-            const numericRatings = ratings.map(Number); // Chuyển đổi tất cả giá trị sang số
-            const minRating = Math.min(...numericRatings); // Giá trị nhỏ nhất
-            const maxRating = Math.max(...numericRatings); // Giá trị lớn nhất
+            const minRating = Math.min(...ratings); // Giá trị nhỏ nhất
+            const maxRating = Math.max(...ratings); // Giá trị lớn nhất
 
             // Nếu chỉ có một giá trị, tìm kiếm từ giá trị đó trở lên
-            if (numericRatings.length === 1) {
+            if (ratings.length === 1) {
                 must.push({
                     range: {
                         average_rating: {
