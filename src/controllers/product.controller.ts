@@ -14,7 +14,7 @@ class ProductController {
     //Thêm sản phẩm
     async createProduct(req: Request, res: Response) {
         const payload = req.body
-       
+
         res.send(await productService.createProduct(payload))
     }
 
@@ -102,7 +102,7 @@ class ProductController {
         const { id } = req.params
         res.send(await productService.deleteProductVariant(id))
     }
-    
+
     //Cập nhật biến thể sản phẩm theo id
     async updateProductVariant(req: Request, res: Response) {
         const productVariantId = req.params.id
@@ -197,11 +197,11 @@ class ProductController {
             sort_name,
         } = req.query as {
             name?: string;
-            category_ids?: string | string[]; // Có thể là một chuỗi hoặc mảng
-            brand_ids?: string | string[];   // Có thể là một chuỗi hoặc mảng
-            min_price?: string;
-            max_price?: string;
-            ratings?: string | string[];    // Có thể là một chuỗi hoặc mảng
+            category_ids?: string | string[];
+            brand_ids?: string | string[];
+            min_price?: number;
+            max_price?: number;
+            ratings?: number | number[];
             sort_price?: 'asc' | 'desc';
             sort_name?: 'asc' | 'desc';
         };
@@ -209,15 +209,15 @@ class ProductController {
         // Đảm bảo các tham số là mảng
         const categoryIdsArray = Array.isArray(category_ids) ? category_ids : category_ids ? [category_ids] : [];
         const brandIdsArray = Array.isArray(brand_ids) ? brand_ids : brand_ids ? [brand_ids] : [];
-        const ratingsArray = Array.isArray(ratings) ? ratings.map(Number) : ratings ? [Number(ratings)] : [];
+        const ratingsArray = Array.isArray(ratings) ? ratings : ratings ? [ratings] : [];
 
         res.send(
             await productService.searchProductVariant({
                 name,
                 category_ids: categoryIdsArray,
                 brand_ids: brandIdsArray,
-                min_price: min_price ? Number(min_price) : undefined,
-                max_price: max_price ? Number(max_price) : undefined,
+                min_price: min_price,
+                max_price: max_price,
                 ratings: ratingsArray,
                 sort_price,
                 sort_name,
