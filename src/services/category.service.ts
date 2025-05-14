@@ -6,7 +6,7 @@ import { BadRequestError } from '@/core/error.response'
 
 class CategoryService {
     async createCategory(payload: Category) {
-        const newCategory = await categoryModel.create({...payload})
+        const newCategory = await categoryModel.create({ ...payload })
 
         const { _id, ...categoryWithoutId } = newCategory.toObject()
 
@@ -16,21 +16,29 @@ class CategoryService {
             categoryWithoutId,
         )
 
-        return new CreatedResponse('Category created successfully', {_id: _id, ...categoryWithoutId})
+        return new CreatedResponse('Category created successfully', { _id: _id, ...categoryWithoutId })
     }
 
-    async getCategories() {
-
-        const response = await elasticsearchService.searchDocuments(
+    async getCategories({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit
+        const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
+                from,
+                size: limit,
                 query: {
                     match_all: {},
                 },
             }
         );
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No categories found', [])
         }
         const categories = response.map((hit: any) => {
@@ -40,12 +48,18 @@ class CategoryService {
             }
         })
 
-        return new OkResponse('Get all categories successfully', categories)
+        return new OkResponse('Get all categories successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            categories,
+        })
     }
 
     async getCategoryById(id: string) {
-        
-        const response = await elasticsearchService.searchDocuments(
+
+        const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
                 query: {
@@ -60,7 +74,7 @@ class CategoryService {
             }
         );
 
-        if (response.length === 0) {
+        if (total === 0) {
             throw new BadRequestError('Category not found')
         }
 
@@ -78,12 +92,12 @@ class CategoryService {
     }) {
         const category = await categoryModel.findOneAndUpdate(
             { _id: convertToObjectId(id), isActive: true },
-            {...payload},
+            { ...payload },
             { new: true }
         )
 
         if (!category) throw new Error('Category not found')
-        
+
         const { _id, ...categoryWithoutId } = category.toObject()
 
         await elasticsearchService.updateDocument(
@@ -92,12 +106,12 @@ class CategoryService {
             categoryWithoutId,
         )
 
-        return new OkResponse('Category updated successfully', {_id: _id, ...categoryWithoutId})
+        return new OkResponse('Category updated successfully', { _id: _id, ...categoryWithoutId })
     }
 
     async deleteCategory(id: string) {
         // Kiểm tra trong Elasticsearch index products
-        const productResponse = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'products',
             {
                 size: 1,
@@ -114,7 +128,7 @@ class CategoryService {
         );
 
         // Nếu tồn tại ít nhất một sản phẩm, không cho phép xóa category
-        if (productResponse.length > 0) {
+        if (!(total === 0)) {
             throw new BadRequestError('Không thể xóa danh mục vì tồn tại sản phẩm liên quan');
         }
 
@@ -129,11 +143,22 @@ class CategoryService {
         return new OkResponse('Xóa danh mục thành công', { _id: id });
     }
 
-    async searchCategories(name: string) {
+    async searchCategories({
+        name,
+        page = 1,
+        limit = 10,
+    }: {
+        name: string;
+        page?: number;
+        limit?: number;
+    }) {
+        const from = (page - 1) * limit
 
-        const response = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
+                from,
+                size: limit,
                 query: {
                     bool: {
                         must: [
@@ -151,7 +176,7 @@ class CategoryService {
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No categories found', [])
         }
 
@@ -160,7 +185,13 @@ class CategoryService {
             ...hit._source,
         }))
 
-        return new OkResponse('Search categories successfully', categories)
+        return new OkResponse('Search categories successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            categories,
+        })
     }
 }
 

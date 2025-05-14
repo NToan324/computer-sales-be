@@ -202,16 +202,20 @@ class ProductController {
             ratings,
             sort_price,
             sort_name,
+            page = '1',
+            limit = '10',
         } = req.query as {
-            name?: string
-            category_ids?: string | string[]
-            brand_ids?: string | string[]
-            min_price?: number
-            max_price?: number
-            ratings?: number | number[]
-            sort_price?: 'asc' | 'desc'
-            sort_name?: 'asc' | 'desc'
-        }
+            name?: string;
+            category_ids?: string | string[];
+            brand_ids?: string | string[];
+            min_price?: number;
+            max_price?: number;
+            ratings?: number | number[];
+            sort_price?: 'asc' | 'desc';
+            sort_name?: 'asc' | 'desc';
+            page?: string;
+            limit?: string;
+        };
 
         // Đảm bảo các tham số là mảng
         const categoryIdsArray = Array.isArray(category_ids)
@@ -240,6 +244,8 @@ class ProductController {
                 ratings: ratingsArray,
                 sort_price,
                 sort_name,
+                page: parseInt(page, 10),
+                limit: parseInt(limit, 10),
             })
         )
     }
