@@ -14,6 +14,6 @@ router.use('/category', categoryRouter)
 router.use('/product/variant', productVariantRouter)
 router.use('/product', productRouter)
 router.use('/cart', cartRouter)
-router.use(verifyJWT)
+// router.use(verifyJWT)
 
 export default router

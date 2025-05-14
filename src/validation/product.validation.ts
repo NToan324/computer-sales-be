@@ -141,15 +141,14 @@ export class ProductValidation {
                             z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
                         ),
                         z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id'),
-                    ]),
+                    ]).optional(),
                 brand_ids: z
                     .union([
                         z.array(
                             z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
                         ),
                         z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id'),
-                    ])
-                    .optional(),
+                    ]).optional(),
                 min_price: z
                     .number()
                     .min(0, 'Minimum price must be greater than or equal to 0')
