@@ -1,8 +1,8 @@
-import elasticsearchService from './elasticsearch.service';
-import { OkResponse, CreatedResponse } from '@/core/success.response';
-import { BadRequestError } from '@/core/error.response';
-import productVariantModel from '@/models/productVariant.model';
-import reviewModel, { Review } from '@/models/review.model';
+import elasticsearchService from './elasticsearch.service'
+import { OkResponse, CreatedResponse } from '@/core/success.response'
+import { BadRequestError } from '@/core/error.response'
+import productVariantModel from '@/models/productVariant.model'
+import reviewModel, { Review } from '@/models/review.model'
 
 class ReviewService {
     // Thêm review cho sản phẩm
@@ -13,64 +13,68 @@ class ReviewService {
         rating,
         socket,
     }: {
-        productVariantId: string;
-        userId?: string;
-        content: string;
-        rating?: number;
-        socket?: any;
+        productVariantId: string
+        userId?: string
+        content: string
+        rating?: number
+        socket?: any
     }) {
         // Kiểm tra xem productVariant có tồn tại và isActive hay không
         const productVariant = await productVariantModel.findOne({
             _id: productVariantId,
             isActive: true,
-        });
+        })
 
         if (!productVariant) {
-            socket.emit('error', { message: 'Product variant does not exist or is inactive' });
-            return;
+            socket.emit('error', {
+                message: 'Product variant does not exist or is inactive',
+            })
+            return
         }
 
         const reviewData: any = {
             product_variant_id: productVariantId,
             content,
-        };
+        }
 
         if (userId) {
-            reviewData.user_id = userId;
+            reviewData.user_id = userId
         }
 
         if (rating) {
-            reviewData.rating = rating;
+            reviewData.rating = rating
         }
 
-        let newReview;
+        let newReview
 
         try {
-            newReview = await reviewModel.create(reviewData);
-        }
-        catch (error: any) {
+            newReview = await reviewModel.create(reviewData)
+        } catch (error: any) {
             if (error.code === 11000) {
-                socket.emit('error', { message: 'Already rated this product' });
-                return;
+                socket.emit('error', { message: 'Already rated this product' })
+                return
             }
-            socket.emit('error', { message: 'Failed to add review' });
-            return;
+            socket.emit('error', { message: 'Failed to add review' })
+            return
         }
 
         // Cập nhật average_rating và số lượng review của product variant
-        await this.updateProductVariantStats(productVariantId, socket);
+        await this.updateProductVariantStats(productVariantId, socket)
 
-        const { _id, ...reviewWithoutId } = newReview.toObject();
+        const { _id, ...reviewWithoutId } = newReview.toObject()
 
         // Thêm review vào Elasticsearch
         await elasticsearchService.indexDocument(
             'reviews',
             _id.toString(),
-            reviewWithoutId,
-        );
+            reviewWithoutId
+        )
 
         if (userId) {
-            const user: any = await elasticsearchService.getDocumentById('users', userId);
+            const user: any = await elasticsearchService.getDocumentById(
+                'users',
+                userId
+            )
 
             newReview = {
                 ...newReview.toObject(),
@@ -79,68 +83,91 @@ class ReviewService {
                     name: user.fullName,
                     avatar: user.avatar.url,
                 },
-            };
+            }
         }
 
-        socket.emit('review_added', { message: 'Review added successfully', review: newReview });
+        socket.emit('review_added', {
+            message: 'Review added successfully',
+            review: newReview,
+        })
     }
 
     // Cập nhật average_rating và số lượng review của product variant
     async updateProductVariantStats(productVariantId: string, socket?: any) {
         // Lấy tất cả các review của product variant
-        const reviews = await reviewModel.find({ product_variant_id: productVariantId });
+        const reviews = await reviewModel.find({
+            product_variant_id: productVariantId,
+        })
 
         if (reviews.length === 0) {
-            socket.emit('error', { message: 'No reviews found for this product variant' });
-            return;
+            socket.emit('error', {
+                message: 'No reviews found for this product variant',
+            })
+            return
         }
 
         // Tính toán average_rating
-        const reviewsWithRating = reviews.filter((review) => review.rating !== undefined && review.rating !== null);
-        const totalRating = reviewsWithRating.reduce((sum, review) => sum + (review.rating as number), 0);
-        const averageRating = reviewsWithRating.length > 0 ? totalRating / reviewsWithRating.length : 0;
+        const reviewsWithRating = reviews.filter(
+            (review) => review.rating !== undefined && review.rating !== null
+        )
+        const totalRating = reviewsWithRating.reduce(
+            (sum, review) => sum + (review.rating as number),
+            0
+        )
+        const averageRating =
+            reviewsWithRating.length > 0
+                ? totalRating / reviewsWithRating.length
+                : 0
 
         // Cập nhật số lượng review và average_rating trong MongoDB
         await productVariantModel.findByIdAndUpdate(productVariantId, {
             average_rating: averageRating,
             review_count: reviews.length,
-        });
+        })
 
         // Cập nhật average_rating và review_count trong Elasticsearch
-        await elasticsearchService.updateDocument('product_variants', productVariantId, {
-            average_rating: averageRating,
-            review_count: reviews.length,
-        });
+        await elasticsearchService.updateDocument(
+            'product_variants',
+            productVariantId,
+            {
+                average_rating: averageRating,
+                review_count: reviews.length,
+            }
+        )
     }
-
 
     async deleteReview({
         reviewId,
         socket,
     }: {
-        reviewId: string;
-        socket?: any;
+        reviewId: string
+        socket?: any
     }) {
         // Kiểm tra xem review có tồn tại hay không
-        const review = await reviewModel.findById(reviewId);
+        const review = await reviewModel.findById(reviewId)
         if (!review) {
-            socket.emit('error', { message: 'Review not found' });
-            return;
+            socket.emit('error', { message: 'Review not found' })
+            return
         }
 
-        const deletedReview = await reviewModel.findByIdAndDelete(reviewId);
+        const deletedReview = await reviewModel.findByIdAndDelete(reviewId)
         if (!deletedReview) {
-            socket.emit('error', { message: 'Failed to delete review' });
-            return;
+            socket.emit('error', { message: 'Failed to delete review' })
+            return
         }
 
         // Cập nhật average_rating và số lượng review của product variant
-        await this.updateProductVariantStats(deletedReview.product_variant_id.toString());
+        await this.updateProductVariantStats(
+            deletedReview.product_variant_id.toString()
+        )
 
-        await elasticsearchService.deleteDocument('reviews', reviewId);
+        await elasticsearchService.deleteDocument('reviews', reviewId)
 
-        socket.emit('review_deleted', { message: 'Review deleted successfully', deletedReview: deletedReview.toObject() });
+        socket.emit('review_deleted', {
+            message: 'Review deleted successfully',
+            deletedReview: deletedReview.toObject(),
+        })
     }
 }
-const reviewService = new ReviewService();
-export default reviewService;
+const reviewService = new ReviewService()
+export default reviewService

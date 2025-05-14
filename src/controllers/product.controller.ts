@@ -204,11 +204,11 @@ class ProductController {
             sort_name,
         } = req.query as {
             name?: string
-            category_ids?: string | string[] // Có thể là một chuỗi hoặc mảng
-            brand_ids?: string | string[] // Có thể là một chuỗi hoặc mảng
+            category_ids?: string | string[]
+            brand_ids?: string | string[]
             min_price?: number
             max_price?: number
-            ratings?: string | string[] // Có thể là một chuỗi hoặc mảng
+            ratings?: number | number[]
             sort_price?: 'asc' | 'desc'
             sort_name?: 'asc' | 'desc'
         }
@@ -225,9 +225,9 @@ class ProductController {
             ? [brand_ids]
             : []
         const ratingsArray = Array.isArray(ratings)
-            ? ratings.map(Number)
+            ? ratings
             : ratings
-            ? [Number(ratings)]
+            ? [ratings]
             : []
 
         res.send(

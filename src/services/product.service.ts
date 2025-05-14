@@ -730,7 +730,6 @@ class ProductService {
 
         // Lọc theo danh mục (nhiều danh mục)
         if (category_ids && category_ids.length > 0) {
-            console.log('category_ids', category_ids)
             must.push({
                 terms: {
                     'category_id.keyword': category_ids,
@@ -758,7 +757,6 @@ class ProductService {
                 },
             })
         }
-
 
         // Lọc theo mức rating trung bình (nhiều mức rating hoặc khoảng giá trị)
         if (ratings && ratings.length > 0) {
