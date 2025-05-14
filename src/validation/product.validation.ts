@@ -135,12 +135,12 @@ export class ProductValidation {
         return {
             query: z.object({
                 name: z.string().optional(),
-                category_id: z
+                category_ids: z
                     .array(
                         z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
                     )
                     .optional(),
-                brand_id: z
+                brand_ids: z
                     .array(
                         z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
                     )
@@ -153,7 +153,7 @@ export class ProductValidation {
                     .number()
                     .min(0, 'Maximum price must be greater than or equal to 0')
                     .optional(),
-                rating: z.array(
+                ratings: z.array(
                     z.number()
                         .min(0, 'Rating must be greater than or equal to 0')
                         .max(5, 'Rating must be less than or equal to 5')
