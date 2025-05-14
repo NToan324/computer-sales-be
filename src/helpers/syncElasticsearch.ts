@@ -9,20 +9,30 @@ let isSynced = true // Cờ kiểm soát đồng bộ
 
 export async function syncElasticsearch() {
     if (isSynced) {
-        console.log('Elasticsearch is already synced. Skipping synchronization.')
+        console.log(
+            'Elasticsearch is already synced. Skipping synchronization.'
+        )
         return
     }
 
     console.log('Starting Elasticsearch synchronization...')
 
     // Xóa toàn bộ các index hiện có
-    const indices = ['users', 'categories', 'brands', 'products', 'product_variants']
+    const indices = [
+        'users',
+        'categories',
+        'brands',
+        'products',
+        'product_variants',
+    ]
     for (const index of indices) {
         try {
             await elasticsearchService.getClient().indices.delete({ index })
             console.log(`Deleted index: ${index}`)
         } catch (error) {
-            console.log(`Index ${index} does not exist or could not be deleted.`)
+            console.log(
+                `Index ${index} does not exist or could not be deleted.`
+            )
         }
     }
 

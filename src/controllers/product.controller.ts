@@ -63,7 +63,9 @@ class ProductController {
             brand_id?: string
         }
 
-        res.send(await productService.searchProduct({ name, category_id, brand_id }))
+        res.send(
+            await productService.searchProduct({ name, category_id, brand_id })
+        )
     }
 
     // =========================Product Variant========================
@@ -107,7 +109,12 @@ class ProductController {
     async updateProductVariant(req: Request, res: Response) {
         const productVariantId = req.params.id
         const payload = req.body
-        res.send(await productService.updateProductVariant({ payload, productVariantId }))
+        res.send(
+            await productService.updateProductVariant({
+                payload,
+                productVariantId,
+            })
+        )
     }
 
     //Lấy danh sách biến thể sản phẩm theo id sản phẩm
@@ -185,6 +192,7 @@ class ProductController {
     }
 
     //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình
+
     async searchProductVariant(req: Request, res: Response) {
         const {
             name,
@@ -196,20 +204,32 @@ class ProductController {
             sort_price,
             sort_name,
         } = req.query as {
-            name?: string;
-            category_ids?: string | string[];
-            brand_ids?: string | string[];
-            min_price?: number;
-            max_price?: number;
-            ratings?: number | number[];
-            sort_price?: 'asc' | 'desc';
-            sort_name?: 'asc' | 'desc';
-        };
+            name?: string
+            category_ids?: string | string[] // Có thể là một chuỗi hoặc mảng
+            brand_ids?: string | string[] // Có thể là một chuỗi hoặc mảng
+            min_price?: number
+            max_price?: number
+            ratings?: string | string[] // Có thể là một chuỗi hoặc mảng
+            sort_price?: 'asc' | 'desc'
+            sort_name?: 'asc' | 'desc'
+        }
 
         // Đảm bảo các tham số là mảng
-        const categoryIdsArray = Array.isArray(category_ids) ? category_ids : category_ids ? [category_ids] : [];
-        const brandIdsArray = Array.isArray(brand_ids) ? brand_ids : brand_ids ? [brand_ids] : [];
-        const ratingsArray = Array.isArray(ratings) ? ratings : ratings ? [ratings] : [];
+        const categoryIdsArray = Array.isArray(category_ids)
+            ? category_ids
+            : category_ids
+            ? [category_ids]
+            : []
+        const brandIdsArray = Array.isArray(brand_ids)
+            ? brand_ids
+            : brand_ids
+            ? [brand_ids]
+            : []
+        const ratingsArray = Array.isArray(ratings)
+            ? ratings.map(Number)
+            : ratings
+            ? [Number(ratings)]
+            : []
 
         res.send(
             await productService.searchProductVariant({
@@ -222,7 +242,7 @@ class ProductController {
                 sort_price,
                 sort_name,
             })
-        );
+        )
     }
 }
 
