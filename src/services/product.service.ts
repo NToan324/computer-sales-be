@@ -3,17 +3,20 @@ import { convertToObjectId } from '@/helpers/convertObjectId'
 import { BadRequestError } from '@/core/error.response'
 import productModel, { Product } from '@/models/product.model'
 import elasticsearchService from './elasticsearch.service'
-import ProductVariantModel, { ProductVariant } from '@/models/productVariant.model'
+import ProductVariantModel, {
+    ProductVariant,
+} from '@/models/productVariant.model'
 
 class ProductService {
-
     // ========================Product========================
     //Thêm sản phẩm
     async createProduct(payload: Partial<Product>) {
         const { brand_id, category_id } = payload
         // Kiểm tra xem brand_id và category_id có tồn tại
         if (!brand_id || !category_id) {
-            throw new BadRequestError('Thiếu thông tin brand_id hoặc category_id');
+            throw new BadRequestError(
+                'Thiếu thông tin brand_id hoặc category_id'
+            )
         }
 
         // Kiểm tra xem brand_id và category_id có tồn tại
@@ -21,29 +24,32 @@ class ProductService {
             const brandExists = await elasticsearchService.getDocumentById(
                 'brands',
                 brand_id.toString()
-            );
+            )
 
             const categoryExists = await elasticsearchService.getDocumentById(
                 'categories',
                 category_id.toString()
-            );
+            )
         } catch (error) {
-            throw new BadRequestError('Thương hiệu hoặc danh mục không tồn tại');
+            throw new BadRequestError('Thương hiệu hoặc danh mục không tồn tại')
         }
 
         var newProduct = await productModel.create({
             ...payload,
         })
 
-        const { _id, ...productWithoutId } = newProduct.toObject();
+        const { _id, ...productWithoutId } = newProduct.toObject()
 
         await elasticsearchService.indexDocument(
             'products',
             _id.toString(),
-            productWithoutId,
+            productWithoutId
         )
 
-        return new CreatedResponse('Tạo sản phẩm thành công', { _id, ...productWithoutId });
+        return new CreatedResponse('Tạo sản phẩm thành công', {
+            _id,
+            ...productWithoutId,
+        })
     }
 
     //Lấy danh sách sản phẩm
@@ -54,7 +60,7 @@ class ProductService {
         page?: number
         limit?: number
     }) {
-        const from = (page - 1) * limit; // Tính toán vị trí bắt đầu
+        const from = (page - 1) * limit // Tính toán vị trí bắt đầu
 
         // Tìm kiếm sản phẩm trong Elasticsearch
         const { total, response } = await elasticsearchService.searchDocuments(
@@ -63,19 +69,19 @@ class ProductService {
                 from,
                 size: limit,
                 query: {
-                    match_all: {}
+                    match_all: {},
                 },
             }
-        );
+        )
 
         if (total === 0) {
-            return new OkResponse('No products found', []);
+            return new OkResponse('No products found', [])
         }
 
         const products = response.map((hit: any) => ({
             _id: hit._id,
             ...hit._source,
-        }));
+        }))
 
         return new OkResponse('Get products successfully', {
             total,
@@ -83,12 +89,11 @@ class ProductService {
             limit,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: products,
-        });
+        })
     }
 
     //Lấy sản phẩm theo id
     async getProductById(id: string) {
-
         const { total, response } = await elasticsearchService.searchDocuments(
             'products',
             {
@@ -102,7 +107,7 @@ class ProductService {
                     },
                 },
             }
-        );
+        )
 
         if (total === 0) {
             throw new BadRequestError('Sản phẩm không tồn tại')
@@ -129,23 +134,26 @@ class ProductService {
                     },
                 },
             }
-        );
+        )
 
         // Nếu tồn tại ít nhất một biến thể, không cho phép xóa sản phẩm
         if (!(total === 0)) {
-            throw new BadRequestError('Không thể xóa sản phẩm vì tồn tại biến thể sản phẩm liên quan');
+            throw new BadRequestError(
+                'Không thể xóa sản phẩm vì tồn tại biến thể sản phẩm liên quan'
+            )
         }
 
         // Tiến hành xóa sản phẩm khỏi MongoDB
-        const deletedProduct = await productModel.findByIdAndDelete(convertToObjectId(id));
+        const deletedProduct = await productModel.findByIdAndDelete(
+            convertToObjectId(id)
+        )
 
-        if (!deletedProduct) throw new BadRequestError('Sản phẩm không tồn tại');
+        if (!deletedProduct) throw new BadRequestError('Sản phẩm không tồn tại')
 
         // Xóa sản phẩm khỏi Elasticsearch index
-        await elasticsearchService.deleteDocument('products', id);
+        await elasticsearchService.deleteDocument('products', id)
 
-        return new OkResponse('Xóa sản phẩm thành công', { _id: id });
-
+        return new OkResponse('Xóa sản phẩm thành công', { _id: id })
     }
 
     //Cập nhật sản phẩm theo id
@@ -164,19 +172,20 @@ class ProductService {
                 const brandExists = await elasticsearchService.getDocumentById(
                     'brands',
                     brand_id.toString()
-                );
+                )
             } catch (error) {
-                throw new BadRequestError('Thương hiệu không tồn tại');
+                throw new BadRequestError('Thương hiệu không tồn tại')
             }
         }
         if (category_id) {
             try {
-                const categoryExists = await elasticsearchService.getDocumentById(
-                    'categories',
-                    category_id.toString()
-                );
+                const categoryExists =
+                    await elasticsearchService.getDocumentById(
+                        'categories',
+                        category_id.toString()
+                    )
             } catch (error) {
-                throw new BadRequestError('Danh mục không tồn tại');
+                throw new BadRequestError('Danh mục không tồn tại')
             }
         }
 
@@ -190,16 +199,19 @@ class ProductService {
 
         if (!updatedProduct) throw new BadRequestError('Sản phẩm không tồn tại')
 
-        const { _id, ...productWithoutId } = updatedProduct.toObject();
+        const { _id, ...productWithoutId } = updatedProduct.toObject()
 
         // Update the product in Elasticsearch
         await elasticsearchService.indexDocument(
             'products',
             _id.toString(),
-            productWithoutId,
+            productWithoutId
         )
 
-        return new OkResponse('Cập nhật sản phẩm thành công', { _id, ...productWithoutId })
+        return new OkResponse('Cập nhật sản phẩm thành công', {
+            _id,
+            ...productWithoutId,
+        })
     }
 
     //Tìm kiếm sản phẩm theo tên, danh mục, thương hiệu
@@ -216,36 +228,36 @@ class ProductService {
         page?: number
         limit?: number
     }) {
-        const from = (page - 1) * limit; // Tính toán vị trí bắt đầu
+        const from = (page - 1) * limit // Tính toán vị trí bắt đầu
 
-        const must: any[] = [];
+        const must: any[] = []
 
         // Add filters dynamically based on the provided parameters
         if (name) {
             must.push({
                 wildcard: {
-                    "product_name.keyword": {
+                    'product_name.keyword': {
                         value: `*${name}*`,
                         case_insensitive: true,
                     },
                 },
-            });
+            })
         }
 
         if (category_id) {
             must.push({
                 term: {
-                    "category_id.keyword": category_id,
+                    'category_id.keyword': category_id,
                 },
-            });
+            })
         }
 
         if (brand_id) {
             must.push({
                 term: {
-                    "brand_id.keyword": brand_id,
+                    'brand_id.keyword': brand_id,
                 },
-            });
+            })
         }
 
         const { total, response } = await elasticsearchService.searchDocuments(
@@ -257,18 +269,17 @@ class ProductService {
                     bool: {
                         must,
                     },
-
                 },
             }
-        );
+        )
 
         if (total === 0) {
-            return new OkResponse('No products found', []);
+            return new OkResponse('No products found', [])
         }
 
         const products = response.map((hit: any) => {
-            return { _id: hit._id, ...hit._source };
-        });
+            return { _id: hit._id, ...hit._source }
+        })
 
         return new OkResponse('Tìm kiếm sản phẩm thành công', {
             total,
@@ -276,16 +287,16 @@ class ProductService {
             limit,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: products,
-        });
+        })
     }
 
     // ========================Product Variant========================
     //Thêm biến thể sản phẩm
     async createProductVariant(payload: Partial<ProductVariant>) {
-        const product = await productModel.findById(payload.product_id);
+        const product = await productModel.findById(payload.product_id)
 
         if (!product) {
-            throw new BadRequestError('Sản phẩm gốc không tồn tại');
+            throw new BadRequestError('Sản phẩm gốc không tồn tại')
         }
 
         // Gộp thêm brand_id và category_id từ sản phẩm gốc
@@ -293,18 +304,21 @@ class ProductService {
             ...payload,
             brand_id: product.brand_id,
             category_id: product.category_id,
-        });
+        })
 
-        const { _id, ...productVariantWithoutId } = newProductVariant.toObject();
+        const { _id, ...productVariantWithoutId } = newProductVariant.toObject()
 
         // Thêm vào Elasticsearch
         await elasticsearchService.indexDocument(
             'product_variants',
             _id.toString(),
-            productVariantWithoutId,
-        );
+            productVariantWithoutId
+        )
 
-        return new CreatedResponse('Tạo biến thể sản phẩm thành công', { _id, ...productVariantWithoutId });
+        return new CreatedResponse('Tạo biến thể sản phẩm thành công', {
+            _id,
+            ...productVariantWithoutId,
+        })
     }
 
     //Lấy danh sách biến thể sản phẩm
@@ -315,7 +329,7 @@ class ProductService {
         page?: number
         limit?: number
     }) {
-        const from = (page - 1) * limit; // Tính toán vị trí bắt đầu
+        const from = (page - 1) * limit // Tính toán vị trí bắt đầu
 
         // Tìm kiếm biến thể sản phẩm trong Elasticsearch
         const { total, response } = await elasticsearchService.searchDocuments(
@@ -329,16 +343,16 @@ class ProductService {
                     },
                 },
             }
-        );
+        )
 
         if (total === 0) {
-            return new OkResponse('No product variants found', []);
+            return new OkResponse('No product variants found', [])
         }
 
         const productVariants = response.map((hit: any) => ({
             _id: hit._id,
             ...hit._source,
-        }));
+        }))
 
         return new OkResponse('Get product variants successfully', {
             total,
@@ -346,7 +360,7 @@ class ProductService {
             limit,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: productVariants,
-        });
+        })
     }
 
     //Lấy biến thể sản phẩm theo id
@@ -370,22 +384,21 @@ class ProductService {
                     },
                 },
             }
-        );
+        )
 
         if (total === 0) {
-            throw new BadRequestError('Biến thể sản phẩm không tồn tại');
+            throw new BadRequestError('Biến thể sản phẩm không tồn tại')
         }
 
         // Lấy thông tin của biến thể sản phẩm được tìm thấy
         const productVariant = {
             _id: response[0]._id,
-            ...(response[0]._source || {})
-        } as unknown as ProductVariant;
+            ...(response[0]._source || {}),
+        } as unknown as ProductVariant
 
         // Bước 2: Tìm các biến thể khác có cùng product_id
-        const relatedVariantsResponse = await elasticsearchService.searchDocuments(
-            'product_variants',
-            {
+        const relatedVariantsResponse =
+            await elasticsearchService.searchDocuments('product_variants', {
                 size: 5,
                 query: {
                     bool: {
@@ -401,29 +414,29 @@ class ProductService {
                         },
                     },
                 },
-            }
-        );
+            })
 
         // Lọc bỏ biến thể hiện tại khỏi danh sách các biến thể liên quan
-        const { total: relatedTotal, response: relatedResponse } = relatedVariantsResponse;
+        const { total: relatedTotal, response: relatedResponse } =
+            relatedVariantsResponse
 
         const relatedVariants = relatedResponse
             .filter((variant: any) => variant._id !== id)
             .map((hit: any) => ({
                 _id: hit._id,
                 ...hit._source,
-            }));
+            }))
 
         return new OkResponse('Get product variant successfully', {
             productVariant,
             relatedVariants,
-        });
+        })
     }
 
     //Xóa biến thể sản phẩm theo id
     async deleteProductVariant(id: string) {
         // Bước 1: Kiểm tra xem biến thể sản phẩm đã được bán hay chưa
-        let orderResponse: any;
+        let orderResponse: any
         try {
             orderResponse = await elasticsearchService.searchDocuments(
                 'orders',
@@ -437,7 +450,8 @@ class ProductService {
                                     must: [
                                         {
                                             term: {
-                                                'items.product_variant_id.keyword': id,
+                                                'items.product_variant_id.keyword':
+                                                    id,
                                             },
                                         },
                                     ],
@@ -446,27 +460,30 @@ class ProductService {
                         },
                     },
                 }
-            );
+            )
         } catch (error) {
-            orderResponse = [];
+            orderResponse = []
         }
 
         // Nếu tồn tại ít nhất một đơn hàng chứa biến thể sản phẩm, không cho phép xóa
         if (orderResponse.length > 0) {
-            throw new BadRequestError('Không thể xóa biến thể sản phẩm vì đã được bán trong đơn hàng');
+            throw new BadRequestError(
+                'Không thể xóa biến thể sản phẩm vì đã được bán trong đơn hàng'
+            )
         }
 
         // Bước 2: Xóa biến thể sản phẩm khỏi MongoDB
-        const deletedProductVariant = await ProductVariantModel.findByIdAndDelete(id);
+        const deletedProductVariant =
+            await ProductVariantModel.findByIdAndDelete(id)
 
         if (!deletedProductVariant) {
-            throw new BadRequestError('Biến thể sản phẩm không tồn tại');
+            throw new BadRequestError('Biến thể sản phẩm không tồn tại')
         }
 
         // Bước 3: Xóa biến thể sản phẩm khỏi Elasticsearch
-        await elasticsearchService.deleteDocument('product_variants', id);
+        await elasticsearchService.deleteDocument('product_variants', id)
 
-        return new OkResponse('Xóa biến thể sản phẩm thành công', { _id: id });
+        return new OkResponse('Xóa biến thể sản phẩm thành công', { _id: id })
     }
 
     //Cập nhật biến thể sản phẩm theo id
@@ -477,26 +494,32 @@ class ProductService {
         payload: ProductVariant
         productVariantId: string
     }) {
-        const updatedProductVariant = await ProductVariantModel.findByIdAndUpdate(
-            { _id: convertToObjectId(productVariantId), isActive: true },
-            {
-                ...payload,
-            },
-            { new: true }
-        )
+        const updatedProductVariant =
+            await ProductVariantModel.findByIdAndUpdate(
+                { _id: convertToObjectId(productVariantId), isActive: true },
+                {
+                    ...payload,
+                },
+                { new: true }
+            )
 
-        if (!updatedProductVariant) throw new BadRequestError('Biến thể sản phẩm không tồn tại')
+        if (!updatedProductVariant)
+            throw new BadRequestError('Biến thể sản phẩm không tồn tại')
 
-        const { _id, ...productVariantWithoutId } = updatedProductVariant.toObject();
+        const { _id, ...productVariantWithoutId } =
+            updatedProductVariant.toObject()
 
         // Update the product variant in Elasticsearch
         await elasticsearchService.indexDocument(
             'product_variants',
             _id.toString(),
-            productVariantWithoutId,
+            productVariantWithoutId
         )
 
-        return new OkResponse('Cập nhật biến thể sản phẩm thành công', { _id, ...productVariantWithoutId })
+        return new OkResponse('Cập nhật biến thể sản phẩm thành công', {
+            _id,
+            ...productVariantWithoutId,
+        })
     }
 
     //Lấy danh sách biến thể sản phẩm mới nhất
@@ -507,7 +530,7 @@ class ProductService {
         page?: number
         limit?: number
     }) {
-        const from = (page - 1) * limit;
+        const from = (page - 1) * limit
         const { total, response } = await elasticsearchService.searchDocuments(
             'products',
             {
@@ -526,16 +549,16 @@ class ProductService {
                     },
                 ],
             }
-        );
+        )
 
         if (total === 0) {
-            return new OkResponse('No new products found', []);
+            return new OkResponse('No new products found', [])
         }
 
         const products = response.map((hit: any) => ({
             _id: hit._id,
             ...hit._source,
-        }));
+        }))
 
         return new OkResponse('Get new products successfully', {
             total,
@@ -543,7 +566,7 @@ class ProductService {
             limit,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: products,
-        });
+        })
     }
 
     //Lấy danh sách biến thể sản phẩm theo id sản phẩm
@@ -556,7 +579,7 @@ class ProductService {
         limit?: number
         productId: string
     }) {
-        const from = (page - 1) * limit;
+        const from = (page - 1) * limit
 
         const { total, response } = await elasticsearchService.searchDocuments(
             'product_variants',
@@ -573,24 +596,30 @@ class ProductService {
                     },
                 },
             }
-        );
+        )
 
         if (total === 0) {
-            return new OkResponse('No product variants found for this product ID', []);
+            return new OkResponse(
+                'No product variants found for this product ID',
+                []
+            )
         }
 
         const productVariants = response.map((hit: any) => ({
             _id: hit._id,
             ...hit._source,
-        }));
+        }))
 
-        return new OkResponse('Get product variants by product ID successfully', {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil((total ?? 0) / limit),
-            data: productVariants,
-        })
+        return new OkResponse(
+            'Get product variants by product ID successfully',
+            {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil((total ?? 0) / limit),
+                data: productVariants,
+            }
+        )
     }
 
     //Lấy danh sách sản phẩm bán chạy nhất
@@ -601,38 +630,38 @@ class ProductService {
         page?: number
         limit?: number
     }) {
-        const from = (page - 1) * limit;
+        const from = (page - 1) * limit
 
         // Bước 1: Lấy danh sách các sản phẩm bán chạy từ chỉ mục orders
-        const bestSellingProducts: any = await elasticsearchService.searchDocuments(
-            'orders',
-            {
+        const bestSellingProducts: any =
+            await elasticsearchService.searchDocuments('orders', {
                 size: 0,
                 aggs: {
                     best_selling_products: {
                         terms: {
-                            field: "items.product_variant_id.keyword",
+                            field: 'items.product_variant_id.keyword',
                             size: limit,
-                            order: { totalSold: "desc" },
+                            order: { totalSold: 'desc' },
                         },
                         aggs: {
                             totalSold: {
                                 sum: {
-                                    field: "items.quantity",
+                                    field: 'items.quantity',
                                 },
                             },
                         },
                     },
                 },
-            }
-        );
+            })
 
         // Lấy danh sách product_variant_id từ kết quả aggregation
-        const buckets = bestSellingProducts?.aggregations?.best_selling_products?.buckets || [];
-        const productVariantIds = buckets.map((bucket: any) => bucket.key);
+        const buckets =
+            bestSellingProducts?.aggregations?.best_selling_products?.buckets ||
+            []
+        const productVariantIds = buckets.map((bucket: any) => bucket.key)
 
         if (productVariantIds.length === 0) {
-            return new OkResponse('No best-selling product variants found', []);
+            return new OkResponse('No best-selling product variants found', [])
         }
 
         // Bước 2: Tìm kiếm thông tin chi tiết từ chỉ mục product_variants
@@ -652,25 +681,30 @@ class ProductService {
                     },
                 },
             }
-        );
+        )
 
         if (total === 0) {
-            return new OkResponse('No product variants found', []);
+            return new OkResponse('No product variants found', [])
         }
 
         // Kết hợp dữ liệu
         const productVariants = response.map((hit: any) => ({
             _id: hit._id,
             ...hit._source,
-            totalSold: buckets.find((bucket: any) => bucket.key === hit._id)?.totalSold.value || 0,
-        }));
+            totalSold:
+                buckets.find((bucket: any) => bucket.key === hit._id)?.totalSold
+                    .value || 0,
+        }))
 
-        return new OkResponse('Get best-selling product variants successfully', {
-            total: productVariants.length,
-            page,
-            limit,
-            data: productVariants,
-        });
+        return new OkResponse(
+            'Get best-selling product variants successfully',
+            {
+                total: productVariants.length,
+                page,
+                limit,
+                data: productVariants,
+            }
+        )
     }
 
     //Lấy danh sách sản phẩm khuyến mãi
@@ -681,7 +715,7 @@ class ProductService {
         page?: number
         limit?: number
     }) {
-        const from = (page - 1) * limit;
+        const from = (page - 1) * limit
 
         // Tìm kiếm biến thể sản phẩm trong Elasticsearch
         const { total, response } = await elasticsearchService.searchDocuments(
@@ -713,16 +747,16 @@ class ProductService {
                     },
                 ],
             }
-        );
+        )
 
         if (total === 0) {
-            return new OkResponse('No discounted product variants found', []);
+            return new OkResponse('No discounted product variants found', [])
         }
 
         const productVariants = response.map((hit: any) => ({
             _id: hit._id,
             ...hit._source,
-        }));
+        }))
 
         return new OkResponse('Get discounted product variants successfully', {
             total,
@@ -730,7 +764,7 @@ class ProductService {
             limit,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: productVariants,
-        });
+        })
     }
 
     //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, xếp hạng rating trung bình, sort theo giá, sort theo tên
@@ -742,51 +776,51 @@ class ProductService {
         max_price,
         ratings,
         sort_price, // "asc" for low to high, "desc" for high to low
-        sort_name,  // "asc" for A-Z, "desc" for Z-A
-        page = 1,   // Trang hiện tại (mặc định là 1)
+        sort_name, // "asc" for A-Z, "desc" for Z-A
+        page = 1, // Trang hiện tại (mặc định là 1)
         limit = 10, // Số lượng kết quả mỗi trang (mặc định là 10)
     }: {
-        name?: string;
-        category_ids?: string[]; // Danh sách ID danh mục
-        brand_ids?: string[];    // Danh sách ID thương hiệu
-        min_price?: number;
-        max_price?: number;
-        ratings?: number[];      // Danh sách mức rating trung bình
-        sort_price?: 'asc' | 'desc';
-        sort_name?: 'asc' | 'desc';
-        page?: number;           // Trang hiện tại
-        limit?: number;          // Số lượng kết quả mỗi trang
+        name?: string
+        category_ids?: string[] // Danh sách ID danh mục
+        brand_ids?: string[] // Danh sách ID thương hiệu
+        min_price?: number
+        max_price?: number
+        ratings?: number[] // Danh sách mức rating trung bình
+        sort_price?: 'asc' | 'desc'
+        sort_name?: 'asc' | 'desc'
+        page?: number // Trang hiện tại
+        limit?: number // Số lượng kết quả mỗi trang
     }) {
-        const must: any[] = [];
+        const must: any[] = []
 
         // Tìm kiếm theo tên
         if (name) {
             must.push({
                 wildcard: {
-                    "product_name.keyword": {
+                    'product_name.keyword': {
                         value: `*${name}*`,
                         case_insensitive: true,
                     },
                 },
-            });
+            })
         }
 
         // Lọc theo danh mục (nhiều danh mục)
         if (category_ids && category_ids.length > 0) {
             must.push({
                 terms: {
-                    "category_id.keyword": category_ids,
+                    'category_id.keyword': category_ids,
                 },
-            });
+            })
         }
 
         // Lọc theo thương hiệu (nhiều thương hiệu)
         if (brand_ids && brand_ids.length > 0) {
             must.push({
                 terms: {
-                    "brand_id.keyword": brand_ids,
+                    'brand_id.keyword': brand_ids,
                 },
-            });
+            })
         }
 
         // Lọc theo khoảng giá
@@ -798,13 +832,13 @@ class ProductService {
                         ...(max_price && { lte: max_price }),
                     },
                 },
-            });
+            })
         }
 
         // Lọc theo mức rating trung bình (nhiều mức rating hoặc khoảng giá trị)
         if (ratings && ratings.length > 0) {
-            const minRating = Math.min(...ratings); // Giá trị nhỏ nhất
-            const maxRating = Math.max(...ratings); // Giá trị lớn nhất
+            const minRating = Math.min(...ratings) // Giá trị nhỏ nhất
+            const maxRating = Math.max(...ratings) // Giá trị lớn nhất
 
             // Nếu chỉ có một giá trị, tìm kiếm từ giá trị đó trở lên
             if (ratings.length === 1) {
@@ -814,7 +848,7 @@ class ProductService {
                             gte: minRating, // Tìm kiếm các giá trị lớn hơn hoặc bằng giá trị duy nhất
                         },
                     },
-                });
+                })
             } else {
                 // Nếu có nhiều giá trị, tìm kiếm trong khoảng từ min đến max
                 must.push({
@@ -824,11 +858,11 @@ class ProductService {
                             lte: maxRating, // Giá trị lớn nhất
                         },
                     },
-                });
+                })
             }
         }
 
-        const from = (page - 1) * limit; // Tính toán vị trí bắt đầu
+        const from = (page - 1) * limit // Tính toán vị trí bắt đầu
         const query: any = {
             from,
             size: limit,
@@ -842,40 +876,40 @@ class ProductService {
                     },
                 },
             },
-        };
+        }
 
         // Sắp xếp theo giá hoặc tên
-        const sort: any[] = [];
+        const sort: any[] = []
         if (sort_price) {
             sort.push({
                 price: {
                     order: sort_price,
                 },
-            });
+            })
         }
         if (sort_name) {
             sort.push({
-                "variant_name.keyword": {
+                'variant_name.keyword': {
                     order: sort_name,
                 },
-            });
+            })
         }
         if (sort.length > 0) {
-            query.sort = sort;
+            query.sort = sort
         }
 
         const { total, response } = await elasticsearchService.searchDocuments(
             'product_variants',
             query
-        );
+        )
 
         const productVariants = response.map((hit: any) => ({
             _id: hit._id,
             ...hit._source,
-        }));
+        }))
 
         if (total === 0) {
-            return new OkResponse('No product variants found', []);
+            return new OkResponse('No product variants found', [])
         }
 
         return new OkResponse('Tìm kiếm biến thể sản phẩm thành công', {
@@ -884,8 +918,7 @@ class ProductService {
             limit,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: productVariants,
-        });
-
+        })
     }
 }
 

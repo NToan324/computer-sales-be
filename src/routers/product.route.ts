@@ -9,7 +9,8 @@ import upload from '@/storage/multerConfig'
 
 const router = Router()
 
-// Lấy danh sách sản phẩm
+router.get('/search', asyncHandler(productController.searchProduct))
+
 router.get(
     '/',
     verifyJWT,
@@ -21,7 +22,8 @@ router.get(
 router.get('/search',
     verifyJWT,
     verifyRole(['ADMIN']),
-    asyncHandler(productController.searchProduct))
+    asyncHandler(productController.searchProduct)
+)
 
 // tải lên ảnh sản phẩm
 router.post(
@@ -29,7 +31,8 @@ router.post(
     verifyJWT,
     verifyRole(['ADMIN']),
     upload.single('file'),
-    asyncHandler(productController.uploadImage))
+    asyncHandler(productController.uploadImage)
+)
 
 // Tạo sản phẩm
 router.post(
@@ -62,7 +65,8 @@ router.get(
     '/:id/variants',
     verifyJWT,
     verifyRole(['ADMIN']),
-    asyncHandler(productController.getProductVariantsByProductId))
+    asyncHandler(productController.getProductVariantsByProductId)
+)
 
 // Lấy sản phẩm theo id sản phẩm
 router.get(

@@ -11,7 +11,6 @@ const userSchema = new Schema(
         phone: {
             type: String,
             unique: true,
-            required: true,
         },
         fullName: {
             type: String,
@@ -23,7 +22,6 @@ const userSchema = new Schema(
         },
         address: {
             type: String,
-            required: true,
         },
         avatar: {
             url: {

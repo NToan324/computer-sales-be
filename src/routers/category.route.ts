@@ -39,8 +39,8 @@ router.get('/',
 
 // Lấy chi tiết danh mục theo id
 router.get('/:id',
-  verifyJWT,
-  verifyRole(['ADMIN']),
+  // verifyJWT,
+  // verifyRole(['ADMIN']),
   asyncHandler(categoryController.getCategoryById))
 
 // Cập nhật danh mục

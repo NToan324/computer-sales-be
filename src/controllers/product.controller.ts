@@ -63,7 +63,9 @@ class ProductController {
             brand_id?: string
         }
 
-        res.send(await productService.searchProduct({ name, category_id, brand_id }))
+        res.send(
+            await productService.searchProduct({ name, category_id, brand_id })
+        )
     }
 
     // =========================Product Variant========================
@@ -107,7 +109,12 @@ class ProductController {
     async updateProductVariant(req: Request, res: Response) {
         const productVariantId = req.params.id
         const payload = req.body
-        res.send(await productService.updateProductVariant({ payload, productVariantId }))
+        res.send(
+            await productService.updateProductVariant({
+                payload,
+                productVariantId,
+            })
+        )
     }
 
     //Lấy danh sách biến thể sản phẩm theo id sản phẩm
@@ -211,9 +218,21 @@ class ProductController {
         };
 
         // Đảm bảo các tham số là mảng
-        const categoryIdsArray = Array.isArray(category_ids) ? category_ids : category_ids ? [category_ids] : [];
-        const brandIdsArray = Array.isArray(brand_ids) ? brand_ids : brand_ids ? [brand_ids] : [];
-        const ratingsArray = Array.isArray(ratings) ? ratings : ratings ? [ratings] : [];
+        const categoryIdsArray = Array.isArray(category_ids)
+            ? category_ids
+            : category_ids
+            ? [category_ids]
+            : []
+        const brandIdsArray = Array.isArray(brand_ids)
+            ? brand_ids
+            : brand_ids
+            ? [brand_ids]
+            : []
+        const ratingsArray = Array.isArray(ratings)
+            ? ratings
+            : ratings
+            ? [ratings]
+            : []
 
         res.send(
             await productService.searchProductVariant({
@@ -228,7 +247,7 @@ class ProductController {
                 page: parseInt(page, 10),
                 limit: parseInt(limit, 10),
             })
-        );
+        )
     }
 }
 
