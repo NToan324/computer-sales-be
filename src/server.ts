@@ -8,6 +8,9 @@ import bodyParser from 'body-parser'
 import dotEnv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import { syncElasticsearch } from './helpers/syncElasticsearch'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
+import websocketRoutes from './routers/websocket.router'
 
 dotEnv.config()
 
@@ -19,15 +22,14 @@ app.use(
     })
 )
 
-// Demo setup socket.io
-// const app = express();
-// const server = http.createServer(app); // Tạo HTTP server
-// const io = new Server(server, {
-//     cors: {
-//         origin: '*',
-//         credentials: true,
-//     },
-// });
+// Setup WebSocket
+const server = createServer(app); // Tạo HTTP server
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        credentials: true,
+    },
+});
 
 const port =
     process.env.NODE_ENV === 'development'
@@ -51,9 +53,8 @@ syncElasticsearch().catch((error) => {
 //import routes
 app.use(router)
 
-
-// import WebSocket routes
-// setupWebSocketRoutes(io);
+// Setup WebSocket routes
+websocketRoutes(io);
 
 
 //handler error

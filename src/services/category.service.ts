@@ -6,7 +6,7 @@ import { BadRequestError } from '@/core/error.response'
 
 class CategoryService {
     async createCategory(payload: Category) {
-        const newCategory = await categoryModel.create({...payload})
+        const newCategory = await categoryModel.create({ ...payload })
 
         const { _id, ...categoryWithoutId } = newCategory.toObject()
 
@@ -16,12 +16,12 @@ class CategoryService {
             categoryWithoutId,
         )
 
-        return new CreatedResponse('Category created successfully', {_id: _id, ...categoryWithoutId})
+        return new CreatedResponse('Category created successfully', { _id: _id, ...categoryWithoutId })
     }
 
     async getCategories() {
 
-        const response = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
                 query: {
@@ -30,7 +30,7 @@ class CategoryService {
             }
         );
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No categories found', [])
         }
         const categories = response.map((hit: any) => {
@@ -44,8 +44,8 @@ class CategoryService {
     }
 
     async getCategoryById(id: string) {
-        
-        const response = await elasticsearchService.searchDocuments(
+
+        const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
                 query: {
@@ -60,7 +60,7 @@ class CategoryService {
             }
         );
 
-        if (response.length === 0) {
+        if (total === 0) {
             throw new BadRequestError('Category not found')
         }
 
@@ -78,12 +78,12 @@ class CategoryService {
     }) {
         const category = await categoryModel.findOneAndUpdate(
             { _id: convertToObjectId(id), isActive: true },
-            {...payload},
+            { ...payload },
             { new: true }
         )
 
         if (!category) throw new Error('Category not found')
-        
+
         const { _id, ...categoryWithoutId } = category.toObject()
 
         await elasticsearchService.updateDocument(
@@ -92,12 +92,12 @@ class CategoryService {
             categoryWithoutId,
         )
 
-        return new OkResponse('Category updated successfully', {_id: _id, ...categoryWithoutId})
+        return new OkResponse('Category updated successfully', { _id: _id, ...categoryWithoutId })
     }
 
     async deleteCategory(id: string) {
         // Kiểm tra trong Elasticsearch index products
-        const productResponse = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'products',
             {
                 size: 1,
@@ -114,7 +114,7 @@ class CategoryService {
         );
 
         // Nếu tồn tại ít nhất một sản phẩm, không cho phép xóa category
-        if (productResponse.length > 0) {
+        if (!(total === 0)) {
             throw new BadRequestError('Không thể xóa danh mục vì tồn tại sản phẩm liên quan');
         }
 
@@ -131,7 +131,7 @@ class CategoryService {
 
     async searchCategories(name: string) {
 
-        const response = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
                 query: {
@@ -151,7 +151,7 @@ class CategoryService {
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No categories found', [])
         }
 

@@ -21,7 +21,7 @@ class BrandService {
     }
 
     async getBrands() {
-        const response = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
                 query: {
@@ -30,7 +30,7 @@ class BrandService {
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No brands found', [])
         }
 
@@ -43,7 +43,7 @@ class BrandService {
     }
 
     async getBrandById(id: string) {
-        const response = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
                 query: {
@@ -58,7 +58,7 @@ class BrandService {
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             throw new BadRequestError('Brand not found')
         }
 
@@ -95,7 +95,7 @@ class BrandService {
 
     async deleteBrand(id: string) {
         // Kiểm tra trong Elasticsearch index products
-        const productResponse = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'products',
             {
                 size: 1,
@@ -112,7 +112,7 @@ class BrandService {
         );
 
         // Nếu tồn tại ít nhất một sản phẩm, không cho phép xóa brand
-        if (productResponse.length > 0) {
+        if (!(total === 0)) {
             throw new BadRequestError('Không thể xóa thương hiệu vì tồn tại sản phẩm liên quan');
         }
 
@@ -128,7 +128,7 @@ class BrandService {
     }
 
     async searchBrands(name: string) {
-        const response = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
                 query: {
@@ -148,7 +148,7 @@ class BrandService {
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No brands found', [])
         }
 

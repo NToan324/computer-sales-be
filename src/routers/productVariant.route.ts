@@ -21,7 +21,9 @@ router.post(
 )
 
 // Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình
-router.get('/search', asyncHandler(productController.searchProductVariant))
+router.get('/search',
+    validationRequest(ProductValidation.searchProductVariant()),
+    asyncHandler(productController.searchProductVariant))
 
 // Cập nhật biến thể sản phẩm
 router.put(

@@ -2,7 +2,7 @@ import { Server } from 'socket.io';
 import reviewController from '@/controllers/review.controller';
 import authenticateSocket from '@/middleware/authenticateSocket';
 
-const setupWebSocketRoutes = (io: Server) => {
+const websocketRoutes = (io: Server) => {
     // Namespace cho các sự kiện cần xác thực
     const authenticatedNamespace = io.of('/authenticated');
 
@@ -27,4 +27,4 @@ const setupWebSocketRoutes = (io: Server) => {
     });
 };
 
-export default setupWebSocketRoutes;
+export default websocketRoutes;
