@@ -136,14 +136,19 @@ export class ProductValidation {
             query: z.object({
                 name: z.string().optional(),
                 category_ids: z
-                    .array(
-                        z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
-                    )
-                    .optional(),
+                    .union([
+                        z.array(
+                            z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id')
+                        ),
+                        z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category_id'),
+                    ]),
                 brand_ids: z
-                    .array(
-                        z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
-                    )
+                    .union([
+                        z.array(
+                            z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id')
+                        ),
+                        z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid brand_id'),
+                    ])
                     .optional(),
                 min_price: z
                     .number()
@@ -153,11 +158,17 @@ export class ProductValidation {
                     .number()
                     .min(0, 'Maximum price must be greater than or equal to 0')
                     .optional(),
-                ratings: z.array(
-                    z.number()
-                        .min(0, 'Rating must be greater than or equal to 0')
-                        .max(5, 'Rating must be less than or equal to 5')
-                )
+                ratings: z
+                    .union([
+                        z.array(
+                            z.number()
+                                .min(0, 'Rating must be greater than or equal to 0')
+                                .max(5, 'Rating must be less than or equal to 5')
+                        ),
+                        z.number()
+                            .min(0, 'Rating must be greater than or equal to 0')
+                            .max(5, 'Rating must be less than or equal to 5')
+                    ])
                     .optional(),
                 sort_price: z
                     .enum(['asc', 'desc'])

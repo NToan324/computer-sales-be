@@ -11,13 +11,11 @@ class ReviewService {
         userId,
         content,
         rating,
-        socket,
     }: {
         productVariantId: string;
         userId?: string;
         content: string;
         rating?: number;
-        socket?: any;
     }) {
         // Kiểm tra xem productVariant có tồn tại và isActive hay không
         const productVariant = await productVariantModel.findOne({
@@ -26,8 +24,7 @@ class ReviewService {
         });
 
         if (!productVariant) {
-            socket.emit('error', { message: 'Product variant does not exist or is inactive' });
-            return;
+            throw new BadRequestError('Product variant not found or inactive');
         }
 
         const reviewData: any = {
@@ -35,12 +32,15 @@ class ReviewService {
             content,
         };
 
-        if (userId) {
-            reviewData.user_id = userId;
+        if (rating && !userId) {
+            throw new BadRequestError('User must be logged in to provide a rating');
         }
 
-        if (rating) {
-            reviewData.rating = rating;
+        if (userId) {
+            reviewData.user_id = userId;
+            if (rating) {
+                reviewData.rating = Math.round(rating);
+            }
         }
 
         let newReview;
@@ -50,15 +50,13 @@ class ReviewService {
         }
         catch (error: any) {
             if (error.code === 11000) {
-                socket.emit('error', { message: 'Already rated this product' });
-                return;
+                throw new BadRequestError('Already rated this product');
             }
-            socket.emit('error', { message: 'Failed to add review' });
-            return;
+            throw new BadRequestError('Failed to add review');
         }
 
         // Cập nhật average_rating và số lượng review của product variant
-        await this.updateProductVariantStats(productVariantId, socket);
+        await this.updateProductVariantStats(productVariantId);
 
         const { _id, ...reviewWithoutId } = newReview.toObject();
 
@@ -81,18 +79,16 @@ class ReviewService {
                 },
             };
         }
-
-        socket.emit('review_added', { message: 'Review added successfully', review: newReview });
+        return newReview;
     }
 
     // Cập nhật average_rating và số lượng review của product variant
-    async updateProductVariantStats(productVariantId: string, socket?: any) {
+    async updateProductVariantStats(productVariantId: string) {
         // Lấy tất cả các review của product variant
         const reviews = await reviewModel.find({ product_variant_id: productVariantId });
 
         if (reviews.length === 0) {
-            socket.emit('error', { message: 'No reviews found for this product variant' });
-            return;
+            throw new BadRequestError('No reviews found for this product variant');
         }
 
         // Tính toán average_rating
@@ -116,30 +112,108 @@ class ReviewService {
 
     async deleteReview({
         reviewId,
-        socket,
     }: {
         reviewId: string;
-        socket?: any;
     }) {
         // Kiểm tra xem review có tồn tại hay không
         const review = await reviewModel.findById(reviewId);
         if (!review) {
-            socket.emit('error', { message: 'Review not found' });
-            return;
+            throw new BadRequestError('Review not found');
         }
 
         const deletedReview = await reviewModel.findByIdAndDelete(reviewId);
         if (!deletedReview) {
-            socket.emit('error', { message: 'Failed to delete review' });
-            return;
+            throw new BadRequestError('Failed to delete review');
         }
 
         // Cập nhật average_rating và số lượng review của product variant
         await this.updateProductVariantStats(deletedReview.product_variant_id.toString());
 
-        await elasticsearchService.deleteDocument('reviews', reviewId);
+        try {
+            // Xóa review khỏi Elasticsearch
+            await elasticsearchService.deleteDocument('reviews', reviewId);
+        }
+        catch (error: any) {
+            console.error('Error deleting review from Elasticsearch:', error);
+            throw new BadRequestError('Failed to delete review from Elasticsearch');
+        }
+        return deletedReview.toObject();
+    }
 
-        socket.emit('review_deleted', { message: 'Review deleted successfully', deletedReview: deletedReview.toObject() });
+    async getReviewsByProductVariantId({
+        productVariantId,
+        page = 1,
+        limit = 10,
+    }: {
+        productVariantId: string;
+        page?: number;
+        limit?: number;
+    }) {
+        const from = (page - 1) * limit;
+        // Kiểm tra xem productVariant có tồn tại và isActive hay không
+        const productVariant = await productVariantModel.findOne({
+            _id: productVariantId,
+            isActive: true,
+        });
+
+        if (!productVariant) {
+            throw new BadRequestError('Product variant not found or inactive');
+        }
+
+        // Lấy tất cả các review của product variant
+        const { total, response } = await elasticsearchService.searchDocuments('reviews', {
+            size: limit,
+            from: from,
+            query: {
+                bool: {
+                    must: {
+                        term: {
+                            product_variant_id: productVariantId,
+                        },
+                    }
+                },
+            },
+            sort: [
+                {
+                    createdAt: {
+                        order: 'desc',
+                    },
+                },
+            ],
+        });
+
+        if (total === 0) {
+            return new OkResponse('No reviews found for this product variant', []);
+        }
+
+        const userIds = response.map((review: any) => review.user_id).filter((userId: string) => userId !== undefined);
+
+        const users = userIds.length > 0 ? await Promise.all(
+            userIds.map(async (userId: any) => {
+                return await elasticsearchService.getDocumentById('users', userId);
+            })
+        ) : [];
+
+        const userMap = new Map(users.map((user: any) => [user.id, user]));
+
+        response.forEach((review: any) => {
+            const user = userMap.get(review.user_id);
+            if (user) {
+                review.user = {
+                    id: user.id,
+                    name: user.fullName,
+                    avatar: user.avatar.url,
+                };
+            }
+        });
+
+        return new OkResponse("Get reviews successfully", {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            data: response,
+        });
     }
 }
 const reviewService = new ReviewService();

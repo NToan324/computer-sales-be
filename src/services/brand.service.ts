@@ -20,17 +20,26 @@ class BrandService {
         return new CreatedResponse('Brand created successfully', { _id, ...brandWithoutId })
     }
 
-    async getBrands() {
-        const response = await elasticsearchService.searchDocuments(
+    async getBrands({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit
+        const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
+                from,
+                size: limit,
                 query: {
                     match_all: {},
                 },
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No brands found', [])
         }
 
@@ -39,11 +48,17 @@ class BrandService {
             ...hit._source,
         }))
 
-        return new OkResponse('Get all brands successfully', brands)
+        return new OkResponse('Get all brands successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            brands,
+        })
     }
 
     async getBrandById(id: string) {
-        const response = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
                 query: {
@@ -58,7 +73,7 @@ class BrandService {
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             throw new BadRequestError('Brand not found')
         }
 
@@ -95,7 +110,7 @@ class BrandService {
 
     async deleteBrand(id: string) {
         // Kiểm tra trong Elasticsearch index products
-        const productResponse = await elasticsearchService.searchDocuments(
+        const { total, response } = await elasticsearchService.searchDocuments(
             'products',
             {
                 size: 1,
@@ -112,7 +127,7 @@ class BrandService {
         );
 
         // Nếu tồn tại ít nhất một sản phẩm, không cho phép xóa brand
-        if (productResponse.length > 0) {
+        if (!(total === 0)) {
             throw new BadRequestError('Không thể xóa thương hiệu vì tồn tại sản phẩm liên quan');
         }
 
@@ -127,10 +142,22 @@ class BrandService {
         return new OkResponse('Xóa thương hiệu thành công', { _id: id });
     }
 
-    async searchBrands(name: string) {
-        const response = await elasticsearchService.searchDocuments(
+    async searchBrands({
+        name,
+        page = 1,
+        limit = 10
+    }: {
+        name?: string,
+        page?: number,
+        limit?: number
+    }) {
+
+        const from = (page - 1) * limit
+        const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
+                from,
+                size: limit,
                 query: {
                     bool: {
                         must: [
@@ -148,7 +175,7 @@ class BrandService {
             }
         )
 
-        if (response.length === 0) {
+        if (total === 0) {
             return new OkResponse('No brands found', [])
         }
 
@@ -157,7 +184,13 @@ class BrandService {
             ...hit._source,
         }))
 
-        return new OkResponse('Get all brands successfully', brands)
+        return new OkResponse('Get all brands successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            brands,
+        })
     }
 }
 
