@@ -37,8 +37,8 @@ router.get('/',
   asyncHandler(categoryController.getCategories))
 
 router.get('/:id',
-  verifyJWT,
-  verifyRole(['ADMIN']),
+  // verifyJWT,
+  // verifyRole(['ADMIN']),
   asyncHandler(categoryController.getCategoryById))
 
 router.put(
