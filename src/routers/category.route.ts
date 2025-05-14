@@ -5,26 +5,26 @@ import { CategoryValidation } from '@/validation/category.validation'
 import { validationRequest } from '@/middleware/validationRequest'
 import verifyJWT from '@/middleware/verifyJWT'
 import verifyRole from '@/middleware/verifyRoles'
+import upload from '@/storage/multerConfig'
 
 const router = Router()
 
+// upload ảnh danh mục
 router.post('/upload',
   verifyJWT,
   verifyRole(['ADMIN']),
+  upload.single('file'),
   asyncHandler(categoryController.uploadImage))
 
-router.post('/search',
-  verifyJWT,
-  verifyRole(['ADMIN']),
-  validationRequest(CategoryValidation.searchCategory()),
-  asyncHandler(categoryController.searchCategories))
 
+// Tìm kiếm danh mục theo tên
 router.get('/search',
   verifyJWT,
   verifyRole(['ADMIN']),
   validationRequest(CategoryValidation.searchCategory()),
   asyncHandler(categoryController.searchCategories))
 
+// Tao danh mục
 router.post(
   '/',
   verifyJWT,
@@ -33,14 +33,17 @@ router.post(
   asyncHandler(categoryController.createCategory)
 )
 
+// Lấy danh sách danh mục
 router.get('/',
   asyncHandler(categoryController.getCategories))
 
+// Lấy chi tiết danh mục theo id
 router.get('/:id',
   verifyJWT,
   verifyRole(['ADMIN']),
   asyncHandler(categoryController.getCategoryById))
 
+// Cập nhật danh mục
 router.put(
   '/:id',
   verifyJWT,
@@ -49,6 +52,7 @@ router.put(
   asyncHandler(categoryController.updateCategory)
 )
 
+// Xóa danh mục
 router.delete('/:id',
   verifyJWT,
   verifyRole(['ADMIN']),

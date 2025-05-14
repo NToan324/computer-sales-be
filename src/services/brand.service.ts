@@ -20,10 +20,19 @@ class BrandService {
         return new CreatedResponse('Brand created successfully', { _id, ...brandWithoutId })
     }
 
-    async getBrands() {
+    async getBrands({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit
         const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
+                from,
+                size: limit,
                 query: {
                     match_all: {},
                 },
@@ -39,7 +48,13 @@ class BrandService {
             ...hit._source,
         }))
 
-        return new OkResponse('Get all brands successfully', brands)
+        return new OkResponse('Get all brands successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            brands,
+        })
     }
 
     async getBrandById(id: string) {
@@ -127,10 +142,22 @@ class BrandService {
         return new OkResponse('Xóa thương hiệu thành công', { _id: id });
     }
 
-    async searchBrands(name: string) {
+    async searchBrands({
+        name,
+        page = 1,
+        limit = 10
+    }: {
+        name?: string,
+        page?: number,
+        limit?: number
+    }) {
+
+        const from = (page - 1) * limit
         const { total, response } = await elasticsearchService.searchDocuments(
             'brands',
             {
+                from,
+                size: limit,
                 query: {
                     bool: {
                         must: [
@@ -157,7 +184,13 @@ class BrandService {
             ...hit._source,
         }))
 
-        return new OkResponse('Get all brands successfully', brands)
+        return new OkResponse('Get all brands successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            brands,
+        })
     }
 }
 

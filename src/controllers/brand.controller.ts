@@ -9,7 +9,16 @@ class BrandController {
   }
 
   async getBrands(req: Request, res: Response) {
-    res.send(await brandService.getBrands())
+    const { page = '1', limit = '10' } = req.query as {
+      page?: string
+      limit?: string
+    }
+    const pageNumber = parseInt(page, 10)
+    const limitNumber = parseInt(limit, 10)
+    res.send(await brandService.getBrands({
+      page: pageNumber,
+      limit: limitNumber,
+    }))
   }
 
   async getBrandById(req: Request, res: Response) {
@@ -35,10 +44,20 @@ class BrandController {
   }
 
   async searchBrands(req: Request, res: Response) {
-    const { name } = req.query as {
+    const {
+      name = '',
+      page = '1',
+      limit = '10'
+    } = req.query as {
       name?: string
+      page?: string
+      limit?: string
     }
-    res.send(await brandService.searchBrands(name || ''))
+    res.send(await brandService.searchBrands({
+      name,
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+    }))
   }
 }
 

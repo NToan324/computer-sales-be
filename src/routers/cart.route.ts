@@ -9,7 +9,7 @@ const router = Router();
 
 // Add item to cart
 router.post(
-    '/add',
+    '/',
     verifyJWT,
     validationRequest(CartValidation.addItemToCart()),
     asyncHandler(cartController.addItemToCart)
@@ -24,18 +24,10 @@ router.get(
 
 // Update item quantity in cart
 router.put(
-    '/update',
+    '/',
     verifyJWT,
     validationRequest(CartValidation.updateItemQuantity()),
     asyncHandler(cartController.updateItemQuantity)
-);
-
-// Remove item from cart
-router.delete(
-    '/remove',
-    verifyJWT,
-    validationRequest(CartValidation.removeItemFromCart()),
-    asyncHandler(cartController.removeItemFromCart)
 );
 
 // Clear cart
@@ -44,5 +36,14 @@ router.delete(
     verifyJWT,
     asyncHandler(cartController.clearCart)
 );
+
+// Remove item from cart
+router.delete(
+    '/',
+    verifyJWT,
+    validationRequest(CartValidation.removeItemFromCart()),
+    asyncHandler(cartController.removeItemFromCart)
+);
+
 
 export default router;

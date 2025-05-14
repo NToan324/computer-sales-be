@@ -19,11 +19,19 @@ class CategoryService {
         return new CreatedResponse('Category created successfully', { _id: _id, ...categoryWithoutId })
     }
 
-    async getCategories() {
-
+    async getCategories({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit
         const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
+                from,
+                size: limit,
                 query: {
                     match_all: {},
                 },
@@ -40,7 +48,13 @@ class CategoryService {
             }
         })
 
-        return new OkResponse('Get all categories successfully', categories)
+        return new OkResponse('Get all categories successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            categories,
+        })
     }
 
     async getCategoryById(id: string) {
@@ -129,11 +143,22 @@ class CategoryService {
         return new OkResponse('Xóa danh mục thành công', { _id: id });
     }
 
-    async searchCategories(name: string) {
+    async searchCategories({
+        name,
+        page = 1,
+        limit = 10,
+    }: {
+        name: string;
+        page?: number;
+        limit?: number;
+    }) {
+        const from = (page - 1) * limit
 
         const { total, response } = await elasticsearchService.searchDocuments(
             'categories',
             {
+                from,
+                size: limit,
                 query: {
                     bool: {
                         must: [
@@ -160,7 +185,13 @@ class CategoryService {
             ...hit._source,
         }))
 
-        return new OkResponse('Search categories successfully', categories)
+        return new OkResponse('Search categories successfully', {
+            total,
+            page,
+            limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            categories,
+        })
     }
 }
 

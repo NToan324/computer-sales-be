@@ -8,7 +8,18 @@ class CategoryController {
   }
 
   async getCategories(req: Request, res: Response) {
-    res.send(await categoryService.getCategories())
+    const { page = '1', limit = '10' } = req.query as {
+      page?: string
+      limit?: string
+    }
+    const pageNumber = parseInt(page, 10)
+    const limitNumber = parseInt(limit, 10)
+    res.send(await categoryService.getCategories(
+      {
+        page: pageNumber,
+        limit: limitNumber,
+      },
+    ))
   }
 
   async getCategoryById(req: Request, res: Response) {
@@ -28,10 +39,23 @@ class CategoryController {
   }
 
   async searchCategories(req: Request, res: Response) {
-    const { name } = req.query as { name?: string }
+    const {
+      name = '',
+      page = '1',
+      limit = '10',
+    } = req.query as {
+      name?: string,
+      page?: string,
+      limit?: string
+    }
 
-    
-    res.send(await categoryService.searchCategories(name || ''))
+    const pageNumber = parseInt(page, 10)
+    const limitNumber = parseInt(limit, 10)
+    res.send(await categoryService.searchCategories({
+      name,
+      page: pageNumber,
+      limit: limitNumber,
+    }))
   }
 
   async uploadImage(req: Request, res: Response) {

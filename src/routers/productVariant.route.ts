@@ -5,11 +5,24 @@ import verifyJWT from '@/middleware/verifyJWT'
 import verifyRole from '@/middleware/verifyRoles'
 import { ProductValidation } from '@/validation/product.validation'
 import { Router } from 'express'
+import reviewController from '@/controllers/review.controller'
+import upload from '@/storage/multerConfig'
 
 const router = Router()
 
+// Lấy danh sách review theo product_variant_id
+router.get('/:id/reviews', asyncHandler(reviewController.getReviewsByProductVariantId))
+
 // Lấy danh sách biến thể sản phẩm
 router.get('/', asyncHandler(productController.getProductVariants))
+
+// tải lên ảnh sản phẩm
+router.post(
+    '/upload',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    upload.single('file'),
+    asyncHandler(productController.uploadImage))
 
 // Tạo biến thể sản phẩm
 router.post(
@@ -24,6 +37,15 @@ router.post(
 router.get('/search',
     validationRequest(ProductValidation.searchProductVariant()),
     asyncHandler(productController.searchProductVariant))
+
+// Lấy danh sách biến thể sản phẩm mới nhất
+router.get('/newest', asyncHandler(productController.getNewestProductVariants))
+
+// Lấy danh sách biến thể sản phẩm bán chạy nhất
+router.get('/best-seller', asyncHandler(productController.getBestSellingProductVariants))
+
+// Lấy danh sách biến thể sản phẩm giảm giá
+router.get('/discount', asyncHandler(productController.getDiscountedProductVariants))
 
 // Cập nhật biến thể sản phẩm
 router.put(
@@ -40,12 +62,5 @@ router.get('/:id', asyncHandler(productController.getProductVariantById))
 // Xóa biến thể sản phẩm
 router.delete('/:id', verifyJWT, verifyRole(['ADMIN']), asyncHandler(productController.deleteProductVariant))
 
-// Lấy danh sách biến thể sản phẩm mới nhất
-router.get('/newest', asyncHandler(productController.getNewestProductVariants))
 
-// Lấy danh sách biến thể sản phẩm bán chạy nhất
-router.get('/best-seller', asyncHandler(productController.getBestSellingProductVariants))
-
-// Lấy danh sách biến thể sản phẩm giảm giá
-router.get('/discount', asyncHandler(productController.getDiscountedProductVariants))
 export default router

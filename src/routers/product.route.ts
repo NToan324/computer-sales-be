@@ -17,7 +17,7 @@ router.get(
     asyncHandler(productController.getProducts)
 )
 
-// Tìm kiêma sản phẩm theo tên, danh mục, thương hiệu
+// Tìm kiếm sản phẩm theo tên, danh mục, thương hiệu
 router.get('/search',
     verifyJWT,
     verifyRole(['ADMIN']),
@@ -58,7 +58,8 @@ router.delete(
 )
 
 // Lấy danh sách biến thể sản phẩm theo id sản phẩm
-router.get('/:id/variants',
+router.get(
+    '/:id/variants',
     verifyJWT,
     verifyRole(['ADMIN']),
     asyncHandler(productController.getProductVariantsByProductId))
