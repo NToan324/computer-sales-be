@@ -24,7 +24,7 @@ router.get(
 
 // Update item quantity in cart
 router.put(
-    '/',
+    '/:productVariantId',
     verifyJWT,
     validationRequest(CartValidation.updateItemQuantity()),
     asyncHandler(cartController.updateItemQuantity)
@@ -39,9 +39,8 @@ router.delete(
 
 // Remove item from cart
 router.delete(
-    '/',
+    '/:productVariantId',
     verifyJWT,
-    validationRequest(CartValidation.removeItemFromCart()),
     asyncHandler(cartController.removeItemFromCart)
 );
 
