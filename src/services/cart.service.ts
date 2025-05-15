@@ -15,24 +15,28 @@ class CartService {
         productVariantId: string;
         quantity: number;
     }) {
+
         const { total, response } = await elasticsearchService.searchDocuments('product_variants', {
             query: {
-                term: {
-                    _id: productVariantId,
+                bool: {
+                    must: [
+                        {
+                            term: { _id: productVariantId }
+                        }
+                    ],
+                    filter: [
+                        {
+                            term: { isActive: true }
+                        }
+                    ]
                 },
-                filter: {
-                    term: {
-                        isActive: true,
-                    },
-                },
-            },
+            }
         });
+
 
         if (total === 0) {
             throw new BadRequestError('Product variant not found');
         }
-
-
 
         const unitPrice = (response[0]._source as { price: number }).price;
 
@@ -43,6 +47,7 @@ class CartService {
                 },
             },
         });
+
 
         const { total: totalCart, response: cart } = cartResponse;
 
