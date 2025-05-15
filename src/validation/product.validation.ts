@@ -99,12 +99,14 @@ export class ProductValidation {
                     variant_description: z
                         .string()
                         .min(1, 'Variant description is required'),
-                    price: z.number().min(1, 'Price must be greater than 0'),
-                    quantity: z
+                    price: z.coerce
+                        .number()
+                        .min(1, 'Price must be greater than 0'),
+                    quantity: z.coerce
                         .number()
                         .int('Quantity must be an integer')
-                        .min(1, 'Quantity must be greater than 0'),
-                    discount: z
+                        .min(1, 'Quantity must be greater than or equal to 1'),
+                    discount: z.coerce
                         .number()
                         .min(0, 'Discount must be greater than or equal to 0')
                         .max(0.5, 'Discount must be less than or equal to 0.5')
@@ -137,16 +139,17 @@ export class ProductValidation {
                     variant_Storage: z.string().optional(),
                     variant_CPU: z.string().optional(),
                     variant_description: z.string().min(1).optional(),
-                    price: z
+                    price: z.coerce
                         .number()
                         .min(1, 'Price must be greater than 0')
                         .optional(),
-                    quantity: z
+                    quantity: z.coerce
                         .number()
                         .int('Quantity must be an integer')
-                        .min(1, 'Quantity must be greater than 0')
-                        .optional(),
-                    discount: z
+                        .min(1, 'Quantity must be greater than or equal to 1')
+                        .nonnegative('Quantity must be a positive number')
+                        .optional(), // Kiểm tra giá trị không âm
+                    discount: z.coerce
                         .number()
                         .min(0, 'Discount must be greater than or equal to 0')
                         .max(0.5, 'Discount must be less than or equal to 0.5')

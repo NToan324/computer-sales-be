@@ -83,10 +83,13 @@ class ProductService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Get products successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: products,
         })
@@ -281,10 +284,13 @@ class ProductService {
             return { _id: hit._id, ...hit._source }
         })
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Tìm kiếm sản phẩm thành công', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: products,
         })
@@ -354,10 +360,12 @@ class ProductService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
         return new OkResponse('Get product variants successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: productVariants,
         })
@@ -560,10 +568,13 @@ class ProductService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Get new products successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: products,
         })
@@ -610,12 +621,14 @@ class ProductService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
         return new OkResponse(
             'Get product variants by product ID successfully',
             {
                 total,
-                page,
-                limit,
+                page: pageNumber,
+                limit: limitNumber,
                 totalPages: Math.ceil((total ?? 0) / limit),
                 data: productVariants,
             }
@@ -696,12 +709,16 @@ class ProductService {
                     .value || 0,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse(
             'Get best-selling product variants successfully',
             {
                 total: productVariants.length,
-                page,
-                limit,
+                page: pageNumber,
+                limit: limitNumber,
+                totalPages: Math.ceil((total ?? 0) / limit),
                 data: productVariants,
             }
         )
@@ -758,10 +775,13 @@ class ProductService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Get discounted product variants successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: productVariants,
         })
@@ -904,10 +924,13 @@ class ProductService {
             return new OkResponse('No product variants found', [])
         }
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Tìm kiếm biến thể sản phẩm thành công', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPages: Math.ceil((total ?? 0) / limit),
             data: productVariants,
         })

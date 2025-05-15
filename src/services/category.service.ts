@@ -48,10 +48,13 @@ class CategoryService {
             }
         })
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Get all categories successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPage: Math.ceil((total ?? 0) / limit),
             categories,
         })
@@ -185,10 +188,13 @@ class CategoryService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Search categories successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPage: Math.ceil((total ?? 0) / limit),
             categories,
         })

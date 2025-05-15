@@ -48,10 +48,13 @@ class BrandService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Get all brands successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPage: Math.ceil((total ?? 0) / limit),
             brands,
         })
@@ -184,10 +187,13 @@ class BrandService {
             ...hit._source,
         }))
 
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
         return new OkResponse('Get all brands successfully', {
             total,
-            page,
-            limit,
+            page: pageNumber,
+            limit: limitNumber,
             totalPage: Math.ceil((total ?? 0) / limit),
             brands,
         })
