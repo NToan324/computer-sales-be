@@ -46,17 +46,17 @@ class BrandController {
   async searchBrands(req: Request, res: Response) {
     const {
       name = '',
-      page = '1',
-      limit = '10'
+      page = 1,
+      limit = 10
     } = req.query as {
       name?: string
-      page?: string
-      limit?: string
+      page?: number
+      limit?: number
     }
     res.send(await brandService.searchBrands({
       name,
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
+      page: page,
+      limit: limit
     }))
   }
 }

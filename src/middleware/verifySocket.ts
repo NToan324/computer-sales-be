@@ -15,7 +15,6 @@ const authenticateSocket = (socket: any, next: any) => {
     } catch (err) {
         console.error('Token verification error:', err);
         next(new UnauthorizedError('Authentication error: Invalid token'));
-        return
     }
 };
 

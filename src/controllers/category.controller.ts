@@ -41,20 +41,18 @@ class CategoryController {
   async searchCategories(req: Request, res: Response) {
     const {
       name = '',
-      page = '1',
-      limit = '10',
+      page = 1,
+      limit = 10,
     } = req.query as {
       name?: string,
-      page?: string,
-      limit?: string
+      page?: number,
+      limit?: number
     }
 
-    const pageNumber = parseInt(page, 10)
-    const limitNumber = parseInt(limit, 10)
     res.send(await categoryService.searchCategories({
       name,
-      page: pageNumber,
-      limit: limitNumber,
+      page: page,
+      limit: limit,
     }))
   }
 

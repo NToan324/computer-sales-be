@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import reviewController from '@/controllers/review.controller';
 import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from '@/core/error.response';
 
 declare module 'socket.io' {
     interface Socket {
@@ -9,22 +10,24 @@ declare module 'socket.io' {
 }
 
 const websocketRoutes = (io: Server) => {
-    // Namespace cho review
     const reviewNamespace = io.of('/review');
 
-    // Middleware kiểm tra token trong handshake
     reviewNamespace.use((socket, next) => {
-        const token = socket.handshake.headers.authorization?.split(' ')[1]; // Lấy token từ header
+        const token = socket.handshake.headers.authorization?.split(' ')[1];
+        if (!token) {
+            next();
+        }
 
         if (token) {
             try {
+                // Kiểm tra token
                 const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE as string);
                 socket.user = decoded; // Lưu thông tin người dùng vào socket
-            } catch (err: any) {
-                console.error('Token verification error:', err);
+                next();
+            } catch (error) {
+                return next(new UnauthorizedError('Invalid token'));
             }
         }
-        next();
     });
 
     // Connect sự kiện cho namespace review

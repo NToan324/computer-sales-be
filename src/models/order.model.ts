@@ -49,6 +49,16 @@ const orderSchema = new Schema(
             ],
             default: 'PENDING',
         },
+        payment_method: {
+            type: String,
+            enum: ['CASH', 'CREDIT_CARD', 'VNPay'],
+            required: true,
+        },
+        payment_status: {
+            type: String,
+            enum: ['PENDING', 'PAID', 'FAILED'],
+            default: 'PENDING',
+        },
     },
     { timestamps: true }
 )
