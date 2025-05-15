@@ -797,7 +797,7 @@ class ProductService {
         if (name) {
             must.push({
                 wildcard: {
-                    'product_name.keyword': {
+                    'variant_name.keyword': {
                         value: `*${name}*`,
                         case_insensitive: true,
                     },
