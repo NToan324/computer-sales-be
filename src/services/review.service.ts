@@ -51,9 +51,6 @@ class ReviewService {
             newReview = await reviewModel.create(reviewData)
 
         } catch (error: any) {
-            if (error.code === 11000) {
-                throw new BadRequestError('Already rated this product')
-            }
             throw new BadRequestError('Failed to add review')
         }
 
