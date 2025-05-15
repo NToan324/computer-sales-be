@@ -1,4 +1,6 @@
+import { url } from 'inspector'
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
+import { any } from 'zod'
 
 const cartSchema = new Schema(
     {
@@ -12,6 +14,10 @@ const cartSchema = new Schema(
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'product_variants',
                 },
+                product_variant_name: {
+                    type: String,
+                    required: true,
+                },
                 quantity: {
                     type: Number,
                     required: true,
@@ -21,6 +27,22 @@ const cartSchema = new Schema(
                     type: Number,
                     required: true,
                     min: 0,
+                },
+                discount: {
+                    type: Number,
+                    required: true,
+                    min: 0,
+                    max: 0.5,
+                    default: 0,
+                },
+                images: {
+                    url: {
+                        type: String,
+                        required: true,
+                    },
+                    public_id: {
+                        type: String,
+                    },
                 },
                 _id: false,
             },

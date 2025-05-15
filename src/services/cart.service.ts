@@ -38,7 +38,7 @@ class CartService {
             throw new BadRequestError('Product variant not found');
         }
 
-        const unitPrice = (response[0]._source as { price: number }).price;
+        const productVariant: ProductVariant = response[0]._source as ProductVariant;
 
         let cartResponse = await elasticsearchService.searchDocuments('carts', {
             query: {
@@ -57,8 +57,11 @@ class CartService {
                 items: [
                     {
                         product_variant_id: productVariantId,
+                        product_variant_name: productVariant.variant_name,
                         quantity,
-                        unit_price: unitPrice,
+                        unit_price: productVariant.price,
+                        discount: productVariant.discount,
+                        images: productVariant.images[0],
                     },
                 ],
             });
@@ -73,7 +76,7 @@ class CartService {
         } else {
             const cartId = cart[0]?._id?.toString();
 
-            const cartSource = cart[0]._source as { items: { product_variant_id: string; quantity: number; unit_price: number }[] };
+            const cartSource = cart[0]._source as { items: any[] };
 
             const existingItem = cartSource.items.find(
                 (item) => item.product_variant_id.toString() === productVariantId
@@ -84,8 +87,11 @@ class CartService {
             } else {
                 cartSource.items.push({
                     product_variant_id: productVariantId,
+                    product_variant_name: productVariant.variant_name,
                     quantity,
-                    unit_price: unitPrice,
+                    unit_price: productVariant.price,
+                    discount: productVariant.discount,
+                    images: productVariant.images[0],
                 });
             }
 
@@ -123,7 +129,8 @@ class CartService {
             return new OkResponse('Cart is empty', []);
         }
 
-        const cart = { _id: response[0]._id, ...(response[0]._source || {}) };
+        const cart: any = { _id: response[0]._id, ...(response[0]._source || {}) };
+
         return new OkResponse('Cart retrieved successfully', cart);
     }
 
@@ -139,14 +146,19 @@ class CartService {
     }) {
         const { total, response } = await elasticsearchService.searchDocuments('product_variants', {
             query: {
-                term: {
-                    _id: productVariantId,
-                },
-                filter: {
-                    term: {
-                        isActive: true,
-                    },
-                },
+                bool: {
+                    must: [
+                        {
+                            term: { _id: productVariantId }
+                        }
+                    ],
+                    filter: [
+                        {
+                            term: { isActive: true }
+                        }
+                    ]
+                }
+
             },
         });
 

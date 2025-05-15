@@ -19,7 +19,7 @@ class CartController {
 
     // Get cart by user ID
     async getCart(req: Request, res: Response) {
-        const userId = (req.user as { id: string }).id; 
+        const userId = (req.user as { id: string }).id;
 
         const response = await cartService.getCart(userId);
 
@@ -28,9 +28,10 @@ class CartController {
 
     // Update item quantity in cart
     async updateItemQuantity(req: Request, res: Response) {
-        const userId = (req.user as { id: string }).id; 
+        const userId = (req.user as { id: string }).id;
 
-        const { productVariantId, quantity } = req.body;
+        const { productVariantId } = req.params;
+        const { quantity } = req.body;
 
         const response = await cartService.updateItemQuantity({
             userId,
@@ -45,7 +46,7 @@ class CartController {
     async removeItemFromCart(req: Request, res: Response) {
         const userId = (req.user as { id: string }).id;
 
-        const { productVariantId } = req.body;
+        const { productVariantId } = req.params;
 
         const response = await cartService.removeItemFromCart({
             userId,
