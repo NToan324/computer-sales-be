@@ -86,7 +86,10 @@ class AuthService {
             role: foundUser.role,
             point: foundUser.loyalty_points,
         }
-        return { accessToken, user }
+        return new OkResponse('Login successfully', {
+            accessToken,
+            user,
+        })
     }
 
     async forgotPassword(email: string) {

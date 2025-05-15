@@ -22,7 +22,8 @@ export async function syncElasticsearch() {
     console.log('Starting Elasticsearch synchronization...')
 
     // Danh sách các index cần tạo
-    const indices = ['users',
+    const indices = [
+        'users',
         'categories',
         'brands',
         'products',
@@ -30,12 +31,15 @@ export async function syncElasticsearch() {
         'orders',
         'carts',
         'coupons',
-        'reviews']
+        'reviews',
+    ]
 
     // Xóa và tạo lại index
     for (const index of indices) {
         try {
-            const exists = await elasticsearchService.getClient().indices.exists({ index })
+            const exists = await elasticsearchService
+                .getClient()
+                .indices.exists({ index })
             if (exists) {
                 await elasticsearchService.getClient().indices.delete({ index })
                 console.log(`Deleted existing index: ${index}`)
