@@ -2,11 +2,9 @@ import mongoose, { InferSchemaType, Schema } from 'mongoose'
 
 const couponSchema = new Schema(
     {
-        name: {
-            type: String,
-        },
         code: {
             type: String,
+            match: /^[A-Z0-9]{5}$/,
             required: true,
             unique: true,
         },
@@ -20,28 +18,16 @@ const couponSchema = new Schema(
             min: 1,
             max: 10,
         },
-        start_date: {
-            type: Date,
-            required: true,
+        isActive: {
+            type: Boolean,
+            default: true,
         },
-        end_date: {
-            type: Date,
-            required: true,
-            validate: {
-                validator: function (this: any) {
-                    return this.end_date > this.start_date
-                },
-                message: 'End date must be after start date',
-            },
-        },
-        status: {
-            type: String,
-            enum: ['ACTIVE', 'EXPIRED'],
-            default: 'ACTIVE',
-        },
+
     },
-    { timestamps: true }
+    { timestamps: true, _id: false }
 )
+
+couponSchema.index({ code: 1 }, { unique: true })
 
 const CouponModel = mongoose.model('coupons', couponSchema)
 type Coupon = InferSchemaType<typeof couponSchema>

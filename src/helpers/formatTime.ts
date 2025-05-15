@@ -6,8 +6,14 @@ export function expirationOtp(time: number): String {
 
 export function formatTime(date: Date): string {
   const options: Intl.DateTimeFormatOptions = {
-    timeZone: 'Asia/Ho_Chi_Minh'
+    timeZone: 'Asia/Ho_Chi_Minh',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
   }
 
-  return date.toLocaleString('en-US', options)
+  return date.toLocaleString('vi-VN', options)
 }
