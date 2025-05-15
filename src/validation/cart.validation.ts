@@ -9,13 +9,11 @@ export class CartValidation {
                     .string()
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid productVariantId')
                     .nonempty('Product Variant ID is required'),
-                quantity: z
-                    .union([
-                        z.string().regex(/^\d+$/, 'Quantity must be a valid number').transform((val) => parseInt(val, 10)), // Chuyển từ string sang number
-                        z.number().int(), // Hỗ trợ trực tiếp kiểu number
-                    ])
-                    .refine((val) => val >= 1, { message: 'Quantity must be at least 1' }) // Kiểm tra giá trị tối thiểu
-                    .refine((val) => val >= 0, { message: 'Quantity must be a positive number' }), // Kiểm tra giá trị không âm
+                quantity: z.coerce
+                    .number()
+                    .int('Quantity must be an integer')
+                    .min(1, 'Quantity must be greater than or equal to 1')
+                    .nonnegative('Quantity must be a positive number')
             }).strict('Invalid field'),
         };
     }
@@ -28,13 +26,11 @@ export class CartValidation {
                     .string()
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid productVariantId')
                     .nonempty('Product Variant ID is required'),
-                quantity: z
-                    .union([
-                        z.string().regex(/^\d+$/, 'Quantity must be a valid number').transform((val) => parseInt(val, 10)), // Chuyển từ string sang number
-                        z.number().int(), // Hỗ trợ trực tiếp kiểu number
-                    ])
-                    .refine((val) => val >= 1, { message: 'Quantity must be at least 1' }) // Kiểm tra giá trị tối thiểu
-                    .refine((val) => val >= 0, { message: 'Quantity must be a positive number' }), // Kiểm tra giá trị không âm
+                quantity: z.coerce
+                    .number()
+                    .int('Quantity must be an integer')
+                    .min(1, 'Quantity must be greater than or equal to 1')
+                    .nonnegative('Quantity must be a positive number')
             }).strict('Invalid field'),
         };
     }
