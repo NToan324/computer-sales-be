@@ -4,8 +4,12 @@ import brandModel from '@/models/brand.model'
 import productModel from '@/models/product.model'
 import ProductVariantModel from '@/models/productVariant.model'
 import UserModel from '@/models/user.model'
+import OrderModel from '@/models/order.model'
+import CartModel from '@/models/cart.model'
+import CouponModel from '@/models/coupon.model'
+import ReviewModel from '@/models/review.model'
 
-let isSynced = true // Cờ kiểm soát đồng bộ
+let isSynced = false // Cờ kiểm soát đồng bộ
 
 export async function syncElasticsearch() {
     if (isSynced) {
@@ -17,22 +21,29 @@ export async function syncElasticsearch() {
 
     console.log('Starting Elasticsearch synchronization...')
 
-    // Xóa toàn bộ các index hiện có
-    const indices = [
-        'users',
+    // Danh sách các index cần tạo
+    const indices = ['users',
         'categories',
         'brands',
         'products',
         'product_variants',
-    ]
+        'orders',
+        'carts',
+        'coupons',
+        'reviews']
+
+    // Xóa và tạo lại index
     for (const index of indices) {
         try {
-            await elasticsearchService.getClient().indices.delete({ index })
-            console.log(`Deleted index: ${index}`)
+            const exists = await elasticsearchService.getClient().indices.exists({ index })
+            if (exists) {
+                await elasticsearchService.getClient().indices.delete({ index })
+                console.log(`Deleted existing index: ${index}`)
+            }
+            await elasticsearchService.getClient().indices.create({ index })
+            console.log(`Created new index: ${index}`)
         } catch (error) {
-            console.log(
-                `Index ${index} does not exist or could not be deleted.`
-            )
+            console.error(`Error handling index ${index}:`, error)
         }
     }
 
@@ -42,6 +53,10 @@ export async function syncElasticsearch() {
     await syncCollectionToIndex(brandModel, 'brands')
     await syncCollectionToIndex(productModel, 'products')
     await syncCollectionToIndex(ProductVariantModel, 'product_variants')
+    await syncCollectionToIndex(OrderModel, 'orders')
+    await syncCollectionToIndex(CartModel, 'carts')
+    await syncCollectionToIndex(CouponModel, 'coupons')
+    await syncCollectionToIndex(ReviewModel, 'reviews')
 
     console.log('Elasticsearch synchronization completed.')
     isSynced = true // Đánh dấu đã đồng bộ
