@@ -10,10 +10,12 @@ export class CartValidation {
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid productVariantId')
                     .nonempty('Product Variant ID is required'),
                 quantity: z
-                    .number()
-                    .int()
-                    .min(1, 'Quantity must be at least 1')
-                    .nonnegative('Quantity must be a positive number'),
+                    .union([
+                        z.string().regex(/^\d+$/, 'Quantity must be a valid number').transform((val) => parseInt(val, 10)), // Chuyển từ string sang number
+                        z.number().int(), // Hỗ trợ trực tiếp kiểu number
+                    ])
+                    .refine((val) => val >= 1, { message: 'Quantity must be at least 1' }) // Kiểm tra giá trị tối thiểu
+                    .refine((val) => val >= 0, { message: 'Quantity must be a positive number' }), // Kiểm tra giá trị không âm
             }).strict('Invalid field'),
         };
     }
@@ -27,10 +29,12 @@ export class CartValidation {
                     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid productVariantId')
                     .nonempty('Product Variant ID is required'),
                 quantity: z
-                    .number()
-                    .int()
-                    .min(1, 'Quantity must be at least 1')
-                    .nonnegative('Quantity must be a positive number'),
+                    .union([
+                        z.string().regex(/^\d+$/, 'Quantity must be a valid number').transform((val) => parseInt(val, 10)), // Chuyển từ string sang number
+                        z.number().int(), // Hỗ trợ trực tiếp kiểu number
+                    ])
+                    .refine((val) => val >= 1, { message: 'Quantity must be at least 1' }) // Kiểm tra giá trị tối thiểu
+                    .refine((val) => val >= 0, { message: 'Quantity must be a positive number' }), // Kiểm tra giá trị không âm
             }).strict('Invalid field'),
         };
     }

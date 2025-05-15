@@ -20,15 +20,18 @@ class ProductController {
 
     //Lấy danh sách sản phẩm
     async getProducts(req: Request, res: Response) {
-        const { page = 1, limit = 10 } = req.query as {
-            page?: number
-            limit?: number
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
         }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
 
         res.send(
             await productService.getProducts({
-                page: page,
-                limit: limit,
+                page: pageNumber,
+                limit: limitNumber,
             })
         )
     }
@@ -54,14 +57,22 @@ class ProductController {
 
     //Tìm kiếm sản phẩm theo tên, danh mục, thương hiệu
     async searchProduct(req: Request, res: Response) {
-        const { name, category_id, brand_id } = req.query as {
+        const { name, category_id, brand_id, page = 1, limit = 10 } = req.query as {
             name?: string
             category_id?: string
-            brand_id?: string
+            brand_id?: string,
+            page?: number
+            limit?: number
         }
 
         res.send(
-            await productService.searchProduct({ name, category_id, brand_id })
+            await productService.searchProduct({
+                name,
+                category_id,
+                brand_id,
+                page: page,
+                limit: limit,
+            })
         )
     }
 
@@ -74,16 +85,18 @@ class ProductController {
 
     //Lấy danh sách biến thể sản phẩm
     async getProductVariants(req: Request, res: Response) {
-        const { page = 1, limit = 10 } = req.query as {
-            page?: number
-            limit?: number
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
         }
 
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
 
         res.send(
             await productService.getProductVariants({
-                page: page,
-                limit: limit,
+                page: pageNumber,
+                limit: limitNumber,
             })
         )
     }
@@ -115,62 +128,74 @@ class ProductController {
     //Lấy danh sách biến thể sản phẩm theo id sản phẩm
     async getProductVariantsByProductId(req: Request, res: Response) {
         const { id } = req.params
-        const { page = 1, limit = 10 } = req.query as {
-            page?: number
-            limit?: number
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
         }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
 
         res.send(
             await productService.getProductVariantsByProductId({
                 productId: id,
-                page: page,
-                limit: limit,
+                page: pageNumber,
+                limit: limitNumber,
             })
         )
     }
 
     //Lấy danh sách sản phẩm bán chạy nhất
     async getBestSellingProductVariants(req: Request, res: Response) {
-        const { page = 1, limit = 10 } = req.query as {
-            page?: number
-            limit?: number
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
         }
 
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
 
         res.send(
             await productService.getBestSellingProductVariants({
-                page: page,
-                limit: limit,
+                page: pageNumber,
+                limit: limitNumber,
             })
         )
     }
 
     //Lấy danh sách biến thể sản phẩm giảm giá
     async getDiscountedProductVariants(req: Request, res: Response) {
-        const { page = 1, limit = 10 } = req.query as {
-            page?: number
-            limit?: number
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
         }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
 
         res.send(
             await productService.getDiscountedProductVariants({
-                page: page,
-                limit: limit,
+                page: pageNumber,
+                limit: limitNumber,
             })
         )
     }
 
     //Lấy danh sách biến thể sản phẩm mới nhất
     async getNewestProductVariants(req: Request, res: Response) {
-        const { page = 1, limit = 10 } = req.query as {
-            page?: number
-            limit?: number
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
         }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
 
         res.send(
             await productService.getNewestProductVariants({
-                page: page,
-                limit: limit,
+                page: pageNumber,
+                limit: limitNumber,
             })
         )
     }

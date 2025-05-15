@@ -101,9 +101,12 @@ export class ProductValidation {
                         .min(1, 'Variant description is required'),
                     price: z.number().min(1, 'Price must be greater than 0'),
                     quantity: z
-                        .number()
-                        .int('Quantity must be an integer')
-                        .min(1, 'Quantity must be greater than 0'),
+                        .union([
+                            z.string().regex(/^\d+$/, 'Quantity must be a valid number').transform((val) => parseInt(val, 10)), // Chuyển từ string sang number
+                            z.number().int(), // Hỗ trợ trực tiếp kiểu number
+                        ])
+                        .refine((val) => val >= 1, { message: 'Quantity must be at least 1' }) // Kiểm tra giá trị tối thiểu
+                        .refine((val) => val >= 0, { message: 'Quantity must be a positive number' }), // Kiểm tra giá trị không âm
                     discount: z
                         .number()
                         .min(0, 'Discount must be greater than or equal to 0')
@@ -142,10 +145,12 @@ export class ProductValidation {
                         .min(1, 'Price must be greater than 0')
                         .optional(),
                     quantity: z
-                        .number()
-                        .int('Quantity must be an integer')
-                        .min(1, 'Quantity must be greater than 0')
-                        .optional(),
+                        .union([
+                            z.string().regex(/^\d+$/, 'Quantity must be a valid number').transform((val) => parseInt(val, 10)), // Chuyển từ string sang number
+                            z.number().int(), // Hỗ trợ trực tiếp kiểu number
+                        ])
+                        .refine((val) => val >= 1, { message: 'Quantity must be at least 1' }) // Kiểm tra giá trị tối thiểu
+                        .refine((val) => val >= 0, { message: 'Quantity must be a positive number' }), // Kiểm tra giá trị không âm
                     discount: z
                         .number()
                         .min(0, 'Discount must be greater than or equal to 0')
