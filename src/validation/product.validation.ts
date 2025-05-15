@@ -220,30 +220,10 @@ export class ProductValidation {
                         )
                         .optional(),
                     ratings: z
-                        .union([
-                            z.array(
-                                z
-                                    .number()
-                                    .min(
-                                        0,
-                                        'Rating must be greater than or equal to 0'
-                                    )
-                                    .max(
-                                        5,
-                                        'Rating must be less than or equal to 5'
-                                    )
-                            ),
-                            z
-                                .number()
-                                .min(
-                                    0,
-                                    'Rating must be greater than or equal to 0'
-                                )
-                                .max(
-                                    5,
-                                    'Rating must be less than or equal to 5'
-                                ),
-                        ])
+                        .coerce
+                        .number().int('Ratings must be an integer')
+                        .min(0, 'Ratings must be greater than or equal to 0')
+                        .max(5, 'Ratings must be less than or equal to 5')
                         .optional(),
                     sort_price: z.enum(['asc', 'desc']).optional(),
                     sort_name: z.enum(['asc', 'desc']).optional(),

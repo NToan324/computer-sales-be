@@ -194,7 +194,7 @@ class ProductController {
             brand_ids?: string | string[];
             min_price?: number;
             max_price?: number;
-            ratings?: number | number[];
+            ratings?: number;
             sort_price?: 'asc' | 'desc';
             sort_name?: 'asc' | 'desc';
             page?: number;
@@ -212,11 +212,6 @@ class ProductController {
             : brand_ids
                 ? [brand_ids]
                 : []
-        const ratingsArray = Array.isArray(ratings)
-            ? ratings
-            : ratings
-                ? [ratings]
-                : []
 
         res.send(
             await productService.searchProductVariant({
@@ -225,7 +220,7 @@ class ProductController {
                 brand_ids: brandIdsArray,
                 min_price: min_price,
                 max_price: max_price,
-                ratings: ratingsArray,
+                ratings: ratings,
                 sort_price,
                 sort_name,
                 page: page,

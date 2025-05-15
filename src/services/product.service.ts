@@ -785,7 +785,7 @@ class ProductService {
         brand_ids?: string[] // Danh sách ID thương hiệu
         min_price?: number
         max_price?: number
-        ratings?: number[] // Danh sách mức rating trung bình
+        ratings?: number
         sort_price?: 'asc' | 'desc'
         sort_name?: 'asc' | 'desc'
         page?: number // Trang hiện tại
@@ -835,31 +835,15 @@ class ProductService {
             })
         }
 
-        // Lọc theo mức rating trung bình (nhiều mức rating hoặc khoảng giá trị)
-        if (ratings && ratings.length > 0) {
-            const minRating = Math.min(...ratings) // Giá trị nhỏ nhất
-            const maxRating = Math.max(...ratings) // Giá trị lớn nhất
-
-            // Nếu chỉ có một giá trị, tìm kiếm từ giá trị đó trở lên
-            if (ratings.length === 1) {
-                must.push({
-                    range: {
-                        average_rating: {
-                            gte: minRating, // Tìm kiếm các giá trị lớn hơn hoặc bằng giá trị duy nhất
-                        },
+        // Lọc theo mức rating trung bình
+        if (ratings) {
+            must.push({
+                range: {
+                    average_rating: {
+                        gte: ratings,
                     },
-                })
-            } else {
-                // Nếu có nhiều giá trị, tìm kiếm trong khoảng từ min đến max
-                must.push({
-                    range: {
-                        average_rating: {
-                            gte: minRating, // Giá trị nhỏ nhất
-                            lte: maxRating, // Giá trị lớn nhất
-                        },
-                    },
-                })
-            }
+                },
+            })
         }
 
         const from = (page - 1) * limit // Tính toán vị trí bắt đầu
@@ -894,6 +878,14 @@ class ProductService {
                 },
             })
         }
+        if (ratings) {
+            sort.push({
+                average_rating: {
+                    order: 'asc',
+                },
+            })
+        }
+
         if (sort.length > 0) {
             query.sort = sort
         }
