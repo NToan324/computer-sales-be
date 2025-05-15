@@ -181,7 +181,7 @@ class CartService {
         }
 
         const cartId = cart[0]?._id?.toString();
-        const cartSource = cart[0]._source as { items: { product_variant_id: string; quantity: number; unit_price: number }[] };
+        const cartSource = cart[0]._source as { items: any[] };
 
         const existingItem = cartSource.items.find(
             (item) => item.product_variant_id.toString() === productVariantId

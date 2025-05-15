@@ -1,7 +1,6 @@
 import reviewService from '@/services/review.service';
 import { Server } from 'socket.io';
 import { Request, Response } from 'express';
-import verifyRoleSocket from '@/middleware/verifyRoleSocket';
 class ReviewController {
     // Thêm review
     async setupReviewWebSocket(socket: any, io: Server) {
@@ -13,41 +12,51 @@ class ReviewController {
                 const userId = socket.user?.id; // Lấy userId từ socket
 
                 // Gọi service để thêm review
-                const newReview = await reviewService.addReview({
+                const newReview: any = await reviewService.addReview({
                     productVariantId: product_variant_id,
                     userId: userId,
                     content: content,
                     rating: rating,
                 });
 
+                const { _id, ...reviewWithoutId } = newReview;
+
                 // Phát sự kiện cho tất cả người dùng trong room
-                io.to(product_variant_id).emit('new_review', newReview);
+                io.of('/review').to(product_variant_id).emit('new_review', { _id, ...reviewWithoutId });
 
             } catch (error: any) {
-                socket.emit('error', { message: error.message });
+                socket.emit('review_error', { message: error.message });
             }
         });
 
         // Lắng nghe sự kiện xóa review
-        socket.on('delete_review', verifyRoleSocket(['ADMIN']), async (data: any) => {
+        socket.on('delete_review', async (data: any) => {
             try {
+                // Kiểm tra quyền của người dùng
+                if (!socket.user || socket.user.role !== 'ADMIN') {
+                    socket.emit('error', { message: 'Forbidden: You do not have permission' });
+                }
+
                 const { reviewId, product_variant_id } = data;
 
+
                 // Gọi service để xóa review
-                const deletedReview = await reviewService.deleteReview(reviewId);
+                const deletedReview: any = await reviewService.deleteReview({ reviewId });
+
+                const { _id, ...reviewWithoutId } = deletedReview;
 
                 // Phát sự kiện cho tất cả người dùng trong room
-                io.to(product_variant_id).emit('review_deleted', deletedReview);
+                io.of('/review').to(product_variant_id).emit('review_deleted', { _id, ...reviewWithoutId });
 
             } catch (error: any) {
-                socket.emit('error', { message: error.message });
+                socket.emit('review_error', { message: error.message });
             }
         });
     }
 
     // Lấy danh sách review theo product_variant_id
     async getReviewsByProductVariantId(req: Request, res: Response) {
-        const { product_variant_id } = req.params;
+        const { id } = req.params;
         const { page = '1', limit = '10' } = req.query as {
             page?: string;
             limit?: string;
@@ -57,7 +66,7 @@ class ReviewController {
         const limitNumber = parseInt(limit, 10);
 
         res.send(await reviewService.getReviewsByProductVariantId({
-            productVariantId: product_variant_id,
+            productVariantId: id,
             page: pageNumber,
             limit: limitNumber,
         }));
