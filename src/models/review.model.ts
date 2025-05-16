@@ -26,8 +26,6 @@ const reviewSchema = new Schema(
     { timestamps: true }
 )
 
-reviewSchema.index({ product_variant_id: 1, user_id: 1 }, { unique: true })
-
 const ReviewModel = mongoose.model('reviews', reviewSchema)
 type Review = InferSchemaType<typeof reviewSchema>
 export default ReviewModel

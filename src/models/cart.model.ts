@@ -31,9 +31,9 @@ const cartSchema = new Schema(
                 discount: {
                     type: Number,
                     required: true,
-                    min: 0,
+                    min: 0.0,
                     max: 0.5,
-                    default: 0,
+                    default: 0.0,
                 },
                 images: {
                     url: {

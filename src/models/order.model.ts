@@ -6,9 +6,16 @@ const orderSchema = new Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
         },
-        coupon_id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'coupons',
+        user_name: {
+            type: String,
+        },
+        email: {
+            type: String,
+            unique: true,
+            required: true,
+        },
+        coupon_code: {
+            type: String,
         },
         address: {
             type: String,
@@ -21,6 +28,10 @@ const orderSchema = new Schema(
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'product_variants',
                 },
+                product_variant_name: {
+                    type: String,
+                    required: true,
+                },
                 quantity: {
                     type: Number,
                     min: 1,
@@ -29,12 +40,29 @@ const orderSchema = new Schema(
                     type: Number,
                     min: 0,
                 },
+                discount: {
+                    type: Number,
+                    min: 0,
+                    max: 0.5,
+                    default: 0,
+                },
+                images: {
+                    url: {
+                        type: String,
+                        required: true,
+                    }
+                },
             },
         ],
         discount_amount: {
             type: Number,
             min: 0,
             default: 0,
+        },
+        loyalty_points_used: {
+            type: Number,
+            default: 0,
+            min: 0,
         },
         loyalty_points_earned: {
             type: Number,
@@ -59,6 +87,20 @@ const orderSchema = new Schema(
             enum: ['PENDING', 'PAID', 'FAILED'],
             default: 'PENDING',
         },
+        order_tracking: [
+            {
+                status: {
+                    type: String,
+                    enum: ['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED'],
+                    default: 'PENDING',
+                    required: true,
+                },
+                updated_at: {
+                    type: Date,
+                    default: Date.now,
+                },
+            },
+        ],
     },
     { timestamps: true }
 )

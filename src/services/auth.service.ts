@@ -46,7 +46,7 @@ class AuthService {
             loyaltyPoint: newUser.loyalty_points,
         }
 
-        return new CreatedResponse('User created successfully', userResponse)
+        return userResponse
     }
 
     async login(data: { email: string; password: string }) {

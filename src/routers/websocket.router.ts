@@ -13,7 +13,8 @@ const websocketRoutes = (io: Server) => {
     const reviewNamespace = io.of('/review');
 
     reviewNamespace.use((socket, next) => {
-        const token = socket.handshake.headers.authorization?.split(' ')[1];
+        const token = socket.handshake.headers.authorization;
+
         if (!token) {
             next();
         }
@@ -23,6 +24,7 @@ const websocketRoutes = (io: Server) => {
                 // Kiểm tra token
                 const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE as string);
                 socket.user = decoded; // Lưu thông tin người dùng vào socket
+
                 next();
             } catch (error) {
                 return next(new UnauthorizedError('Invalid token'));
@@ -35,7 +37,7 @@ const websocketRoutes = (io: Server) => {
         console.log('User connected to review namespace:', socket.id);
 
         // Lắng nghe sự kiện join room
-        socket.on('join_room', (product_variant_id: string) => {
+        socket.on('join_room', ({ product_variant_id }) => {
             socket.join(product_variant_id);
             console.log(`User ${socket.id} joined room ${product_variant_id}`);
         });

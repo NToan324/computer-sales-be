@@ -49,10 +49,8 @@ class ReviewService {
 
         try {
             newReview = await reviewModel.create(reviewData)
+
         } catch (error: any) {
-            if (error.code === 11000) {
-                throw new BadRequestError('Already rated this product')
-            }
             throw new BadRequestError('Failed to add review')
         }
 
@@ -83,6 +81,7 @@ class ReviewService {
                 },
             }
         }
+
         return newReview
     }
 
@@ -92,12 +91,6 @@ class ReviewService {
         const reviews = await reviewModel.find({
             product_variant_id: productVariantId,
         })
-
-        if (reviews.length === 0) {
-            throw new BadRequestError(
-                'No reviews found for this product variant'
-            )
-        }
 
         // Tính toán average_rating
         const reviewsWithRating = reviews.filter(
@@ -150,7 +143,6 @@ class ReviewService {
             // Xóa review khỏi Elasticsearch
             await elasticsearchService.deleteDocument('reviews', reviewId)
         } catch (error: any) {
-            console.error('Error deleting review from Elasticsearch:', error)
             throw new BadRequestError(
                 'Failed to delete review from Elasticsearch'
             )
@@ -168,6 +160,7 @@ class ReviewService {
         limit?: number
     }) {
         const from = (page - 1) * limit
+
         // Kiểm tra xem productVariant có tồn tại và isActive hay không
         const productVariant = await productVariantModel.findOne({
             _id: productVariantId,
@@ -179,63 +172,83 @@ class ReviewService {
         }
 
         // Lấy tất cả các review của product variant
-        const { total, response } = await elasticsearchService.searchDocuments(
-            'reviews',
-            {
-                size: limit,
-                from: from,
-                query: {
-                    bool: {
-                        must: {
-                            term: {
-                                product_variant_id: productVariantId,
+        let total: any;
+        let response: any[];
+
+        try {
+            ({ total, response } = await elasticsearchService.searchDocuments(
+                'reviews',
+                {
+                    size: limit,
+                    from: from,
+                    query: {
+                        bool: {
+                            must: {
+                                term: {
+                                    product_variant_id: productVariantId,
+                                },
                             },
                         },
                     },
-                },
-                sort: [
-                    {
-                        createdAt: {
-                            order: 'desc',
+                    sort: [
+                        {
+                            createdAt: {
+                                order: 'desc',
+                            },
                         },
-                    },
-                ],
-            }
-        )
-
-        if (total === 0) {
+                    ],
+                }
+            ));
+        } catch (error: any) {
             return new OkResponse(
                 'No reviews found for this product variant',
                 []
-            )
+            );
         }
 
-        const userIds = response
+        const reviews = response.map((review: any) => {
+            const { _id, ...reviewWithoutId } = review
+            return {
+                _id: _id,
+                ...reviewWithoutId._source,
+            }
+        })
+
+        const userIds = reviews
             .map((review: any) => review.user_id)
             .filter((userId: string) => userId !== undefined)
 
-        const users =
-            userIds.length > 0
-                ? await Promise.all(
-                      userIds.map(async (userId: any) => {
-                          return await elasticsearchService.getDocumentById(
-                              'users',
-                              userId
-                          )
-                      })
-                  )
-                : []
+
+        let users: any[] = []
+        if (userIds.length > 0) {
+            users = await Promise.all(
+                userIds.map(async (userId: any) => {
+                    const user: any = await elasticsearchService.getDocumentById(
+                        'users',
+                        userId
+                    )
+                    return {
+                        id: userId,
+                        name: user.fullName,
+                        avatar: user.avatar.url,
+                    }
+                })
+            )
+        }
+        else {
+            users = []
+        }
+
+
+
 
         const userMap = new Map(users.map((user: any) => [user.id, user]))
 
-        response.forEach((review: any) => {
+
+        reviews.forEach((review: any) => {
             const user = userMap.get(review.user_id)
             if (user) {
-                review.user = {
-                    id: user.id,
-                    name: user.fullName,
-                    avatar: user.avatar.url,
-                }
+                review.user = user
             }
         })
 
@@ -244,7 +257,7 @@ class ReviewService {
             page,
             limit,
             totalPage: Math.ceil((total ?? 0) / limit),
-            data: response,
+            data: reviews,
         })
     }
 }
