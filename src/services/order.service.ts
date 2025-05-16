@@ -6,7 +6,7 @@ import CartModel from '@/models/cart.model';
 import UserModel from '@/models/user.model';
 import authService from './auth.service';
 import ProductVariantModel from '@/models/productVariant.model';
-// import mailQueue from '@/queue/mail.queue';
+import { mailQueue } from '@/queue/mail.queue';
 
 class OrderService {
     // Tìm kiếm đơn hàng theo các tiêu chí
@@ -306,11 +306,11 @@ class OrderService {
             discountAmount = coupon.discount_amount || 0;
         }
 
-        let loyalty_points_used = 0;
+        let loyalty_points_used: any = 0.0;
         if (user_id) {
             const user = await UserModel.findById(user_id);
 
-            loyalty_points_used = user?.loyalty_points || 0;
+            loyalty_points_used = user?.loyalty_points || 0.0;
         }
 
         // Tính tổng tiền
@@ -345,9 +345,29 @@ class OrderService {
                     });
 
                     user_id = newUser.id.toString();
+
+                    // Gửi email thông báo tạo tài khoản mới
+                    await mailQueue.add({
+                        type: 'create_account',
+                        email,
+                        name: user_name,
+                        password: randomPassword,
+                    });
                 }
             }
         }
+
+        // Kiểm tra phương thức thanh toán
+        const validPaymentMethods = ['CASH', 'BANK_TRANSFER'];
+        if (!validPaymentMethods.includes(payment_method)) {
+            throw new BadRequestError('Invalid payment method');
+        }
+        let payment_status = 'PENDING';
+        if (payment_method === 'BANK_TRANSFER') {
+            payment_status = 'PAID';
+        }
+
+        console.log('test');
 
         // Tạo đơn hàng trong MongoDB
         const order = await OrderModel.create({
@@ -359,6 +379,7 @@ class OrderService {
             items: cartItems,
             total_amount: totalAmount,
             discount_amount: discountAmount,
+            payment_status,
             loyalty_points_used,
             loyalty_points_earned,
             payment_method,
@@ -399,17 +420,25 @@ class OrderService {
         }
 
         // Dùng message queue để gửi email thông báo đơn hàng
-        // Enqueue email sending task
-        // await mailQueue.addEmailTask({
-        //     to: email,
-        //     subject: 'Order Confirmation',
-        //     text: `Thank you for your order, ${user_name}. Your order ID is ${order._id}.`,
-        // });
+        await mailQueue.add({
+            type: 'order_confirmation',
+            email,
+            orderDetails: {
+                order_id: order._id,
+                user_name,
+                address,
+                items: cartItems,
+                total_amount: totalAmount,
+                discount_amount: discountAmount,
+                loyalty_points_used,
+                loyalty_points_earned,
+                payment_method,
+            }
+        });
 
-        return
+        return new CreatedResponse('Order created successfully', { _id, ...orderWithoutId })
     }
 
-    // Lấy danh sách đơn hàng
     async getOrders({
         page = 1,
         limit = 10,
@@ -417,46 +446,147 @@ class OrderService {
         page?: number;
         limit?: number;
     }) {
-        const skip = (page - 1) * limit;
+        const from = (page - 1) * limit;
 
-        const orders = await OrderModel.find()
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 }); // Sắp xếp theo thời gian tạo (mới nhất trước)
+        // Tìm kiếm đơn hàng trong Elasticsearch
+        let total: any;
+        let response: any[] = [];
+        try {
+            ({ total, response } = await elasticsearchService.searchDocuments(
+                'orders',
+                {
+                    from,
+                    size: limit,
+                    query: {
+                        match_all: {},
+                    },
+                    sort: [
+                        {
+                            createdAt: {
+                                order: 'desc',
+                            },
+                        },
+                    ],
+                }
+            ));
+        }
+        catch (error: any) {
+            return new OkResponse('No orders found', []);
+        }
 
-        const total = await OrderModel.countDocuments();
+        const orders = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }));
 
-        return {
+        const pageNumber = parseInt(page.toString(), 10);
+        const limitNumber = parseInt(limit.toString(), 10);
+
+        return new OkResponse('Get orders successfully', {
             total,
-            page,
-            limit,
-            orders,
-        };
+            page: pageNumber,
+            limit: limitNumber,
+            totalPages: Math.ceil((total ?? 0) / limit),
+            data: orders,
+        });
     }
 
-    // Lấy chi tiết đơn hàng theo order_id
     async getOrderById(order_id: string) {
-        const order = await OrderModel.findById(order_id);
+        // Tìm kiếm đơn hàng trong Elasticsearch
+        const { total, response } = await elasticsearchService.searchDocuments(
+            'orders',
+            {
+                query: {
+                    term: {
+                        _id: order_id,
+                    },
+                },
+            }
+        );
 
-        if (!order) {
+        // Kiểm tra nếu không tìm thấy đơn hàng
+        if (total === 0) {
             throw new Error('Order not found');
         }
 
-        return order.toObject();
+        const order = { _id: response[0]._id, ...(response[0]._source || {}) }
+        return new OkResponse('Get product successfully', order)
     }
 
-    // Cập nhật trạng thái đơn hàng
+    async getOrderByUserId({
+        user_id,
+        page = 1,
+        limit = 10,
+    }: {
+        user_id: string;
+        page?: number;
+        limit?: number;
+    }) {
+
+        const from = (page - 1) * limit;
+
+        // Tìm kiếm đơn hàng trong Elasticsearch
+        let total: any;
+        let response: any[] = [];
+        try {
+            ({ total, response } = await elasticsearchService.searchDocuments(
+                'orders',
+                {
+                    from,
+                    size: limit,
+                    query: {
+                        term: {
+                            user_id,
+                        },
+                    },
+                    sort: [
+                        {
+                            createdAt: {
+                                order: 'desc',
+                            },
+                        },
+                    ],
+                }
+            ));
+        }
+        catch (error: any) {
+            return new OkResponse('No orders found', []);
+        }
+
+
+        // Xử lý kết quả trả về
+        const orders = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }));
+
+        return new OkResponse('Get orders by user id successfully', orders);
+    }
+
     async updateOrderStatus(order_id: string, status: string) {
         const validStatuses = ['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
 
+        // Kiểm tra trạng thái hợp lệ
         if (!validStatuses.includes(status)) {
-            throw new Error('Invalid status');
+            throw new BadRequestError('Invalid status');
         }
 
-        const order = await OrderModel.findById(order_id);
+        // Tìm kiếm đơn hàng trong Elasticsearch
+        let order: Order;
+        try {
+            order = await elasticsearchService.getDocumentById('orders', order_id) as Order;
+        }
+        catch (error: any) {
+            if (error.statusCode === 404) {
+                throw new BadRequestError('Order not found');
+            }
+            throw new BadRequestError('Error searching order');
+        }
 
-        if (!order) {
-            throw new Error('Order not found');
+        // Cập nhật trạng thái thanh toán nếu cần
+        let updatedPaymentStatus = order.payment_status;
+        if (order.payment_method === 'CASH' && status === 'DELIVERED') {
+            updatedPaymentStatus = 'PAID';
         }
 
         // Thêm trạng thái mới vào order_tracking
@@ -465,12 +595,29 @@ class OrderService {
             updated_at: new Date(),
         });
 
-        // Cập nhật trạng thái hiện tại
-        // order.status = status;
+        // Cập nhật trạng thái hiện tại và trạng thái thanh toán
+        order.status = status as 'PENDING' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
+        order.payment_status = updatedPaymentStatus;
 
-        await order.save();
+        // Lưu thay đổi vào MongoDB
+        const updatedOrder = await OrderModel.findByIdAndUpdate(order_id, order, {
+            new: true,
+        });
 
-        return order.toObject();
+        if (!updatedOrder) {
+            throw new BadRequestError('Error updating order');
+        }
+
+        const { _id, ...orderWithoutId } = updatedOrder.toObject();
+
+        // Cập nhật dữ liệu trên Elasticsearch
+        await elasticsearchService.updateDocument('orders', order_id, {
+            status,
+            payment_status: updatedPaymentStatus,
+            order_tracking: order.order_tracking,
+        });
+
+        return new OkResponse('Order status updated successfully', { _id, ...orderWithoutId });
     }
 }
 

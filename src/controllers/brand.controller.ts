@@ -5,10 +5,11 @@ import type { Request, Response } from 'express'
 class BrandController {
   async createBrand(req: Request, res: Response) {
     const payload = req.body
-    res.send(await brandService.createBrand(payload))
+    res.status(201).send(await brandService.createBrand(payload))
   }
 
   async getBrands(req: Request, res: Response) {
+
     const { page = '1', limit = '10' } = req.query as {
       page?: string
       limit?: string

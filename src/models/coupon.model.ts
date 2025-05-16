@@ -8,7 +8,7 @@ const couponSchema = new Schema(
             required: true,
             unique: true,
         },
-        discount_amount: Number,
+        discount_amount: mongoose.Schema.Types.Double,
         usage_count: {
             type: Number,
             default: 0,
@@ -26,8 +26,6 @@ const couponSchema = new Schema(
     },
     { timestamps: true, _id: false }
 )
-
-couponSchema.index({ code: 1 }, { unique: true })
 
 const CouponModel = mongoose.model('coupons', couponSchema)
 type Coupon = InferSchemaType<typeof couponSchema>

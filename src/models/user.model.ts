@@ -40,8 +40,8 @@ const userSchema = new Schema(
             default: 'CUSTOMER',
         },
         loyalty_points: {
-            type: Number,
-            default: 0,
+            type: mongoose.Schema.Types.Double,
+            default: 0.0,
             min: 0,
         },
 

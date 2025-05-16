@@ -4,6 +4,7 @@ import brandRouter from '@/routers/brand.route'
 import categoryRouter from '@/routers/category.route'
 import productRouter from '@/routers/product.route'
 import productVariantRouter from '@/routers/productVariant.route'
+import userRouter from '@/routers/user.route'
 import orderRouter from '@/routers/order.route'
 import verifyJWT from '@/middleware/verifyJWT'
 import cartRouter from '@/routers/cart.route'
@@ -16,6 +17,7 @@ router.use('/product/variant', productVariantRouter)
 router.use('/product', productRouter)
 router.use('/cart', cartRouter)
 router.use('/order', orderRouter)
+router.use('/user', userRouter)
 router.use(verifyJWT)
 
 export default router

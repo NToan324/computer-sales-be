@@ -1,6 +1,4 @@
-import { url } from 'inspector'
 import mongoose, { InferSchemaType, Schema } from 'mongoose'
-import { any } from 'zod'
 
 const cartSchema = new Schema(
     {
@@ -24,12 +22,12 @@ const cartSchema = new Schema(
                     min: 1,
                 },
                 unit_price: {
-                    type: Number,
+                    type: mongoose.Schema.Types.Double,
                     required: true,
                     min: 0,
                 },
                 discount: {
-                    type: Number,
+                    type: mongoose.Schema.Types.Double,
                     required: true,
                     min: 0.0,
                     max: 0.5,

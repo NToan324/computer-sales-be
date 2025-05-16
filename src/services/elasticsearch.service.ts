@@ -6,7 +6,11 @@ class ElasticsearchService {
 
     constructor() {
         this.client = new Client({
-            node: 'http://localhost:9200',
+            node: process.env.ELASTICSEARCH_HOST ?? 'http://localhost:9200',
+            // auth: {
+            //     username: process.env.ELASTICSEARCH_USERNAME ?? '',
+            //     password: process.env.ELASTICSEARCH_PASSWORD ?? '',
+            // },
         });
     }
 

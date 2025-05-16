@@ -1,20 +1,13 @@
-// import { Queue, Worker } from 'bull';
-// import { sendEmail } from '@/utils/mailer';
+import { mailQueue } from './mail.queue';
+import emailService from '@/services/sendEmail.service';
 
-// // Create a new queue for email tasks
-// const emailQueue = new Queue('email');
-
-// // Worker to process email tasks
-// const emailWorker = new Worker('email', async (job) => {
-//     const { to, subject, text } = job.data;
-
-//     try {
-//         await sendEmail(to, subject, text);
-//         console.log(`Email sent to ${to}`);
-//     } catch (error) {
-//         console.error(`Failed to send email to ${to}:`, error);
-//     }
-// });
-
-// // Export the email queue for adding tasks
-// export { emailQueue };
+mailQueue.process(async (job) => {
+    const { type } = job.data;
+    if (type === 'order_confirmation') {
+        const { email, orderDetails } = job.data;
+        await emailService.sendEmailOrderConfirmation({ email, orderDetails });
+    } else if (type === 'create_account') {
+        const { email, name, password } = job.data;
+        await emailService.sendEmailCreateAccount({ email, name, password });
+    }
+});

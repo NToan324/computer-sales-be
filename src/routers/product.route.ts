@@ -60,7 +60,7 @@ router.delete(
     asyncHandler(productController.deleteProduct)
 )
 
-// Lấy danh sách biến thể sản phẩm theo id sản phẩm
+// Lấy danh sách biến thể sản phẩm theo id sản phẩm cha
 router.get(
     '/:id/variants',
     verifyJWT,

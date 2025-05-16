@@ -42,11 +42,14 @@ class OrderController {
 
     // Tạo đơn hàng
     async createOrder(req: Request, res: Response) {
-        const { user_id } = req.user as { user_id?: string };
-        const { coupon_code, address, items, payment_method } = req.body;
+        const { id } = req.user as { id: string };
+
+        const { email, name, coupon_code, address, items, payment_method } = req.body;
 
         res.send(await orderService.createOrder({
-            user_id,
+            user_id: id,
+            email,
+            user_name: name,
             coupon_code,
             address,
             items,
