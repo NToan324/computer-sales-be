@@ -204,10 +204,6 @@ class CartService {
             throw new BadRequestError('Cart not found')
         }
 
-<<<<<<< HEAD
-        const cartId = cart[0]?._id?.toString();
-        const cartSource = cart[0]._source as { items: any[] };
-=======
         const cartId = cart[0]?._id?.toString()
         const cartSource = cart[0]._source as {
             items: {
@@ -216,7 +212,6 @@ class CartService {
                 unit_price: number
             }[]
         }
->>>>>>> 6f31205 (pull)
 
         const existingItem = cartSource.items.find(
             (item) => item.product_variant_id.toString() === productVariantId

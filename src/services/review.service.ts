@@ -49,7 +49,6 @@ class ReviewService {
 
         try {
             newReview = await reviewModel.create(reviewData)
-
         } catch (error: any) {
             throw new BadRequestError(error.message)
         }
@@ -182,11 +181,11 @@ class ReviewService {
         }
 
         // Lấy tất cả các review của product variant
-        let total: any;
-        let response: any[];
+        let total: any
+        let response: any[]
 
         try {
-            ({ total, response } = await elasticsearchService.searchDocuments(
+            ;({ total, response } = await elasticsearchService.searchDocuments(
                 'reviews',
                 {
                     size: limit,
@@ -208,12 +207,12 @@ class ReviewService {
                         },
                     ],
                 }
-            ));
+            ))
         } catch (error: any) {
             return new OkResponse(
                 'No reviews found for this product variant',
                 []
-            );
+            )
         }
 
         const reviews = response.map((review: any) => {
@@ -228,15 +227,15 @@ class ReviewService {
             .map((review: any) => review.user_id)
             .filter((userId: string) => userId !== undefined)
 
-
         let users: any[] = []
         if (userIds.length > 0) {
             users = await Promise.all(
                 userIds.map(async (userId: any) => {
-                    const user: any = await elasticsearchService.getDocumentById(
-                        'users',
-                        userId
-                    )
+                    const user: any =
+                        await elasticsearchService.getDocumentById(
+                            'users',
+                            userId
+                        )
                     return {
                         id: userId,
                         name: user.fullName,
@@ -244,16 +243,11 @@ class ReviewService {
                     }
                 })
             )
-        }
-        else {
+        } else {
             users = []
         }
 
-
-
-
         const userMap = new Map(users.map((user: any) => [user.id, user]))
-
 
         reviews.forEach((review: any) => {
             const user = userMap.get(review.user_id)
