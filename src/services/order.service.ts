@@ -314,12 +314,18 @@ class OrderService {
         }
 
         // Tính tổng tiền
-        const totalAmount = cartItems.reduce(
+        const shipping_fee = 0; // Ví dụ: phí vận chuyển là 0
+        const tax_rate = 0; // Ví dụ: thuế là 0%
+
+        const subtotal = cartItems.reduce(
             (sum: number, item: any) => sum + item.quantity * item.price * (1 - (item.discount || 0)),
             0
-        ) - discountAmount - (loyalty_points_used * 1000); // Giả sử 1 điểm thưởng = 1000đ
+        );
 
-        const loyalty_points_earned = totalAmount * 0.1; // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
+        const tax = subtotal * tax_rate; // Tính thuế dựa trên tổng tiền hàng
+        const totalAmount = subtotal + shipping_fee + tax - discountAmount - (loyalty_points_used * 1000); // Giả sử 1 điểm thưởng = 1000đ
+
+        const loyalty_points_earned = totalAmount * 0.0001; // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
 
 
         // Tạo tài khoản người dùng nếu không có
