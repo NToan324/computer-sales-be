@@ -51,7 +51,7 @@ class ReviewService {
             newReview = await reviewModel.create(reviewData)
 
         } catch (error: any) {
-            throw new BadRequestError('Failed to add review')
+            throw new BadRequestError(error.message)
         }
 
         // Cập nhật average_rating và số lượng review của product variant
@@ -82,7 +82,7 @@ class ReviewService {
             }
         }
 
-        return newReview
+        return { _id: _id, ...reviewWithoutId }
     }
 
     // Cập nhật average_rating và số lượng review của product variant

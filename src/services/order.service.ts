@@ -6,7 +6,7 @@ import CartModel from '@/models/cart.model';
 import UserModel from '@/models/user.model';
 import authService from './auth.service';
 import ProductVariantModel from '@/models/productVariant.model';
-// import mailQueue from '@/queue/mail.queue';
+import { mailQueue } from '@/queue/mail.queue';
 
 class OrderService {
     // Tìm kiếm đơn hàng theo các tiêu chí
@@ -345,8 +345,26 @@ class OrderService {
                     });
 
                     user_id = newUser.id.toString();
+
+                    // Gửi email thông báo tạo tài khoản mới
+                    await mailQueue.add({
+                        type: 'create_account',
+                        email,
+                        name: user_name,
+                        password: randomPassword,
+                    });
                 }
             }
+        }
+
+        // Kiểm tra phương thức thanh toán
+        const validPaymentMethods = ['CASH', 'BANK_TRANSFER'];
+        if (!validPaymentMethods.includes(payment_method)) {
+            throw new BadRequestError('Invalid payment method');
+        }
+        let payment_status = 'PENDING';
+        if (payment_method === 'BANK_TRANSFER') {
+            payment_status = 'PAID';
         }
 
         // Tạo đơn hàng trong MongoDB
@@ -359,6 +377,7 @@ class OrderService {
             items: cartItems,
             total_amount: totalAmount,
             discount_amount: discountAmount,
+            payment_status,
             loyalty_points_used,
             loyalty_points_earned,
             payment_method,
@@ -399,17 +418,25 @@ class OrderService {
         }
 
         // Dùng message queue để gửi email thông báo đơn hàng
-        // Enqueue email sending task
-        // await mailQueue.addEmailTask({
-        //     to: email,
-        //     subject: 'Order Confirmation',
-        //     text: `Thank you for your order, ${user_name}. Your order ID is ${order._id}.`,
-        // });
+        await mailQueue.add({
+            type: 'order_confirmation',
+            email,
+            orderDetails: {
+                order_id: order._id,
+                user_name,
+                address,
+                items: cartItems,
+                total_amount: totalAmount,
+                discount_amount: discountAmount,
+                loyalty_points_used,
+                loyalty_points_earned,
+                payment_method,
+            }
+        });
 
-        return
+        return new CreatedResponse('Order created successfully', { _id, ...orderWithoutId })
     }
 
-    // Lấy danh sách đơn hàng
     async getOrders({
         page = 1,
         limit = 10,
@@ -417,21 +444,53 @@ class OrderService {
         page?: number;
         limit?: number;
     }) {
-        const skip = (page - 1) * limit;
+        //     const from = (page - 1) * limit;
 
-        const orders = await OrderModel.find()
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 }); // Sắp xếp theo thời gian tạo (mới nhất trước)
+        //     // Tìm kiếm đơn hàng trong Elasticsearch
 
-        const total = await OrderModel.countDocuments();
+        //     try {
+        //         const { total, response } = await elasticsearchService.searchDocuments(
+        //             'orders',
+        //             {
+        //                 from,
+        //                 size: limit,
+        //                 query: {
+        //                     match_all: {},
+        //                 },
+        //                 sort: [
+        //                     {
+        //                         createdAt: {
+        //                             order: 'desc',
+        //                         },
+        //                     },
+        //                 ],
+        //             }
+        //         );
+        //     }
+        //     catch (error) {
+        //         console.error('Error searching orders in Elasticsearch:', error);
+        //         throw new BadRequestError('Error searching orders');
+        //     }
 
-        return {
-            total,
-            page,
-            limit,
-            orders,
-        };
+        //     if (total === 0) {
+        //         return new OkResponse('No orders found', []);
+        //     }
+
+        //     const orders = response.map((hit: any) => ({
+        //         _id: hit._id,
+        //         ...hit._source,
+        //     }));
+
+        //     const pageNumber = parseInt(page.toString(), 10);
+        //     const limitNumber = parseInt(limit.toString(), 10);
+
+        //     return new OkResponse('Get orders successfully', {
+        //         total,
+        //         page: pageNumber,
+        //         limit: limitNumber,
+        //         totalPages: Math.ceil((total ?? 0) / limit),
+        //         data: orders,
+        //     });
     }
 
     // Lấy chi tiết đơn hàng theo order_id
@@ -444,6 +503,8 @@ class OrderService {
 
         return order.toObject();
     }
+
+    async getOrderByUserId(user_id: string) { }
 
     // Cập nhật trạng thái đơn hàng
     async updateOrderStatus(order_id: string, status: string) {

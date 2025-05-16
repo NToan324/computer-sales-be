@@ -34,7 +34,7 @@ class ReviewController {
             try {
                 // Kiểm tra quyền của người dùng
                 if (!socket.user || socket.user.role !== 'ADMIN') {
-                    socket.emit('error', { message: 'Forbidden: You do not have permission' });
+                    socket.emit('review_error', { message: 'Forbidden: You do not have permission' });
                 }
 
                 const { reviewId, product_variant_id } = data;

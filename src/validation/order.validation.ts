@@ -46,7 +46,7 @@ export class OrderValidation {
                             }),
                         })
                     ).optional(),
-                payment_method: z.enum(['CASH', 'CREDIT_CARD', 'VNPay'], {
+                payment_method: z.enum(['CASH', 'BANK_TRANSFER'], {
                     required_error: 'Payment method is required',
                 }),
             }).strict('Invalid field'),

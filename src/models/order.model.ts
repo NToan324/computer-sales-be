@@ -42,9 +42,9 @@ const orderSchema = new Schema(
                 },
                 discount: {
                     type: Number,
-                    min: 0,
+                    min: 0.0,
                     max: 0.5,
-                    default: 0,
+                    default: 0.0,
                 },
                 images: {
                     url: {
@@ -79,7 +79,7 @@ const orderSchema = new Schema(
         },
         payment_method: {
             type: String,
-            enum: ['CASH', 'CREDIT_CARD', 'VNPay'],
+            enum: ['CASH', 'BANK_TRANSFER'],
             required: true,
         },
         payment_status: {

@@ -27,8 +27,6 @@ const couponSchema = new Schema(
     { timestamps: true, _id: false }
 )
 
-couponSchema.index({ code: 1 }, { unique: true })
-
 const CouponModel = mongoose.model('coupons', couponSchema)
 type Coupon = InferSchemaType<typeof couponSchema>
 export default CouponModel

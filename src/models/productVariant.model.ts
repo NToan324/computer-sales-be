@@ -46,9 +46,9 @@ const productVariantSchema = new Schema(
         },
         average_rating: {
             type: Number,
-            min: 0,
-            max: 5,
-            default: 0,
+            min: 0.0,
+            max: 5.0,
+            default: 0.0,
         },
         review_count: {
             type: Number,
