@@ -1,3 +1,4 @@
+import email from '@/config/email';
 import { z } from 'zod';
 
 export class OrderValidation {
@@ -5,6 +6,13 @@ export class OrderValidation {
     static createOrder() {
         return {
             body: z.object({
+                user_name: z
+                    .string()
+                    .nonempty('User name is required'),
+                email: z
+                    .string()
+                    .email('Invalid email format')
+                    .nonempty('Email is required'),
                 coupon_code: z
                     .string()
                     .regex(/^[A-Z0-9]{5}$/)

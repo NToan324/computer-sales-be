@@ -62,14 +62,14 @@
 //         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #f4f6f8;">
 //           <h2 style="color: #4caf50; text-align: center;">🎉 Chào mừng ${name}!</h2>
 //           <p style="color: #333;">Tài khoản nhân viên của bạn đã được tạo thành công. Dưới đây là thông tin đăng nhập:</p>
-          
+
 //           <ul style="list-style: none; padding: 0; color: #555;">
 //             <li><strong>👤 Tên đăng nhập:</strong> ${email}</li>
 //             <li><strong>🔑 Mật khẩu:</strong> ${password}</li>
 //           </ul>
 
 //           <p style="color: #f44336;"><strong>Lưu ý:</strong> Bạn cần xác thực tài khoản khi đăng nhập lần đầu tiên.</p>
-          
+
 //           <p style="color: #777; margin-top: 20px;">Nếu bạn không yêu cầu tạo tài khoản này, vui lòng liên hệ quản lý ngay lập tức.</p>
 
 //           <hr style="border: none; height: 1px; background: #ccc; margin: 20px 0;" />
@@ -159,13 +159,23 @@ class EmailConfig {
           <li><strong>👤 Email:</strong> ${email}</li>
           <li><strong>🔑 Mật khẩu:</strong> ${password}</li>
         </ul>
-        <p style="color: #f44336;"><strong>Lưu ý:</strong> Bạn cần xác thực tài khoản khi đăng nhập lần đầu tiên.</p>
+        <p style="color: #f44336;"><strong>Lưu ý:</strong> Hãy nhớ đổi mật khẩu sau khi đăng nhập.</p>
         <hr style="border: none; height: 1px; background: #ccc; margin: 20px 0;" />
         <p style="color: #aaa; font-size: 12px; text-align: center;">
           📧 Email này được gửi tự động. Vui lòng không trả lời lại.
         </p>
       </div>
     `
+  })
+
+  orderConfirmationMailOptions = ({ email, orderDetails }: { email: string; orderDetails: any }) => ({
+    from: EMAIL_USER,
+    to: email,
+    subject: '📦 Xác nhận đơn hàng',
+    replyTo: EMAIL_USER,
+    text: `Cảm ơn bạn đã đặt hàng! Đây là chi tiết đơn hàng: ${JSON.stringify(orderDetails)}`,
+    html: `<p>Cảm ơn bạn đã đặt hàng!</p><p>Đây là chi tiết đơn hàng:</p><pre>${JSON.stringify(orderDetails, null, 2)}</pre>`,
+
   })
 }
 

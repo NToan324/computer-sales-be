@@ -1,16 +1,17 @@
 import type { Request, Response } from 'express'
 import authService from '@/services/auth.service'
+import { CreatedResponse } from '@/core/success.response'
 
 class AuthController {
     async signup(req: Request, res: Response) {
         const { email, fullName, password } = req.body
-        res.send(
-            await authService.signup({
-                email,
-                fullName,
-                password,
-            })
-        )
+        const userResponse = await authService.signup({
+            email,
+            fullName,
+            password,
+        })
+
+        res.send(new CreatedResponse('User created successfully', userResponse))
     }
 
     async login(req: Request, res: Response) {

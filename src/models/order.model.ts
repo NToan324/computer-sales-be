@@ -9,6 +9,11 @@ const orderSchema = new Schema(
         user_name: {
             type: String,
         },
+        email: {
+            type: String,
+            unique: true,
+            required: true,
+        },
         coupon_code: {
             type: String,
         },
@@ -53,6 +58,11 @@ const orderSchema = new Schema(
             type: Number,
             min: 0,
             default: 0,
+        },
+        loyalty_points_used: {
+            type: Number,
+            default: 0,
+            min: 0,
         },
         loyalty_points_earned: {
             type: Number,
