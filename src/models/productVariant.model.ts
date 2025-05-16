@@ -36,9 +36,9 @@ const productVariantSchema = new Schema(
         },
         discount: {
             type: Number,
-            min: 0,
+            min: 0.0,
             max: 0.5,
-            default: 0,
+            default: 0.0,
         },
         quantity: {
             type: Number,
