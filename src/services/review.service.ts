@@ -86,7 +86,7 @@ class ReviewService {
     }
 
     // Cập nhật average_rating và số lượng review của product variant
-    async updateProductVariantStats(productVariantId: string) {
+    async updateProductVariantStats(productVariantId: string, isGetData = false) {
         // Lấy tất cả các review của product variant
         const reviews = await reviewModel.find({
             product_variant_id: productVariantId,
@@ -105,6 +105,14 @@ class ReviewService {
                 ? totalRating / reviewsWithRating.length
                 : 0
 
+        if (isGetData) {
+            return {
+                average_rating: averageRating,
+                review_count: reviews.length,
+                reviews_with_rating: reviewsWithRating.length,
+            }
+        }
+
         // Cập nhật số lượng review và average_rating trong MongoDB
         await productVariantModel.findByIdAndUpdate(productVariantId, {
             average_rating: averageRating,
@@ -120,6 +128,8 @@ class ReviewService {
                 review_count: reviews.length,
             }
         )
+
+
     }
 
     async deleteReview({ reviewId }: { reviewId: string }) {
@@ -252,10 +262,19 @@ class ReviewService {
             }
         })
 
+
+        const { average_rating, review_count, reviews_with_rating } = await this.updateProductVariantStats(
+            productVariantId,
+            true
+        ) || { average_rating: 0, review_count: 0, reviews_with_rating: 0 }
+
         return new OkResponse('Get reviews successfully', {
             total,
             page,
             limit,
+            average_rating,
+            review_count,
+            reviews_with_rating,
             totalPage: Math.ceil((total ?? 0) / limit),
             data: reviews,
         })

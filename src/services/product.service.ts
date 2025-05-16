@@ -539,28 +539,35 @@ class ProductService {
         limit?: number
     }) {
         const from = (page - 1) * limit
-        const { total, response } = await elasticsearchService.searchDocuments(
-            'products',
-            {
-                from,
-                size: limit,
-                query: {
-                    term: {
-                        isActive: true,
-                    },
-                },
-                sort: [
-                    {
-                        createdAt: {
-                            order: 'desc',
+
+        // Tìm kiếm biến thể sản phẩm mới nhất trong Elasticsearch
+
+        let total: any;
+        let response: any[] = [];
+        try {
+            ({ total, response } = await elasticsearchService.searchDocuments(
+                'products',
+                {
+                    from,
+                    size: limit,
+                    query: {
+                        term: {
+                            isActive: true,
                         },
                     },
-                ],
-            }
-        )
-
-        if (total === 0) {
-            return new OkResponse('No new products found', [])
+                    sort: [
+                        {
+                            createdAt: {
+                                order: 'desc',
+                            },
+                        },
+                    ],
+                }
+            ));
+        }
+        catch (error: any) {
+            return new OkResponse(
+                'No new products found', []);
         }
 
         const products = response.map((hit: any) => ({

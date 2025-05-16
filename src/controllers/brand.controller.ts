@@ -9,6 +9,7 @@ class BrandController {
   }
 
   async getBrands(req: Request, res: Response) {
+
     const { page = '1', limit = '10' } = req.query as {
       page?: string
       limit?: string

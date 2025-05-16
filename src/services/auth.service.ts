@@ -60,7 +60,7 @@ class AuthService {
         }
         const isPasswordMatch = await bcrypt.compare(
             password,
-            foundUser.password
+            foundUser.password as string
         )
         if (!isPasswordMatch) {
             throw new BadRequestError('Password is incorrect')
@@ -165,7 +165,7 @@ class AuthService {
         }
 
         //check if password is old password
-        const isPasswordMatch = await bcrypt.compare(password, user.password)
+        const isPasswordMatch = await bcrypt.compare(password, user.password as string)
         if (isPasswordMatch) {
             throw new BadRequestError(
                 'New password must be different from old password'

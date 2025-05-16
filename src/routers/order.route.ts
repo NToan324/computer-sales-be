@@ -2,6 +2,7 @@ import asyncHandler from '@/middleware/asyncHandler'
 import { Router } from 'express'
 import { validationRequest } from '@/middleware/validationRequest'
 import verifyJWT from '@/middleware/verifyJWT'
+import verifyJWTOrder from '@/middleware/verifyJWTOrder'
 import verifyRole from '@/middleware/verifyRoles'
 import OrderValidation from '@/validation/order.validation'
 import orderController from '@/controllers/order.controller'
@@ -18,6 +19,7 @@ router.get('/search',
 // Tao đơn hàng
 router.post(
     '/',
+    verifyJWTOrder,
     validationRequest(OrderValidation.createOrder()),
     asyncHandler(orderController.createOrder)
 )

@@ -8,7 +8,7 @@ const couponSchema = new Schema(
             required: true,
             unique: true,
         },
-        discount_amount: Number,
+        discount_amount: mongoose.Schema.Types.Double,
         usage_count: {
             type: Number,
             default: 0,

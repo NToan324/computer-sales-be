@@ -6,7 +6,7 @@ export class OrderValidation {
     static createOrder() {
         return {
             body: z.object({
-                user_name: z
+                name: z
                     .string()
                     .nonempty('User name is required'),
                 email: z

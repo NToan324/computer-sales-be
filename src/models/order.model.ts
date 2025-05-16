@@ -11,7 +11,6 @@ const orderSchema = new Schema(
         },
         email: {
             type: String,
-            unique: true,
             required: true,
         },
         coupon_code: {
@@ -21,7 +20,7 @@ const orderSchema = new Schema(
             type: String,
             required: true,
         },
-        total_amount: Number,
+        total_amount: mongoose.Schema.Types.Double,
         items: [
             {
                 product_variant_id: {
@@ -37,11 +36,11 @@ const orderSchema = new Schema(
                     min: 1,
                 },
                 price: {
-                    type: Number,
+                    type: mongoose.Schema.Types.Double,
                     min: 0,
                 },
                 discount: {
-                    type: Number,
+                    type: mongoose.Schema.Types.Double,
                     min: 0.0,
                     max: 0.5,
                     default: 0.0,
@@ -60,12 +59,12 @@ const orderSchema = new Schema(
             default: 0,
         },
         loyalty_points_used: {
-            type: Number,
-            default: 0,
-            min: 0,
+            type: mongoose.Schema.Types.Double,
+            default: 0.0,
+            min: 0.0,
         },
         loyalty_points_earned: {
-            type: Number,
+            type: mongoose.Schema.Types.Double,
         },
         status: {
             type: String,

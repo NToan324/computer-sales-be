@@ -31,11 +31,11 @@ const productVariantSchema = new Schema(
             required: true,
         },
         price: {
-            type: Number,
+            type: mongoose.Schema.Types.Double,
             min: 0,
         },
         discount: {
-            type: Number,
+            type: mongoose.Schema.Types.Double,
             min: 0.0,
             max: 0.5,
             default: 0.0,
@@ -45,7 +45,7 @@ const productVariantSchema = new Schema(
             min: 0,
         },
         average_rating: {
-            type: Number,
+            type: mongoose.Schema.Types.Double,
             min: 0.0,
             max: 5.0,
             default: 0.0,
