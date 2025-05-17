@@ -394,8 +394,10 @@ class ProductService {
                 from,
                 size: limit,
                 query: {
-                    term: {
-                        isActive: true,
+                    must: {
+                        term: {
+                            isActive: true,
+                        },
                     },
                 },
             }

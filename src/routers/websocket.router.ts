@@ -77,16 +77,42 @@ const websocketRoutes = (io: Server) => {
         console.log('User connected to chat namespace:', socket.id)
 
         // Lắng nghe sự kiện join room
-        socket.on('join_room', ({ roomId }) => {
+        socket.on('join_room', ({ user_id }) => {
+            if (!user_id) {
+                console.log('User ID is required to join room')
+                socket.emit('chat_error', 'User ID is required to join room')
+                return
+            }
+            if (user_id !== socket.user.id) {
+                console.log('User ID does not match socket user ID')
+                socket.emit('chat_error', 'User ID does not match socket user ID')
+                return
+            }
+
+            const roomId = `user_${user_id}_admin`
             socket.join(roomId)
             console.log(`User ${socket.id} joined room ${roomId}`)
         })
 
         // Lắng nghe sự kiện leave room
-        socket.on('leave_room', (roomId: string) => {
+        socket.on('leave_room', ({ user_id }) => {
+            if (!user_id) {
+                console.log('User ID is required to leave room')
+                socket.emit('chat_error', 'User ID is required to leave room')
+                return
+            }
+
+            if (user_id !== socket.user.id) {
+                console.log('User ID does not match socket user ID')
+                socket.emit('chat_error', 'User ID does not match socket user ID')
+                return
+            }
+            const roomId = `user_${user_id}_admin`
             socket.leave(roomId)
             console.log(`User ${socket.id} left room ${roomId}`)
         })
+
+        // Lắng nghe sự kiện gửi tin nhắn
 
         // Xử lý sự kiện ngắt kết nối
         socket.on('disconnect', () => {

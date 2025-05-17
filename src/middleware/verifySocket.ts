@@ -1,4 +1,5 @@
-import { UnauthorizedError } from '@/core/error.response';
+import { ForbiddenError, UnauthorizedError } from '@/core/error.response';
+import elasticsearchService from '@/services/elasticsearch.service';
 import jwt from 'jsonwebtoken';
 
 const verifyJWTSocket = (socket: any, next: any) => {
@@ -8,14 +9,25 @@ const verifyJWTSocket = (socket: any, next: any) => {
         next(new UnauthorizedError('Authentication error: No token provided'));
     }
 
-    try {
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE as string);
-        socket.user = decoded; // Lưu thông tin người dùng vào socket
-        next();
-    } catch (err) {
-        console.error('Token verification error:', err);
-        next(new UnauthorizedError('Authentication error: Invalid token'));
-    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE as string, async (err: any, decoded: any) => {
+        if (err) {
+            return next(new ForbiddenError('Invalid token'))
+        }
+
+        socket.user = decoded
+
+        // Check if the user is active
+        const user = await elasticsearchService.getDocumentById(
+            'users',
+            decoded.id
+        ) as any
+
+        if (!user || !user.isActive) {
+            return next(new ForbiddenError('User is not found or inactive'))
+        }
+
+        next()
+    })
 };
 
 export default verifyJWTSocket;
