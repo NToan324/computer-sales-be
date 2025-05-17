@@ -1,7 +1,7 @@
 import { UnauthorizedError } from '@/core/error.response';
 import jwt from 'jsonwebtoken';
 
-const authenticateSocket = (socket: any, next: any) => {
+const verifyJWTSocket = (socket: any, next: any) => {
     const token = socket.handshake.headers.authorization?.split(' ')[1]; // Lấy token từ header
 
     if (!token) {
@@ -18,4 +18,4 @@ const authenticateSocket = (socket: any, next: any) => {
     }
 };
 
-export default authenticateSocket;
+export default verifyJWTSocket;

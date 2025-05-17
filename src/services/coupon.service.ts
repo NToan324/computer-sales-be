@@ -187,24 +187,8 @@ class CouponService {
             throw new NotFoundError('Coupon not found');
         }
 
-        // Search mã phiếu giảm giá đã có đơn hàng nào sử dụng hay chưa
-        const { total, response } = await elasticsearchService.searchDocuments(
-            'orders',
-            {
-                query: {
-                    bool: {
-                        must: {
-                            term: {
-                                coupon_code: code,
-                            },
-                        },
-                    },
-                },
-            }
-        );
-
-        if (!(total === 0)) {
-            throw new BadRequestError('Coupon cannot be deleted as it has been used in orders');
+        if ((existingCoupon as any).usage_count > 0) {
+            throw new BadRequestError('Cannot delete coupon that has been used');
         }
 
         // Xóa mã phiếu giảm giá khỏi MongoDB

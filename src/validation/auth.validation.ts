@@ -9,6 +9,7 @@ export class AuthValidation {
                         .string()
                         .email('Email is not valid')
                         .nonempty('Email is required'),
+                    address: z.string().nonempty('Address is required'),
                     password: z
                         .string()
                         .nonempty('Password is required')

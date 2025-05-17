@@ -2,6 +2,7 @@ import { Server } from 'socket.io'
 import reviewController from '@/controllers/review.controller'
 import jwt from 'jsonwebtoken'
 import { UnauthorizedError } from '@/core/error.response'
+import verifyJWTSocket from '@/middleware/verifySocket'
 
 declare module 'socket.io' {
     interface Socket {
@@ -10,8 +11,12 @@ declare module 'socket.io' {
 }
 
 const websocketRoutes = (io: Server) => {
+
+    // ====================================== Review ====================================== //
+    // Tạo namespace cho review
     const reviewNamespace = io.of('/review')
 
+    // Middleware xác thực JWT cho namespace review
     reviewNamespace.use((socket, next) => {
         const token = socket.handshake.headers.authorization
 
@@ -59,6 +64,36 @@ const websocketRoutes = (io: Server) => {
             console.log('User disconnected from review namespace:', socket.id)
         })
     })
+
+    // ====================================== Chat ====================================== //
+    // Tạo namespace cho chat
+    const chatNamespace = io.of('/chat')
+
+    // Middleware xác thực JWT cho namespace chat
+    chatNamespace.use(verifyJWTSocket)
+
+    // Connect sự kiện cho namespace chat
+    chatNamespace.on('connection', (socket) => {
+        console.log('User connected to chat namespace:', socket.id)
+
+        // Lắng nghe sự kiện join room
+        socket.on('join_room', ({ roomId }) => {
+            socket.join(roomId)
+            console.log(`User ${socket.id} joined room ${roomId}`)
+        })
+
+        // Lắng nghe sự kiện leave room
+        socket.on('leave_room', (roomId: string) => {
+            socket.leave(roomId)
+            console.log(`User ${socket.id} left room ${roomId}`)
+        })
+
+        // Xử lý sự kiện ngắt kết nối
+        socket.on('disconnect', () => {
+            console.log('User disconnected from chat namespace:', socket.id)
+        })
+    })
+
 }
 
 export default websocketRoutes
