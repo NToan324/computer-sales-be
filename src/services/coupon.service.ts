@@ -178,10 +178,49 @@ class CouponService {
         return new OkResponse('Coupon retrieved successfully', coupon);
     }
 
-    // // Xóa mã phiếu giảm giá
-    // async deleteCoupon(id: string) {
+    // Xóa mã phiếu giảm giá
+    async deleteCoupon(code: string) {
+        // Tìm và xóa mã phiếu giảm giá
+        const existingCoupon = await CouponModel.findOne({ code });
 
-    // }
+        if (!existingCoupon) {
+            throw new NotFoundError('Coupon not found');
+        }
+
+        // Search mã phiếu giảm giá đã có đơn hàng nào sử dụng hay chưa
+        const { total, response } = await elasticsearchService.searchDocuments(
+            'orders',
+            {
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                coupon_code: code,
+                            },
+                        },
+                    },
+                },
+            }
+        );
+
+        if (!(total === 0)) {
+            throw new BadRequestError('Coupon cannot be deleted as it has been used in orders');
+        }
+
+        // Xóa mã phiếu giảm giá khỏi MongoDB
+        const deletedCoupon = await CouponModel.findOneAndDelete({ code });
+
+        if (!deletedCoupon) {
+            throw new NotFoundError('Coupon not found');
+        }
+
+        const { code: deletedCode, ...couponWithoutId } = deletedCoupon.toObject();
+
+        // Xóa mã phiếu giảm giá khỏi Elasticsearch
+        await elasticsearchService.deleteDocument('coupons', code);
+
+        return new OkResponse('Coupon deleted successfully', { code: deletedCode });
+    }
 }
 
 export default new CouponService();

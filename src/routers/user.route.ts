@@ -63,4 +63,11 @@ router.post(
     upload.single('file'),
     asyncHandler(userController.uploadImage))
 
+// search user
+router.get('/search',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    validationRequest(UserValidation.searchUser()),
+    asyncHandler(userController.searchUser));
+
 export default router;

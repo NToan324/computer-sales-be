@@ -39,7 +39,7 @@ class UserController {
         }));
     }
 
-    // Lấy danh sách đơn hàng theo user_id
+    // Lấy danh sách đơn hàng theo user_id (ADMIN)
     async getOrdersByUserId(req: Request, res: Response) {
         const { id } = req.params as { id: string };
 
@@ -83,10 +83,12 @@ class UserController {
         const { id } = req.user as { id: string };
         const {
             fullName,
+            phone,
             address,
             avatar,
         }: {
             fullName?: string;
+            phone?: string;
             address?: string;
             avatar?: {
                 url?: string;
@@ -96,6 +98,7 @@ class UserController {
         res.send(await userService.updateUserInfo({
             user_id: id,
             fullName,
+            phone,
             address,
             avatar,
         }));
@@ -128,6 +131,29 @@ class UserController {
             address,
             avatar,
             isActive,
+        }));
+    }
+
+    // Tìm kiếm người dùng
+    async searchUser(req: Request, res: Response) {
+        const { name, email } = req.query as {
+            name?: string;
+            email?: string;
+        };
+
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string;
+            limit?: string;
+        };
+
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
+
+        res.send(await userService.searchUsers({
+            name,
+            email,
+            page: pageNumber,
+            limit: limitNumber,
         }));
     }
 

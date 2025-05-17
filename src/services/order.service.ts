@@ -166,7 +166,7 @@ class OrderService {
             product_variant_id: string;
             product_variant_name: string;
             quantity: number;
-            price: number;
+            unit_price: number;
             discount?: number;
             images: {
                 url: string;
@@ -178,14 +178,6 @@ class OrderService {
         let discountAmount = 0
         let cart: any[] = []
 
-        //print all variables
-        console.log('user_id', user_id)
-        console.log('user_name', user_name)
-        console.log('email', email)
-        console.log('coupon_code', coupon_code)
-        console.log('address', address)
-        console.log('items', items)
-        console.log('payment_method', payment_method)
 
         // Trường hợp có `user_id`
         if (user_id) {
@@ -209,8 +201,7 @@ class OrderService {
 
             cart = response
 
-            cartItems = (cart[0] as { _id: string; _source: { items: any[] } })
-                ._source.items
+            cartItems = (cart[0] as { _id: string; _source: { items: any[] } })._source.items
         }
 
         // Lấy danh sách product_variant_id từ giỏ hàng
@@ -262,13 +253,15 @@ class OrderService {
                 )
             }
 
+            console.log('item', item)
+
             // Kiểm tra giá và discount
             if (
-                item.price !== product.price ||
+                item.unit_price !== product.price ||
                 item.discount !== product.discount
             ) {
                 // Cập nhật lại giá và discount trong giỏ hàng
-                item.price = product.price
+                item.unit_price = product.price
                 item.discount = product.discount
 
                 flagChangePrice = true

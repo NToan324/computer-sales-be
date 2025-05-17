@@ -22,6 +22,12 @@ const couponSchema = new Schema(
             min: 1,
             max: 10,
         },
+        orders_used: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'orders',
+            },
+        ],
         isActive: {
             type: Boolean,
             default: true,

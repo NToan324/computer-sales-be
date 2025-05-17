@@ -33,7 +33,7 @@ export class OrderValidation {
                                 .number()
                                 .int('Quantity must be an integer')
                                 .min(1, 'Quantity must be at least 1'),
-                            price: z.coerce
+                            unit_price: z.coerce
                                 .number()
                                 .min(0, 'Price must be at least 0'),
                             discount: z
