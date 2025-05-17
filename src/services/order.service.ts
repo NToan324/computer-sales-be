@@ -495,7 +495,12 @@ class OrderService {
             // Cập nhật lại số lần sử dụng mã giảm giá trong MongoDB
             const updatedCoupon = await CouponModel.findOneAndUpdate(
                 { code: coupon_code },
-                { $inc: { usage_count: 1 } },
+                {
+                    $inc: { usage_count: 1 },
+                    $push: {
+                        orders_used: order._id,
+                    },
+                },
                 { new: true }
             )
 
