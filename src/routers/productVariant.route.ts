@@ -21,7 +21,7 @@ router.post(
     '/upload',
     verifyJWT,
     verifyRole(['ADMIN']),
-    upload.single('file'),
+    upload.array('file'),
     asyncHandler(productController.uploadImage))
 
 // Tạo biến thể sản phẩm
