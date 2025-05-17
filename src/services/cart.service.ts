@@ -1,8 +1,10 @@
-import { BadRequestError } from '@/core/error.response';
-import { OkResponse, CreatedResponse } from '@/core/success.response';
-import CartModel, { Cart } from '@/models/cart.model';
-import ProductVariantModel, { ProductVariant } from '@/models/productVariant.model';
-import elasticsearchService from './elasticsearch.service';
+import { BadRequestError } from '@/core/error.response'
+import { OkResponse, CreatedResponse } from '@/core/success.response'
+import CartModel, { Cart } from '@/models/cart.model'
+import ProductVariantModel, {
+    ProductVariant,
+} from '@/models/productVariant.model'
+import elasticsearchService from './elasticsearch.service'
 
 class CartService {
     // Add item to cart
@@ -11,34 +13,36 @@ class CartService {
         productVariantId,
         quantity,
     }: {
-        userId: string;
-        productVariantId: string;
-        quantity: number;
+        userId: string
+        productVariantId: string
+        quantity: number
     }) {
-
-        const { total, response } = await elasticsearchService.searchDocuments('product_variants', {
-            query: {
-                bool: {
-                    must: [
-                        {
-                            term: { _id: productVariantId }
-                        }
-                    ],
-                    filter: [
-                        {
-                            term: { isActive: true }
-                        }
-                    ]
+        const { total, response } = await elasticsearchService.searchDocuments(
+            'product_variants',
+            {
+                query: {
+                    bool: {
+                        must: [
+                            {
+                                term: { _id: productVariantId },
+                            },
+                        ],
+                        filter: [
+                            {
+                                term: { isActive: true },
+                            },
+                        ],
+                    },
                 },
             }
-        });
-
+        )
 
         if (total === 0) {
-            throw new BadRequestError('Product variant not found');
+            throw new BadRequestError('Product variant not found')
         }
 
-        const productVariant: ProductVariant = response[0]._source as ProductVariant;
+        const productVariant: ProductVariant = response[0]
+            ._source as ProductVariant
 
         let cartResponse = await elasticsearchService.searchDocuments('carts', {
             query: {
@@ -46,10 +50,9 @@ class CartService {
                     user_id: userId,
                 },
             },
-        });
+        })
 
-
-        const { total: totalCart, response: cart } = cartResponse;
+        const { total: totalCart, response: cart } = cartResponse
 
         if (totalCart === 0) {
             const newCart = await CartModel.create({
@@ -64,26 +67,33 @@ class CartService {
                         images: productVariant.images[0],
                     },
                 ],
-            });
+            })
 
-            const { _id, ...cartWithoutId } = newCart.toObject();
+            const { _id, ...cartWithoutId } = newCart.toObject()
 
             // Index the new cart in Elasticsearch
-            await elasticsearchService.indexDocument('carts', _id.toString(), cartWithoutId);
+            await elasticsearchService.indexDocument(
+                'carts',
+                _id.toString(),
+                cartWithoutId
+            )
 
-            return new CreatedResponse('Cart created successfully', { _id, ...cartWithoutId });
-
+            return new CreatedResponse('Cart created successfully', {
+                _id,
+                ...cartWithoutId,
+            })
         } else {
-            const cartId = cart[0]?._id?.toString();
+            const cartId = cart[0]?._id?.toString()
 
-            const cartSource = cart[0]._source as { items: any[] };
+            const cartSource = cart[0]._source as { items: any[] }
 
             const existingItem = cartSource.items.find(
-                (item) => item.product_variant_id.toString() === productVariantId
-            );
+                (item) =>
+                    item.product_variant_id.toString() === productVariantId
+            )
 
             if (existingItem) {
-                existingItem.quantity += quantity;
+                existingItem.quantity += quantity
             } else {
                 cartSource.items.push({
                     product_variant_id: productVariantId,
@@ -92,46 +102,58 @@ class CartService {
                     unit_price: productVariant.price,
                     discount: productVariant.discount,
                     images: productVariant.images[0],
-                });
+                })
             }
 
-            const updatedCart = await CartModel.findByIdAndUpdate(cartId, { items: cartSource.items }, { new: true });
-
+            const updatedCart = await CartModel.findByIdAndUpdate(
+                cartId,
+                { items: cartSource.items },
+                { new: true }
+            )
 
             if (!updatedCart) {
-                throw new BadRequestError('Failed to update cart');
+                throw new BadRequestError('Failed to update cart')
             }
 
-            const { _id, ...cartWithoutId } = updatedCart.toObject();
+            const { _id, ...cartWithoutId } = updatedCart.toObject()
 
             // Update the cart in Elasticsearch
             await elasticsearchService.indexDocument(
                 'carts',
                 _id.toString(),
                 cartWithoutId
-            );
+            )
 
-            return new OkResponse('Item added to cart successfully', { _id, ...cartWithoutId });
+            return new OkResponse('Item added to cart successfully', {
+                _id,
+                ...cartWithoutId,
+            })
         }
     }
 
     // Get cart by user ID
     async getCart(userId: string) {
-        const { total, response } = await elasticsearchService.searchDocuments('carts', {
-            query: {
-                term: {
-                    user_id: userId,
+        const { total, response } = await elasticsearchService.searchDocuments(
+            'carts',
+            {
+                query: {
+                    term: {
+                        user_id: userId,
+                    },
                 },
-            },
-        });
+            }
+        )
 
         if (total === 0) {
-            return new OkResponse('Cart is empty', []);
+            return new OkResponse('Cart is empty', [])
         }
 
-        const cart: any = { _id: response[0]._id, ...(response[0]._source || {}) };
+        const cart: any = {
+            _id: response[0]._id,
+            ...(response[0]._source || {}),
+        }
 
-        return new OkResponse('Cart retrieved successfully', cart);
+        return new OkResponse('Cart retrieved successfully', cart)
     }
 
     // Update item quantity in cart
@@ -140,30 +162,32 @@ class CartService {
         productVariantId,
         quantity,
     }: {
-        userId: string;
-        productVariantId: string;
-        quantity: number;
+        userId: string
+        productVariantId: string
+        quantity: number
     }) {
-        const { total, response } = await elasticsearchService.searchDocuments('product_variants', {
-            query: {
-                bool: {
-                    must: [
-                        {
-                            term: { _id: productVariantId }
-                        }
-                    ],
-                    filter: [
-                        {
-                            term: { isActive: true }
-                        }
-                    ]
-                }
-
-            },
-        });
+        const { total, response } = await elasticsearchService.searchDocuments(
+            'product_variants',
+            {
+                query: {
+                    bool: {
+                        must: [
+                            {
+                                term: { _id: productVariantId },
+                            },
+                        ],
+                        filter: [
+                            {
+                                term: { isActive: true },
+                            },
+                        ],
+                    },
+                },
+            }
+        )
 
         if (total === 0) {
-            throw new BadRequestError('Product variant not found');
+            throw new BadRequestError('Product variant not found')
         }
 
         let cartResponse = await elasticsearchService.searchDocuments('carts', {
@@ -172,43 +196,56 @@ class CartService {
                     user_id: userId,
                 },
             },
-        });
+        })
 
-        const { total: totalCart, response: cart } = cartResponse;
+        const { total: totalCart, response: cart } = cartResponse
 
         if (totalCart === 0) {
-            throw new BadRequestError('Cart not found');
+            throw new BadRequestError('Cart not found')
         }
 
-        const cartId = cart[0]?._id?.toString();
-        const cartSource = cart[0]._source as { items: any[] };
+        const cartId = cart[0]?._id?.toString()
+        const cartSource = cart[0]._source as {
+            items: {
+                product_variant_id: string
+                quantity: number
+                unit_price: number
+            }[]
+        }
 
         const existingItem = cartSource.items.find(
             (item) => item.product_variant_id.toString() === productVariantId
-        );
+        )
 
         if (!existingItem) {
-            throw new BadRequestError('Item not found in cart');
+            throw new BadRequestError('Item not found in cart')
         }
 
-        existingItem.quantity = quantity;
+        existingItem.quantity = quantity
 
-        const updatedCart = await CartModel.findByIdAndUpdate(cartId, { items: cartSource.items }, { new: true });
+        const updatedCart = await CartModel.findByIdAndUpdate(
+            cartId,
+            { items: cartSource.items },
+            { new: true }
+        )
 
         if (!updatedCart) {
-            throw new BadRequestError('Failed to update cart');
+            throw new BadRequestError('Failed to update cart')
         }
 
-        const { _id, ...cartWithoutId } = updatedCart.toObject();
+        const { _id, ...cartWithoutId } = updatedCart.toObject()
 
         // Update the cart in Elasticsearch
         await elasticsearchService.indexDocument(
             'carts',
             _id.toString(),
             cartWithoutId
-        );
+        )
 
-        return new OkResponse('Item quantity updated successfully', { _id: _id, ...cartWithoutId });
+        return new OkResponse('Item quantity updated successfully', {
+            _id: _id,
+            ...cartWithoutId,
+        })
     }
 
     // Remove item from cart
@@ -216,8 +253,8 @@ class CartService {
         userId,
         productVariantId,
     }: {
-        userId: string;
-        productVariantId: string;
+        userId: string
+        productVariantId: string
     }) {
         let cartResponse = await elasticsearchService.searchDocuments('carts', {
             query: {
@@ -225,69 +262,88 @@ class CartService {
                     user_id: userId,
                 },
             },
-        });
+        })
 
-        const { total: totalCart, response: cart } = cartResponse;
+        const { total: totalCart, response: cart } = cartResponse
 
         if (!cart || cart.length === 0) {
-            throw new BadRequestError('Cart not found');
+            throw new BadRequestError('Cart not found')
         }
 
-        const cartId = cart[0]?._id?.toString();
-        const cartSource = cart[0]._source as { items: { product_variant_id: string; quantity: number; unit_price: number }[] };
+        const cartId = cart[0]?._id?.toString()
+        const cartSource = cart[0]._source as {
+            items: {
+                product_variant_id: string
+                quantity: number
+                unit_price: number
+            }[]
+        }
 
         const updatedItems = cartSource.items.filter(
             (item) => item.product_variant_id.toString() !== productVariantId
-        );
+        )
 
-        const updatedCart = await CartModel.findByIdAndUpdate(cartId, { items: updatedItems }, { new: true });
+        const updatedCart = await CartModel.findByIdAndUpdate(
+            cartId,
+            { items: updatedItems },
+            { new: true }
+        )
 
         if (!updatedCart) {
-            throw new BadRequestError('Failed to update cart');
+            throw new BadRequestError('Failed to update cart')
         }
 
-        const { _id, ...cartWithoutId } = updatedCart.toObject();
+        const { _id, ...cartWithoutId } = updatedCart.toObject()
 
         // Update the cart in Elasticsearch
         await elasticsearchService.indexDocument(
             'carts',
             _id.toString(),
             cartWithoutId
-        );
+        )
 
-        return new OkResponse('Item removed from cart successfully', { _id: _id, ...cartWithoutId });
+        return new OkResponse('Item removed from cart successfully', {
+            _id: _id,
+            ...cartWithoutId,
+        })
     }
 
     // Clear cart
     async clearCart(userId: string) {
-        const cartResponse = await elasticsearchService.searchDocuments('carts', {
-            query: {
-                term: {
-                    user_id: userId,
+        const cartResponse = await elasticsearchService.searchDocuments(
+            'carts',
+            {
+                query: {
+                    term: {
+                        user_id: userId,
+                    },
                 },
-            },
-        });
+            }
+        )
 
-        const { total: totalCart, response: cart } = cartResponse;
+        const { total: totalCart, response: cart } = cartResponse
 
         if (totalCart === 0) {
-            throw new BadRequestError('Cart not found');
+            throw new BadRequestError('Cart not found')
         }
 
-        const cartId = cart[0]?._id?.toString();
+        const cartId = cart[0]?._id?.toString()
 
-        const deletedCart = await CartModel.findByIdAndDelete(cartId);
+        const deletedCart = await CartModel.findByIdAndDelete(cartId)
 
         if (!deletedCart) {
-            throw new BadRequestError('Failed to clear cart');
+            throw new BadRequestError('Failed to clear cart')
         }
 
         // Delete the cart from Elasticsearch
-        await elasticsearchService.deleteDocument('carts', deletedCart._id.toString());
+        await elasticsearchService.deleteDocument(
+            'carts',
+            deletedCart._id.toString()
+        )
 
-        return new OkResponse('Cart cleared successfully', {});
+        return new OkResponse('Cart cleared successfully', {})
     }
 }
 
-const cartService = new CartService();
-export default cartService;
+const cartService = new CartService()
+export default cartService
