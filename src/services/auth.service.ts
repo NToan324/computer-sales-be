@@ -85,6 +85,7 @@ class AuthService {
             name: foundUser.fullName,
             role: foundUser.role,
             point: foundUser.loyalty_points,
+            avatar: foundUser.avatar,
         }
         return new OkResponse('Login successfully', {
             accessToken,
@@ -168,7 +169,10 @@ class AuthService {
         }
 
         //check if password is old password
-        const isPasswordMatch = await bcrypt.compare(password, user.password as string)
+        const isPasswordMatch = await bcrypt.compare(
+            password,
+            user.password as string
+        )
         if (isPasswordMatch) {
             throw new BadRequestError(
                 'New password must be different from old password'

@@ -79,13 +79,17 @@ class ReviewService {
                     avatar: user.avatar.url,
                 },
             }
+            return { ...newReview }
         }
 
         return { _id: _id, ...reviewWithoutId }
     }
 
     // Cập nhật average_rating và số lượng review của product variant
-    async updateProductVariantStats(productVariantId: string, isGetData = false) {
+    async updateProductVariantStats(
+        productVariantId: string,
+        isGetData = false
+    ) {
         // Lấy tất cả các review của product variant
         const reviews = await reviewModel.find({
             product_variant_id: productVariantId,
@@ -127,8 +131,6 @@ class ReviewService {
                 review_count: reviews.length,
             }
         )
-
-
     }
 
     async deleteReview({ reviewId }: { reviewId: string }) {
@@ -256,11 +258,12 @@ class ReviewService {
             }
         })
 
-
-        const { average_rating, review_count, reviews_with_rating } = await this.updateProductVariantStats(
-            productVariantId,
-            true
-        ) || { average_rating: 0, review_count: 0, reviews_with_rating: 0 }
+        const { average_rating, review_count, reviews_with_rating } =
+            (await this.updateProductVariantStats(productVariantId, true)) || {
+                average_rating: 0,
+                review_count: 0,
+                reviews_with_rating: 0,
+            }
 
         return new OkResponse('Get reviews successfully', {
             total,
