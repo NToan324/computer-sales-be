@@ -330,11 +330,11 @@ class OrderService {
             discountAmount = coupon.discount_amount || 0.0
         }
 
-        let currentLoyaltyPoints: any = 0.0
+        let currentLoyaltyPoints: number = 0.0
         if (user_id) {
             const user = await UserModel.findById(user_id)
 
-            currentLoyaltyPoints = user?.loyalty_points || 0.0
+            currentLoyaltyPoints = (user?.loyalty_points) as number || 0.0
         }
 
         // Tính tổng tiền
@@ -352,7 +352,7 @@ class OrderService {
 
         // Nếu số tiền giảm giá lớn hơn tổng tiền hàng, thì không cho phép
         if (totalAmount - discountAmount < 0) {
-            throw new BadRequestError('Mã giảm giá không hợp lệ')
+            throw new BadRequestError('Mã giảm giá không hợp lệ');
         }
 
         // Nếu số tiền giảm giá bằng số điểm thưởng lớn hơn 50% tổng tiền hàng, thì chỉ được giảm tối đa 50% tổng tiền hàng
@@ -371,6 +371,12 @@ class OrderService {
             currentLoyaltyPoints - loyalty_points_used // Số điểm thưởng còn lại
 
         const loyalty_points_earned = Math.round(subtotal * 0.0001) // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
+
+        console.log('current loyalty_points', currentLoyaltyPoints)
+        console.log('loyalty_points_earned', loyalty_points_earned)
+        console.log('loyalty_points_remaining', loyalty_points_remaining)
+        console.log('loyalty_points_used', loyalty_points_used)
+        console.log('totalAmount', totalAmount)
 
         // Tạo tài khoản người dùng nếu không có
         let isNewUser = false;

@@ -36,7 +36,7 @@ export class OrderValidation {
                             unit_price: z.coerce
                                 .number()
                                 .min(0, 'Price must be at least 0'),
-                            discount: z
+                            discount: z.coerce
                                 .number()
                                 .min(0, 'Discount must be at least 0')
                                 .max(0.5, 'Discount must be at most 0.5')
