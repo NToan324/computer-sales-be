@@ -343,7 +343,7 @@ class OrderService {
 
         const subtotal = cartItems.reduce(
             (sum: number, item: any) =>
-                sum + item.quantity * item.price * (1 - (item.discount || 0.0)),
+                sum + item.quantity * item.unit_price * (1 - (item.discount || 0.0)),
             0
         )
 
@@ -377,6 +377,11 @@ class OrderService {
         console.log('loyalty_points_remaining', loyalty_points_remaining)
         console.log('loyalty_points_used', loyalty_points_used)
         console.log('totalAmount', totalAmount)
+        console.log('subtotal', subtotal)
+        console.log('shipping_fee', shipping_fee)
+        console.log('tax', tax)
+        console.log('discountAmount', discountAmount)
+        console.log('discountAmoutLoyaltyPoints', discountAmoutLoyaltyPoints)
 
         // Tạo tài khoản người dùng nếu không có
         let isNewUser = false;
