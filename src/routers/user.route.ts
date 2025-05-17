@@ -44,7 +44,7 @@ router.put('/:id',
     validationRequest(UserValidation.updateUserInfo()),
     asyncHandler(userController.updateUserInfo));
 
-// Lấy orders theo user_id
+// Lấy orders theo user_id (ADMIN)
 router.get('/:id/orders',
     verifyJWT,
     verifyRole(['ADMIN']),

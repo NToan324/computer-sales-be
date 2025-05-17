@@ -3,6 +3,7 @@ import reviewController from '@/controllers/review.controller'
 import jwt from 'jsonwebtoken'
 import { UnauthorizedError } from '@/core/error.response'
 import verifyJWTSocket from '@/middleware/verifySocket'
+import chatController from '@/controllers/chat.controller'
 
 declare module 'socket.io' {
     interface Socket {
@@ -77,22 +78,14 @@ const websocketRoutes = (io: Server) => {
         console.log('User connected to chat namespace:', socket.id)
 
         // Lắng nghe sự kiện join room
-        socket.on('join_room', ({ user_id }) => {
-            if (!user_id) {
-                console.log('User ID is required to join room')
-                socket.emit('chat_error', 'User ID is required to join room')
-                return
-            }
-            if (user_id !== socket.user.id) {
-                console.log('User ID does not match socket user ID')
-                socket.emit('chat_error', 'User ID does not match socket user ID')
-                return
-            }
+        socket.on('join_room', ({ senderId, receiverId }) => {
+            const roomId = [senderId, receiverId].sort().join('_')
 
-            const roomId = `user_${user_id}_admin`
             socket.join(roomId)
             console.log(`User ${socket.id} joined room ${roomId}`)
         })
+
+        chatController.setupChatWebSocket(socket, io)
 
         // Lắng nghe sự kiện leave room
         socket.on('leave_room', ({ user_id }) => {

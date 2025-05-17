@@ -14,11 +14,9 @@ const conversationSchema = new mongoose.Schema(
         },
         last_message: {
             type: String,
-            required: true,
         },
         imageUrl: {
             type: String,
-            required: true,
         }
     },
     {
