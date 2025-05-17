@@ -86,20 +86,28 @@ const orderSchema = new Schema(
             enum: ['PENDING', 'PAID', 'FAILED'],
             default: 'PENDING',
         },
-        order_tracking: [
-            {
-                status: {
-                    type: String,
-                    enum: ['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED'],
-                    default: 'PENDING',
-                    required: true,
+        order_tracking: {
+            type: [
+                {
+                    status: {
+                        type: String,
+                        enum: ['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED'],
+                        default: 'PENDING',
+                        required: true,
+                    },
+                    updated_at: {
+                        type: Date,
+                        default: Date.now,
+                    },
                 },
-                updated_at: {
-                    type: Date,
-                    default: Date.now,
+            ],
+            default: [
+                {
+                    status: 'PENDING',
+                    updated_at: Date.now(),
                 },
-            },
-        ],
+            ],
+        },
     },
     { timestamps: true }
 )

@@ -399,8 +399,6 @@ class OrderService {
             payment_status = 'PAID';
         }
 
-        console.log('test');
-
         // Tạo đơn hàng trong MongoDB
         const order = await OrderModel.create({
             user_id,

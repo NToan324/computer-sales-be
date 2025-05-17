@@ -5,13 +5,20 @@ import verifyJWT from '@/middleware/verifyJWT';
 import { UserValidation } from '@/validation/user.validation';
 import { Router } from 'express';
 import upload from '@/storage/multerConfig';
+import verifyRole from '@/middleware/verifyRoles';
 
 const router = Router();
 
-// Tìm order theo user_id
+// Lấy order theo user_id
 router.get('/orders',
     verifyJWT,
     asyncHandler(userController.getOrdersByUserId));
+
+// Xem chi tiết người dùng
+router.get('/:id',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(userController.getUserProfile));
 
 // Lấy hồ sơ người dùng
 router.get('/profile',
@@ -24,8 +31,15 @@ router.put('/change-password',
     validationRequest(UserValidation.changePassword()),
     asyncHandler(userController.changePassword));
 
-// Cập nhật thông tin người dùng
+// Cập nhật thông tin người dùng với quyền ADMIN
 router.put('/:id',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    validationRequest(UserValidation.updateUserInfo()),
+    asyncHandler(userController.updateUserInfo));
+
+// Cập nhật thông tin người dùng với quyền USER
+router.put('/profile',
     verifyJWT,
     validationRequest(UserValidation.updateUserInfo()),
     asyncHandler(userController.updateUserInfo));

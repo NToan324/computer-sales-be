@@ -80,6 +80,8 @@ class ReviewService {
                     avatar: user.avatar.url,
                 },
             }
+
+            return { ...newReview }
         }
 
         return { _id: _id, ...reviewWithoutId }

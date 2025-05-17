@@ -174,7 +174,6 @@ class AuthService {
 
         // Cập nhật mật khẩu
         user.password = password
-        user.isActive = true
         await user.save()
 
         // Xoá OTP sau khi đổi mật khẩu (tuỳ ý)
