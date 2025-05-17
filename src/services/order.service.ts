@@ -353,6 +353,7 @@ class OrderService {
 
 
         // Tạo tài khoản người dùng nếu không có
+        let isNewUser = false;
         if (!user_id) {
             if (!user_name || !email) {
                 throw new BadRequestError('User name and email are required');
@@ -383,6 +384,7 @@ class OrderService {
                         name: user_name,
                         password: randomPassword,
                     });
+                    isNewUser = true;
                 }
             }
         }
@@ -433,7 +435,7 @@ class OrderService {
         }
 
         // Xóa giỏ hàng của người dùng trong Elasticsearch và MongoDB
-        if (user_id) {
+        if (user_id && !isNewUser) {
             await elasticsearchService.deleteDocument('carts', cart[0]._id);
             await CartModel.findByIdAndDelete(cart[0]._id);
         }
