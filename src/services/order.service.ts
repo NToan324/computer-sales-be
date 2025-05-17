@@ -435,7 +435,7 @@ class OrderService {
         }
 
         // Xóa giỏ hàng của người dùng trong Elasticsearch và MongoDB
-        if (user_id && !isNewUser) {
+        if (user_id && !isNewUser && cart.length > 0) {
             await elasticsearchService.deleteDocument('carts', cart[0]._id);
             await CartModel.findByIdAndDelete(cart[0]._id);
         }
