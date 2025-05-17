@@ -253,8 +253,6 @@ class OrderService {
                 )
             }
 
-            console.log('item', item)
-
             // Kiểm tra giá và discount
             if (
                 item.unit_price !== product.price ||
@@ -277,11 +275,6 @@ class OrderService {
 
         // Kiểm tra trạng thái sản phẩm
         if (flagChangePrice && user_id) {
-            console.log('Product information has changed. Updating cart...')
-            console.log('>>>>> check', {
-                flagChangePrice,
-                cartItems,
-            })
             // Cập nhật lại giá và discount trong Elasticsearch
             await elasticsearchService.updateDocument('carts', cart[0]._id, {
                 items: cartItems,
@@ -378,17 +371,6 @@ class OrderService {
             currentLoyaltyPoints - loyalty_points_used // Số điểm thưởng còn lại
 
         const loyalty_points_earned = Math.round(subtotal * 0.0001) // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
-
-        console.log('current loyalty_points', currentLoyaltyPoints)
-        console.log('loyalty_points_earned', loyalty_points_earned)
-        console.log('loyalty_points_remaining', loyalty_points_remaining)
-        console.log('loyalty_points_used', loyalty_points_used)
-        console.log('totalAmount', totalAmount)
-        console.log('subtotal', subtotal)
-        console.log('shipping_fee', shipping_fee)
-        console.log('tax', tax)
-        console.log('discountAmount', discountAmount)
-        console.log('discountAmoutLoyaltyPoints', discountAmoutLoyaltyPoints)
 
         // Tạo tài khoản người dùng nếu không có
         let isNewUser = false
@@ -573,7 +555,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ;({ total, response } = await elasticsearchService.searchDocuments(
+            ; ({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
@@ -648,7 +630,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ;({ total, response } = await elasticsearchService.searchDocuments(
+            ; ({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
