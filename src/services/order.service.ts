@@ -163,21 +163,20 @@ class OrderService {
         coupon_code?: string
         address: string
         items?: {
-            product_variant_id: string;
-            product_variant_name: string;
-            quantity: number;
-            unit_price: number;
-            discount?: number;
+            product_variant_id: string
+            product_variant_name: string
+            quantity: number
+            unit_price: number
+            discount?: number
             images: {
-                url: string;
-            };
-        }[];
-        payment_method: string;
+                url: string
+            }
+        }[]
+        payment_method: string
     }) {
         let cartItems = items || [] // Danh sách sản phẩm trong giỏ hàng
         let discountAmount = 0
         let cart: any[] = []
-
 
         // Trường hợp có `user_id`
         if (user_id) {
@@ -201,7 +200,8 @@ class OrderService {
 
             cart = response
 
-            cartItems = (cart[0] as { _id: string; _source: { items: any[] } })._source.items
+            cartItems = (cart[0] as { _id: string; _source: { items: any[] } })
+                ._source.items
         }
 
         // Lấy danh sách product_variant_id từ giỏ hàng
@@ -277,6 +277,11 @@ class OrderService {
 
         // Kiểm tra trạng thái sản phẩm
         if (flagChangePrice && user_id) {
+            console.log('Product information has changed. Updating cart...')
+            console.log('>>>>> check', {
+                flagChangePrice,
+                cartItems,
+            })
             // Cập nhật lại giá và discount trong Elasticsearch
             await elasticsearchService.updateDocument('carts', cart[0]._id, {
                 items: cartItems,
@@ -362,7 +367,9 @@ class OrderService {
         if (discountAmoutLoyaltyPoints > totalAmount * 0.5) {
             discountAmoutLoyaltyPoints = Math.floor(totalAmount * 0.5)
         }
-        const loyalty_points_used = Math.floor(discountAmoutLoyaltyPoints / 1000) // Số điểm thưởng được sử dụng
+        const loyalty_points_used = Math.floor(
+            discountAmoutLoyaltyPoints / 1000
+        ) // Số điểm thưởng được sử dụng
 
         // Tính tổng tiền sau khi áp dụng mã giảm giá
         totalAmount = totalAmount - discountAmount - discountAmoutLoyaltyPoints
@@ -373,7 +380,7 @@ class OrderService {
         const loyalty_points_earned = Math.round(subtotal * 0.0001) // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
 
         // Tạo tài khoản người dùng nếu không có
-        let isNewUser = false;
+        let isNewUser = false
         if (!user_id) {
             if (!user_name || !email) {
                 throw new BadRequestError('User name and email are required')
@@ -402,8 +409,8 @@ class OrderService {
                         email,
                         name: user_name,
                         password: randomPassword,
-                    });
-                    isNewUser = true;
+                    })
+                    isNewUser = true
                 }
             }
         }
@@ -472,8 +479,8 @@ class OrderService {
 
         // Xóa giỏ hàng của người dùng trong Elasticsearch và MongoDB
         if (user_id && !isNewUser && cart.length > 0) {
-            await elasticsearchService.deleteDocument('carts', cart[0]._id);
-            await CartModel.findByIdAndDelete(cart[0]._id);
+            await elasticsearchService.deleteDocument('carts', cart[0]._id)
+            await CartModel.findByIdAndDelete(cart[0]._id)
         }
 
         // Cập nhật lại số điểm thưởng cho người dùng
@@ -482,7 +489,6 @@ class OrderService {
                 loyalty_points:
                     loyalty_points_earned + loyalty_points_remaining,
             })
-
 
             await elasticsearchService.updateDocument('users', user_id, {
                 loyalty_points:
@@ -551,7 +557,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ({ total, response } = await elasticsearchService.searchDocuments(
+            ;({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
@@ -626,7 +632,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ; ({ total, response } = await elasticsearchService.searchDocuments(
+            ;({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
@@ -655,7 +661,7 @@ class OrderService {
             ...hit._source,
         }))
 
-        return new OkResponse('Get orders successfully', orders);
+        return new OkResponse('Get orders successfully', orders)
     }
 
     async updateOrderStatus(order_id: string, status: string) {

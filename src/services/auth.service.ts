@@ -84,7 +84,7 @@ class AuthService {
         )
 
         const user = {
-            id: foundUser._id,
+            _id: foundUser._id,
             phone: foundUser.phone,
             email: foundUser.email,
             name: foundUser.fullName,
