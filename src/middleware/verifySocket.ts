@@ -17,10 +17,15 @@ const verifyJWTSocket = (socket: any, next: any) => {
         socket.user = decoded
 
         // Check if the user is active
-        const user = await elasticsearchService.getDocumentById(
-            'users',
-            decoded.id
-        ) as any
+        let user: any
+        try {
+            user = await elasticsearchService.getDocumentById(
+                'users',
+                decoded.id
+            ) as any
+        } catch (error) {
+            return next(new ForbiddenError('User not found'))
+        }
 
         if (!user || !user.isActive) {
             return next(new ForbiddenError('User is not found or inactive'))

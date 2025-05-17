@@ -5,55 +5,52 @@ export class OrderValidation {
     // Validation cho việc tạo order
     static createOrder() {
         return {
-            body: z
-                .object({
-                    name: z.string().nonempty('User name is required'),
-                    email: z
-                        .string()
-                        .email('Invalid email format')
-                        .nonempty('Email is required'),
-                    coupon_code: z
-                        .string()
-                        .regex(/^[A-Z0-9]{5}$/)
-                        .optional(),
-                    address: z.string().nonempty('Address is required'),
-                    items: z
-                        .array(
-                            z.object({
-                                product_variant_id: z
-                                    .string()
-                                    .nonempty('Product variant ID is required'),
-                                product_variant_name: z
-                                    .string()
-                                    .nonempty(
-                                        'Product variant name is required'
-                                    ),
-                                quantity: z.coerce
-                                    .number()
-                                    .int('Quantity must be an integer')
-                                    .min(1, 'Quantity must be at least 1'),
-                                unit_price: z.coerce
-                                    .number()
-                                    .min(0, 'Price must be at least 0'),
-                                discount: z
-                                    .number()
-                                    .min(0, 'Discount must be at least 0')
-                                    .max(0.5, 'Discount must be at most 0.5')
-                                    .default(0),
-                                images: z.object({
-                                    url: z
-                                        .string()
-                                        .nonempty('Image URL is required'),
-                                }),
-                            })
-                        )
-                        .optional(),
-                    payment_method: z.enum(['CASH', 'BANK_TRANSFER'], {
-                        required_error: 'Payment method is required',
-                    }),
-                })
-                .strict('Invalid field'),
-        }
+            body: z.object({
+                name: z
+                    .string()
+                    .nonempty('User name is required'),
+                email: z
+                    .string()
+                    .email('Invalid email format')
+                    .nonempty('Email is required'),
+                coupon_code: z
+                    .string()
+                    .regex(/^[A-Z0-9]{5}$/)
+                    .optional(),
+                address: z
+                    .string()
+                    .nonempty('Address is required'),
+                items: z
+                    .array(
+                        z.object({
+                            product_variant_id: z
+                                .string()
+                                .nonempty('Product variant ID is required'),
+                            product_variant_name: z
+                                .string()
+                                .nonempty('Product variant name is required'),
+                            quantity: z.coerce
+                                .number()
+                                .int('Quantity must be an integer')
+                                .min(1, 'Quantity must be at least 1'),
+                            unit_price: z.coerce
+                                .number()
+                                .min(0, 'Price must be at least 0'),
+                            discount: z.coerce
+                                .number()
+                                .min(0, 'Discount must be at least 0')
+                                .max(0.5, 'Discount must be at most 0.5')
+                                .default(0),
+                            images: z.object({
+                                url: z.string().nonempty('Image URL is required'),
+                            }),
+                        })
+                    ).optional(),
+                payment_method: z.enum(['CASH', 'BANK_TRANSFER'], {
+                    required_error: 'Payment method is required',
+                }),
+            }).strict('Invalid field'),
+        };
     }
 
     // Validation cho việc cập nhật trạng thái order

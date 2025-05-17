@@ -1,30 +1,40 @@
-class ChatService {
-    async sendMessage({
-        senderId,
-        receiverId,
-        message
-    }: {
-        senderId: string
-        receiverId: string
-        message: string
-    }) {
-        // Validate input
-        if (!senderId || !receiverId || !message) {
-            throw new Error('Invalid input')
-        }
+// class ChatService {
+//     async sendMessage({
+//         senderId,
+//         receiverId,
+//         message
+//     }: {
+//         senderId: string
+//         receiverId: string
+//         message: string
+//     }) {
+//         // Kiểm tra và tạo cuộc hội thoại nếu chưa có
+//         let conversation = await Conversation.findOne({
+//             user: senderId === receiverId ? null : (senderId), // user luôn khác admin
+//             admin: receiverId
+//         });
 
-        // Check if the conversation exists
-        const conversation = await this.getConversation(senderId, receiverId)
-        if (!conversation) {
-            throw new Error('Conversation not found')
-        }
+//         if (!conversation) {
+//             conversation = new Conversation({
+//                 user_id: senderId,
+//                 admin_id: receiverId,
+//                 last_message: content
+//             });
+//             await conversation.save();
+//         }
 
-        // Save the message to the database
-        const savedMessage = await this.saveMessage(senderId, receiverId, message)
+//         // Lưu tin nhắn
+//         const message = new Message({
+//             conversation: conversation._id,
+//             sender: senderId,
+//             messageType,
+//             content
+//         });
+//         await message.save();
 
-        // Return the saved message
-        return savedMessage
-    }
-}
-const chatService = new ChatService()
-export default chatService
+//         // Return the saved message
+//         return savedMessage
+//     }
+// }
+// const chatService = new ChatService()
+// export default chatService
