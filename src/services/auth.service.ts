@@ -29,6 +29,10 @@ class AuthService {
             password,
         })
 
+        if (!newUser) {
+            throw new BadRequestError('Failed to create user')
+        }
+
         const { _id, ...userWithoutId } = newUser.toObject()
 
         await elasticsearchService.indexDocument(

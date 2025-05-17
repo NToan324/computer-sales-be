@@ -33,9 +33,15 @@ router.post(
   asyncHandler(categoryController.createCategory)
 )
 
-// Lấy danh sách danh mục
+// Lấy danh sách danh mục (User)
 router.get('/',
   asyncHandler(categoryController.getCategories))
+
+// Lấy danh sách danh mục (Admin)
+router.get('/admin',
+  verifyJWT,
+  verifyRole(['ADMIN']),
+  asyncHandler(categoryController.getCategoriesAdmin))
 
 // Lấy chi tiết danh mục theo id
 router.get('/:id',

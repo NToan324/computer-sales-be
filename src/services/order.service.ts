@@ -166,7 +166,7 @@ class OrderService {
             product_variant_id: string;
             product_variant_name: string;
             quantity: number;
-            price: number;
+            unit_price: number;
             discount?: number;
             images: {
                 url: string;
@@ -178,14 +178,6 @@ class OrderService {
         let discountAmount = 0
         let cart: any[] = []
 
-        //print all variables
-        console.log('user_id', user_id)
-        console.log('user_name', user_name)
-        console.log('email', email)
-        console.log('coupon_code', coupon_code)
-        console.log('address', address)
-        console.log('items', items)
-        console.log('payment_method', payment_method)
 
         // Trường hợp có `user_id`
         if (user_id) {
@@ -209,8 +201,7 @@ class OrderService {
 
             cart = response
 
-            cartItems = (cart[0] as { _id: string; _source: { items: any[] } })
-                ._source.items
+            cartItems = (cart[0] as { _id: string; _source: { items: any[] } })._source.items
         }
 
         // Lấy danh sách product_variant_id từ giỏ hàng
@@ -262,13 +253,15 @@ class OrderService {
                 )
             }
 
+            console.log('item', item)
+
             // Kiểm tra giá và discount
             if (
-                item.price !== product.price ||
+                item.unit_price !== product.price ||
                 item.discount !== product.discount
             ) {
                 // Cập nhật lại giá và discount trong giỏ hàng
-                item.price = product.price
+                item.unit_price = product.price
                 item.discount = product.discount
 
                 flagChangePrice = true
@@ -334,7 +327,7 @@ class OrderService {
                 throw new BadRequestError('Coupon usage limit has been reached')
             }
 
-            discountAmount = coupon.discount_amount || 0
+            discountAmount = coupon.discount_amount || 0.0
         }
 
         let currentLoyaltyPoints: any = 0.0
@@ -345,12 +338,12 @@ class OrderService {
         }
 
         // Tính tổng tiền
-        const shipping_fee = 0 // Ví dụ: phí vận chuyển là 0
-        const tax_rate = 0 // Ví dụ: thuế là 0%
+        const shipping_fee = 49000.0 // Ví dụ: phí vận chuyển là 0
+        const tax_rate = 0.1 // Ví dụ: thuế là 10%
 
         const subtotal = cartItems.reduce(
             (sum: number, item: any) =>
-                sum + item.quantity * item.price * (1 - (item.discount || 0)),
+                sum + item.quantity * item.price * (1 - (item.discount || 0.0)),
             0
         )
 
@@ -367,9 +360,9 @@ class OrderService {
 
         let discountAmoutLoyaltyPoints = discountAmoutLoyaltyPointsMax
         if (discountAmoutLoyaltyPoints > totalAmount * 0.5) {
-            discountAmoutLoyaltyPoints = totalAmount * 0.5
+            discountAmoutLoyaltyPoints = Math.floor(totalAmount * 0.5)
         }
-        const loyalty_points_used = discountAmoutLoyaltyPoints / 1000 // Số điểm thưởng được sử dụng
+        const loyalty_points_used = Math.floor(discountAmoutLoyaltyPoints / 1000) // Số điểm thưởng được sử dụng
 
         // Tính tổng tiền sau khi áp dụng mã giảm giá
         totalAmount = totalAmount - discountAmount - discountAmoutLoyaltyPoints
@@ -377,7 +370,7 @@ class OrderService {
         const loyalty_points_remaining =
             currentLoyaltyPoints - loyalty_points_used // Số điểm thưởng còn lại
 
-        const loyalty_points_earned = totalAmount * 0.0001 // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
+        const loyalty_points_earned = Math.round(subtotal * 0.0001) // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
 
         // Tạo tài khoản người dùng nếu không có
         let isNewUser = false;
@@ -441,6 +434,10 @@ class OrderService {
             payment_method,
         })
 
+        if (!order) {
+            throw new BadRequestError('Failed to create order')
+        }
+
         const { _id, ...orderWithoutId } = order.toObject()
 
         // Thêm đơn hàng vào Elasticsearch
@@ -486,6 +483,7 @@ class OrderService {
                     loyalty_points_earned + loyalty_points_remaining,
             })
 
+
             await elasticsearchService.updateDocument('users', user_id, {
                 loyalty_points:
                     loyalty_points_earned + loyalty_points_remaining,
@@ -501,14 +499,18 @@ class OrderService {
                 { new: true }
             )
 
+            if (!updatedCoupon) {
+                throw new BadRequestError('Coupon not found')
+            }
+
+            const { _id, ...couponWithoutId } = updatedCoupon.toObject()
+
             // Cập nhật lại số lần sử dụng mã giảm giá trong Elasticsearch
             if (updatedCoupon) {
                 await elasticsearchService.updateDocument(
                     'coupons',
                     coupon_code,
-                    {
-                        usage_count: updatedCoupon.usage_count + 1,
-                    }
+                    couponWithoutId
                 )
             }
         }
@@ -549,7 +551,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ; ({ total, response } = await elasticsearchService.searchDocuments(
+            ({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,

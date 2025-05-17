@@ -28,8 +28,14 @@ router.post('/',
     validationRequest(BrandValidation.createBrand()),
     asyncHandler(brandController.createBrand))
 
-// Lấy danh sách thương hiệu
+// Lấy danh sách thương hiệu (User)
 router.get('/', asyncHandler(brandController.getBrands))
+
+// Lấy danh sách thương hiệu (Admin)
+router.get('/admin',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(brandController.getBrandsAdmin))
 
 // Lấy chi tiết thương hiệu theo id
 router.get('/:id',

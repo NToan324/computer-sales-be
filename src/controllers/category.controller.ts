@@ -22,6 +22,21 @@ class CategoryController {
     ))
   }
 
+  async getCategoriesAdmin(req: Request, res: Response) {
+    const { page = '1', limit = '10' } = req.query as {
+      page?: string
+      limit?: string
+    }
+    const pageNumber = parseInt(page, 10)
+    const limitNumber = parseInt(limit, 10)
+    res.send(await categoryService.getCategoriesAdmin(
+      {
+        page: pageNumber,
+        limit: limitNumber,
+      },
+    ))
+  }
+
   async getCategoryById(req: Request, res: Response) {
     const { id } = req.params
     res.send(await categoryService.getCategoryById(id))

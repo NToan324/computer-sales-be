@@ -10,10 +10,22 @@ import upload from '@/storage/multerConfig'
 
 const router = Router()
 
+// Lấy danh sách biến thể sản phẩm (Admin)
+router.get('/admin',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(productController.getProductVariantsAdmin))
+
 // Lấy danh sách review theo product_variant_id
 router.get('/:id/reviews', asyncHandler(reviewController.getReviewsByProductVariantId))
 
-// Lấy danh sách biến thể sản phẩm
+// Lấy biến thể sản phẩm theo id biến thể sản phẩm (Admin)
+router.get('/:id/admin',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(productController.getProductVariantByIdAdmin))
+
+// Lấy danh sách biến thể sản phẩm (User)
 router.get('/', asyncHandler(productController.getProductVariants))
 
 // tải lên ảnh sản phẩm
@@ -33,7 +45,14 @@ router.post(
     asyncHandler(productController.createProductVariant)
 )
 
-// Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình
+// Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu (Admin)
+router.get('/search/admin',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    validationRequest(ProductValidation.searchProductVariant()),
+    asyncHandler(productController.searchProductVariantAdmin))
+
+// Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình (User)
 router.get('/search',
     validationRequest(ProductValidation.searchProductVariant()),
     asyncHandler(productController.searchProductVariant))
@@ -56,7 +75,7 @@ router.put(
     asyncHandler(productController.updateProductVariant)
 )
 
-// Lấy biến thể sản phẩm theo id biến thể sản phẩm
+// Lấy biến thể sản phẩm theo id biến thể sản phẩm (User)
 router.get('/:id', asyncHandler(productController.getProductVariantById))
 
 // Xóa biến thể sản phẩm

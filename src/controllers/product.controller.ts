@@ -83,7 +83,25 @@ class ProductController {
         res.send(await productService.createProductVariant(payload))
     }
 
-    //Lấy danh sách biến thể sản phẩm
+    //Lấy danh sách biến thể sản phẩm (Admin)
+    async getProductVariantsAdmin(req: Request, res: Response) {
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string
+            limit?: string
+        }
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        res.send(
+            await productService.getProductVariantsAdmin({
+                page: pageNumber,
+                limit: limitNumber,
+            })
+        )
+    }
+
+    //Lấy danh sách biến thể sản phẩm (User)
     async getProductVariants(req: Request, res: Response) {
         const { page = '1', limit = '10' } = req.query as {
             page?: string
@@ -101,7 +119,13 @@ class ProductController {
         )
     }
 
-    //Lấy biến thể sản phẩm theo id
+    //Lấy biến thể sản phẩm theo id (Admin)
+    async getProductVariantByIdAdmin(req: Request, res: Response) {
+        const { id } = req.params
+        res.send(await productService.getProductVariantByIdAdmin(id))
+    }
+
+    //Lấy biến thể sản phẩm theo id (User)
     async getProductVariantById(req: Request, res: Response) {
         const { id } = req.params
         res.send(await productService.getProductVariantById(id))
@@ -200,7 +224,61 @@ class ProductController {
         )
     }
 
-    //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình
+    //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình (Admin)
+    async searchProductVariantAdmin(req: Request, res: Response) {
+        const {
+            name,
+            category_ids,
+            brand_ids,
+            min_price,
+            max_price,
+            ratings,
+            sort_price,
+            sort_name,
+            page = 1,
+            limit = 10,
+        } = req.query as {
+            name?: string;
+            category_ids?: string | string[];
+            brand_ids?: string | string[];
+            min_price?: number;
+            max_price?: number;
+            ratings?: number;
+            sort_price?: 'asc' | 'desc';
+            sort_name?: 'asc' | 'desc';
+            page?: number;
+            limit?: number;
+        };
+
+        // Đảm bảo các tham số là mảng
+        const categoryIdsArray = Array.isArray(category_ids)
+            ? category_ids
+            : category_ids
+                ? [category_ids]
+                : []
+        const brandIdsArray = Array.isArray(brand_ids)
+            ? brand_ids
+            : brand_ids
+                ? [brand_ids]
+                : []
+
+        res.send(
+            await productService.searchProductVariantAdmin({
+                name,
+                category_ids: categoryIdsArray,
+                brand_ids: brandIdsArray,
+                min_price: min_price,
+                max_price: max_price,
+                ratings: ratings,
+                sort_price,
+                sort_name,
+                page: page,
+                limit: limit,
+            })
+        )
+    }
+
+    //Tìm kiếm biến thể sản phẩm theo tên, danh mục, thương hiệu, khoảng giá, rating trung bình (User)
     async searchProductVariant(req: Request, res: Response) {
         const {
             name,

@@ -8,7 +8,11 @@ const couponSchema = new Schema(
             required: true,
             unique: true,
         },
-        discount_amount: mongoose.Schema.Types.Double,
+        discount_amount: {
+            type: mongoose.Schema.Types.Double,
+            required: true,
+            min: 0,
+        },
         usage_count: {
             type: Number,
             default: 0,
@@ -18,6 +22,12 @@ const couponSchema = new Schema(
             min: 1,
             max: 10,
         },
+        orders_used: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'orders',
+            },
+        ],
         isActive: {
             type: Boolean,
             default: true,

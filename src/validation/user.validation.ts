@@ -22,6 +22,10 @@ export class UserValidation {
             body: z.object({
                 fullName: z.string().optional(),
                 address: z.string().optional(),
+                phone: z
+                    .string()
+                    .regex(/^\d{10}$/, 'Phone number must be 10 digits')
+                    .optional(),
                 avatar: z
                     .object({
                         url: z.string().url('Invalid avatar URL'),
@@ -31,6 +35,26 @@ export class UserValidation {
                 isActive: z
                     .boolean()
                     .optional()
+            }).strict('Invalid field'),
+        };
+    }
+
+    static searchUser() {
+        return {
+            query: z.object({
+                name: z.string().optional(),
+                email: z.string().optional(),
+                page: z.coerce
+                    .number()
+                    .int('Page must be an integer')
+                    .min(1, 'Page must be greater than or equal to 1')
+                    .optional(),
+                limit: z.coerce
+                    .number()
+                    .int('Limit must be an integer')
+                    .min(1, 'Limit must be greater than or equal to 1')
+                    .max(100, 'Limit must be less than or equal to 100')
+                    .optional(),
             }).strict('Invalid field'),
         };
     }

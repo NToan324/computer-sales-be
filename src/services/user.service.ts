@@ -46,12 +46,14 @@ class UserService {
     async updateUserInfo({
         user_id,
         fullName,
+        phone,
         address,
         avatar,
         isActive
     }: {
         user_id: string;
         fullName?: string;
+        phone?: string;
         address?: string;
         avatar?: {
             url?: string;
@@ -63,6 +65,7 @@ class UserService {
         const updatedUser = await UserModel.findByIdAndUpdate(user_id,
             {
                 fullName: fullName,
+                phone: phone,
                 address: address,
                 avatar: avatar,
                 isActive: isActive,
@@ -119,6 +122,71 @@ class UserService {
         });
 
         return new OkResponse('Get users successfully', {
+            total: total,
+            page: page,
+            limit: limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            users,
+        });
+    }
+
+    async searchUsers({
+        name,
+        email,
+        page = 1,
+        limit = 10,
+    }: {
+        name?: string;
+        email?: string;
+        page?: number;
+        limit?: number;
+    }) {
+        const from = (page - 1) * limit;
+        const must: any[] = []
+
+        if (name) {
+            must.push({
+                wildcard: {
+                    "fullName.keyword": {
+                        value: `*${name}*`,
+                        case_insensitive: true,
+                    },
+                },
+            });
+        }
+
+        if (email) {
+            must.push({
+                term: {
+                    'email.keyword': email,
+                },
+            });
+        }
+
+        // Tìm kiếm người dùng trong Elasticsearch
+        const { total, response } = await elasticsearchService.searchDocuments('users', {
+            from: from,
+            size: limit,
+            query: {
+                bool: {
+                    must
+                },
+            },
+        });
+
+        if (total === 0) {
+            throw new OkResponse('No users found', []);
+        }
+
+        const users = response.map((user: any) => {
+            const { password, role, ...userWithoutSensitiveFields } = user._source;
+            return {
+                _id: user._id,
+                ...userWithoutSensitiveFields,
+            };
+        });
+
+        return new OkResponse('Search users successfully', {
             total: total,
             page: page,
             limit: limit,
