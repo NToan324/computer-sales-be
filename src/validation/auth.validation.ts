@@ -10,10 +10,6 @@ export class AuthValidation {
                         .email('Email is not valid')
                         .nonempty('Email is required'),
                     address: z.string().nonempty('Address is required'),
-                    phone: z
-                        .string()
-                        .nonempty('Phone number is required')
-                        .regex(/^[0-9]{10}$/, 'Phone number is not valid'),
                     password: z
                         .string()
                         .nonempty('Password is required')

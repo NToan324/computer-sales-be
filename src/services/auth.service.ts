@@ -11,20 +11,14 @@ dotenv.config()
 
 class AuthService {
     async signup(payload: Partial<User>) {
-        const { fullName, email, phone, address, password } = payload
-        const isPhoneNumberExist = await userModel.exists({ phone })
+        const { fullName, email, address, password } = payload
         const isEmailExist = await userModel.exists({ email })
         if (isEmailExist) {
             throw new BadRequestError('Email already exists')
         }
-        if (isPhoneNumberExist) {
-            throw new BadRequestError('Phone number already exists')
-        }
-
         const newUser = await userModel.create({
             fullName,
             email,
-            phone,
             address,
             password,
         })

@@ -4,13 +4,12 @@ import { CreatedResponse } from '@/core/success.response'
 
 class AuthController {
     async signup(req: Request, res: Response) {
-        const { email, fullName, password, address, phone } = req.body
+        const { email, fullName, password, address } = req.body
         const userResponse = await authService.signup({
             email,
             fullName,
             password,
             address,
-            phone,
         })
 
         res.send(new CreatedResponse('User created successfully', userResponse))
