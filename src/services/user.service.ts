@@ -8,12 +8,17 @@ class UserService {
     // Lấy hồ sơ người dùng
     async getUserProfile(user_id: string) {
         // Tìm người dùng trong MongoDB
-        const user = await elasticsearchService.getDocumentById('users', user_id);
+        const user: any = await elasticsearchService.getDocumentById('users', user_id);
         if (!user) {
             throw new BadRequestError('User not found');
         }
 
-        return new OkResponse('Get user profile successfully', user);
+        const { password, role, isActive, ...userWithoutSensitiveField } = user;
+
+        return new OkResponse('Get user profile successfully', {
+            _id: user_id,
+            ...userWithoutSensitiveField,
+        });
     }
 
     // Đổi mật khẩu
@@ -31,29 +36,95 @@ class UserService {
             throw new BadRequestError('Old password is incorrect');
         }
 
-        // Hash mật khẩu mới và cập nhật
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
+        user.password = newPassword;
         await user.save();
 
         return new OkResponse('Password changed successfully');
     }
 
     // Cập nhật thông tin người dùng
-    async updateUserInfo(user_id: string, updatedData: any) {
+    async updateUserInfo({
+        user_id,
+        fullName,
+        address,
+        avatar,
+        isActive
+    }: {
+        user_id: string;
+        fullName?: string;
+        address?: string;
+        avatar?: {
+            url?: string;
+            public_id?: string;
+        };
+        isActive?: boolean;
+    }) {
         // Cập nhật thông tin trong MongoDB
-        const updatedUser = await UserModel.findByIdAndUpdate(user_id, updatedData, {
-            new: true,
-        }).lean();
+        const updatedUser = await UserModel.findByIdAndUpdate(user_id,
+            {
+                fullName: fullName,
+                address: address,
+                avatar: avatar,
+                isActive: isActive,
+            },
+            {
+                new: true,
+            });
 
         if (!updatedUser) {
             throw new BadRequestError('User not found');
         }
 
-        // Đồng bộ thông tin lên Elasticsearch
-        await elasticsearchService.updateDocument('users', user_id, updatedUser);
+        const { _id, ...userWithoutId } = updatedUser.toObject();
 
-        return updatedUser;
+        // Đồng bộ thông tin lên Elasticsearch
+        await elasticsearchService.updateDocument('users', _id.toString(), userWithoutId);
+
+        const { password, role, isActive: userStatus, ...userWithoutSensitiveField } = userWithoutId;
+
+        return new OkResponse('User information updated successfully', {
+            _id: _id,
+            ...userWithoutSensitiveField,
+        });
+    }
+
+    // Lấy danh sách người dùng
+    async getUsers({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number;
+        limit?: number;
+    }) {
+        const from = (page - 1) * limit;
+        // Lấy danh sách người dùng từ Elasticsearch
+        const { total, response } = await elasticsearchService.searchDocuments('users', {
+            from: from,
+            size: limit,
+            query: {
+                match_all: {}
+            }
+        });
+
+        if (total === 0) {
+            throw new OkResponse('No users found', []);
+        }
+
+        const users = response.map((user: any) => {
+            const { password, role, ...userWithoutSensitiveFields } = user._source;
+            return {
+                _id: user._id,
+                ...userWithoutSensitiveFields,
+            };
+        });
+
+        return new OkResponse('Get users successfully', {
+            total: total,
+            page: page,
+            limit: limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            users,
+        });
     }
 
 }

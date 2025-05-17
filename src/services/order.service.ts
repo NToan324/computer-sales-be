@@ -273,7 +273,7 @@ class OrderService {
 
                 flagChangePrice = true
             }
-            
+
             // Kiểm tra số lượng sản phẩm
             if (item.quantity > product.quantity) {
                 throw new BadRequestError(
@@ -425,8 +425,6 @@ class OrderService {
             payment_status = 'PAID'
         }
 
-        console.log('test')
-
         // Tạo đơn hàng trong MongoDB
         const order = await OrderModel.create({
             user_id,
@@ -551,7 +549,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ;({ total, response } = await elasticsearchService.searchDocuments(
+            ; ({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
@@ -626,7 +624,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ;({ total, response } = await elasticsearchService.searchDocuments(
+            ; ({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
@@ -655,7 +653,7 @@ class OrderService {
             ...hit._source,
         }))
 
-        return new OkResponse('Get orders by user id successfully', orders)
+        return new OkResponse('Get orders successfully', orders);
     }
 
     async updateOrderStatus(order_id: string, status: string) {

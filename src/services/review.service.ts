@@ -187,7 +187,7 @@ class ReviewService {
         let response: any[]
 
         try {
-            ;({ total, response } = await elasticsearchService.searchDocuments(
+            ({ total, response } = await elasticsearchService.searchDocuments(
                 'reviews',
                 {
                     size: limit,
