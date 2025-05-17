@@ -1,5 +1,5 @@
-import email from '@/config/email';
-import { z } from 'zod';
+import email from '@/config/email'
+import { z } from 'zod'
 
 export class OrderValidation {
     // Validation cho việc tạo order
@@ -56,47 +56,66 @@ export class OrderValidation {
     // Validation cho việc cập nhật trạng thái order
     static updateOrderStatus() {
         return {
-            body: z.object({
-                status: z.enum(['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED'], {
-                    required_error: 'Status is required',
-                }),
-            }).strict('Invalid field'),
-        };
+            body: z
+                .object({
+                    status: z.enum(
+                        ['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED'],
+                        {
+                            required_error: 'Status is required',
+                        }
+                    ),
+                })
+                .strict('Invalid field'),
+        }
     }
 
     static searchOrder() {
         return {
-            query: z.object({
-                order_id: z
-                    .string()
-                    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid order ID')
-                    .optional(),
-                user_name: z.string().optional(),
-                status: z.enum(['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED']).optional(),
-                payment_method: z.enum(['CASH', 'CREDIT_CARD', 'VNPay']).optional(),
-                payment_status: z.enum(['PENDING', 'PAID', 'FAILED']).optional(),
-                from_date: z
-                    .string()
-                    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
-                    .optional(),
-                to_date: z
-                    .string()
-                    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
-                    .optional(),
-                page: z.coerce
-                    .number()
-                    .int('Page must be an integer')
-                    .min(1, 'Page must be greater than or equal to 1')
-                    .optional(),
-                limit: z.coerce
-                    .number()
-                    .int('Limit must be an integer')
-                    .min(1, 'Limit must be greater than or equal to 1')
-                    .max(100, 'Limit must be less than or equal to 100')
-                    .optional(),
-            }).strict('Invalid field'),
-        };
+            query: z
+                .object({
+                    order_id: z
+                        .string()
+                        .regex(/^[0-9a-fA-F]{24}$/, 'Invalid order ID')
+                        .optional(),
+                    user_name: z.string().optional(),
+                    status: z
+                        .enum(['PENDING', 'SHIPPING', 'DELIVERED', 'CANCELLED'])
+                        .optional(),
+                    payment_method: z
+                        .enum(['CASH', 'CREDIT_CARD', 'VNPay'])
+                        .optional(),
+                    payment_status: z
+                        .enum(['PENDING', 'PAID', 'FAILED'])
+                        .optional(),
+                    from_date: z
+                        .string()
+                        .regex(
+                            /^\d{4}-\d{2}-\d{2}$/,
+                            'Invalid date format (YYYY-MM-DD)'
+                        )
+                        .optional(),
+                    to_date: z
+                        .string()
+                        .regex(
+                            /^\d{4}-\d{2}-\d{2}$/,
+                            'Invalid date format (YYYY-MM-DD)'
+                        )
+                        .optional(),
+                    page: z.coerce
+                        .number()
+                        .int('Page must be an integer')
+                        .min(1, 'Page must be greater than or equal to 1')
+                        .optional(),
+                    limit: z.coerce
+                        .number()
+                        .int('Limit must be an integer')
+                        .min(1, 'Limit must be greater than or equal to 1')
+                        .max(100, 'Limit must be less than or equal to 100')
+                        .optional(),
+                })
+                .strict('Invalid field'),
+        }
     }
 }
 
-export default OrderValidation;
+export default OrderValidation
