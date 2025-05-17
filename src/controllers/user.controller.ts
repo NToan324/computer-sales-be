@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express';
 import userService from '@/services/user.service';
 import orderService from '@/services/order.service';
-import { CreatedResponse, OkResponse } from '@/core/success.response';
 import { UploadService } from '@/services/upload.service';
 
 class UserController {
@@ -107,11 +106,13 @@ class UserController {
         const { id } = req.params as { id: string };
         const {
             fullName,
+            phone,
             address,
             avatar,
             isActive,
         }: {
             fullName?: string;
+            phone?: string;
             address?: string;
             avatar?: {
                 url?: string;
@@ -123,6 +124,7 @@ class UserController {
         res.send(await userService.updateUserInfo({
             user_id: id,
             fullName,
+            phone,
             address,
             avatar,
             isActive,

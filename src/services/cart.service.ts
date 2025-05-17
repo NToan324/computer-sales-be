@@ -69,6 +69,10 @@ class CartService {
                 ],
             })
 
+            if (!newCart) {
+                throw new BadRequestError('Failed to create cart')
+            }
+
             const { _id, ...cartWithoutId } = newCart.toObject()
 
             // Index the new cart in Elasticsearch

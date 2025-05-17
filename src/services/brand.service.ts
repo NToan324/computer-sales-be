@@ -9,6 +9,10 @@ class BrandService {
 
         const newBrand = await brandModel.create({ ...payload })
 
+        if (!newBrand) {
+            throw new BadRequestError('Failed to create brand')
+        }
+
         const { _id, ...brandWithoutId } = newBrand.toObject()
 
         await elasticsearchService.indexDocument(
@@ -20,7 +24,8 @@ class BrandService {
         return new CreatedResponse('Brand created successfully', { _id, ...brandWithoutId })
     }
 
-    async getBrands({
+    // Lấy danh sách thương hiệu (Admin)
+    async getBrandsAdmin({
         page = 1,
         limit = 10,
     }: {
@@ -35,6 +40,51 @@ class BrandService {
                 size: limit,
                 query: {
                     match_all: {},
+                },
+            }
+        )
+
+        if (total === 0) {
+            return new OkResponse('No brands found', [])
+        }
+
+        const brands = response.map((hit: any) => ({
+            _id: hit._id,
+            ...hit._source,
+        }))
+
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
+        return new OkResponse('Get all brands successfully', {
+            total,
+            page: pageNumber,
+            limit: limitNumber,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            brands,
+        })
+    }
+
+    // Lấy danh sách thương hiệu (User)
+    async getBrands({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit
+        const { total, response } = await elasticsearchService.searchDocuments(
+            'brands',
+            {
+                from,
+                size: limit,
+                query: {
+                    bool: {
+                        term: {
+                            isActive: true,
+                        },
+                    },
                 },
             }
         )

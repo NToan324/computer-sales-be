@@ -8,14 +8,30 @@ class BrandController {
     res.status(201).send(await brandService.createBrand(payload))
   }
 
-  async getBrands(req: Request, res: Response) {
-
+  async getBrandsAdmin(req: Request, res: Response) {
     const { page = '1', limit = '10' } = req.query as {
       page?: string
       limit?: string
     }
+
     const pageNumber = parseInt(page, 10)
     const limitNumber = parseInt(limit, 10)
+
+    res.send(await brandService.getBrandsAdmin({
+      page: pageNumber,
+      limit: limitNumber,
+    }))
+  }
+
+  async getBrands(req: Request, res: Response) {
+    const { page = '1', limit = '10' } = req.query as {
+      page?: string
+      limit?: string
+    }
+
+    const pageNumber = parseInt(page, 10)
+    const limitNumber = parseInt(limit, 10)
+
     res.send(await brandService.getBrands({
       page: pageNumber,
       limit: limitNumber,

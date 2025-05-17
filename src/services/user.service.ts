@@ -46,12 +46,14 @@ class UserService {
     async updateUserInfo({
         user_id,
         fullName,
+        phone,
         address,
         avatar,
         isActive
     }: {
         user_id: string;
         fullName?: string;
+        phone?: string;
         address?: string;
         avatar?: {
             url?: string;
@@ -63,6 +65,7 @@ class UserService {
         const updatedUser = await UserModel.findByIdAndUpdate(user_id,
             {
                 fullName: fullName,
+                phone: phone,
                 address: address,
                 avatar: avatar,
                 isActive: isActive,

@@ -22,6 +22,10 @@ export class UserValidation {
             body: z.object({
                 fullName: z.string().optional(),
                 address: z.string().optional(),
+                phone: z
+                    .string()
+                    .regex(/^\d{10}$/, 'Phone number must be 10 digits')
+                    .optional(),
                 avatar: z
                     .object({
                         url: z.string().url('Invalid avatar URL'),

@@ -8,6 +8,10 @@ class CategoryService {
     async createCategory(payload: Category) {
         const newCategory = await categoryModel.create({ ...payload })
 
+        if (!newCategory) {
+            throw new BadRequestError('Failed to create category')
+        }
+
         const { _id, ...categoryWithoutId } = newCategory.toObject()
 
         await elasticsearchService.indexDocument(
@@ -19,7 +23,8 @@ class CategoryService {
         return new CreatedResponse('Category created successfully', { _id: _id, ...categoryWithoutId })
     }
 
-    async getCategories({
+    // Lấy danh sách danh mục (Admin)
+    async getCategoriesAdmin({
         page = 1,
         limit = 10,
     }: {
@@ -34,6 +39,54 @@ class CategoryService {
                 size: limit,
                 query: {
                     match_all: {},
+                },
+            }
+        );
+
+        if (total === 0) {
+            return new OkResponse('No categories found', [])
+        }
+        const categories = response.map((hit: any) => {
+            return {
+                _id: hit._id,
+                ...hit._source,
+            }
+        })
+
+        const pageNumber = parseInt(page.toString(), 10)
+        const limitNumber = parseInt(limit.toString(), 10)
+
+        return new OkResponse('Get all categories successfully', {
+            total,
+            page: pageNumber,
+            limit: limitNumber,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            categories,
+        })
+    }
+
+    // Lấy danh sách danh mục (User)
+    async getCategories({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number
+        limit?: number
+    }) {
+        const from = (page - 1) * limit
+        const { total, response } = await elasticsearchService.searchDocuments(
+            'categories',
+            {
+                from,
+                size: limit,
+                query: {
+                    bool: {
+                        must: {
+                            term: {
+                                isActive: true,
+                            },
+                        },
+                    },
                 },
             }
         );
