@@ -168,6 +168,9 @@ class OrderService {
             quantity: number;
             price: number;
             discount?: number;
+            images: {
+                url: string;
+            };
         }[];
         payment_method: string;
     }) {
