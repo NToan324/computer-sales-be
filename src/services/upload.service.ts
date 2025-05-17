@@ -1,9 +1,8 @@
 import { CreatedResponse } from "@/core/success.response";
 import { Cloudinary } from "@/helpers/uploadImageToCloudinary";
 import fs from "fs";
-
 export class UploadService {
-    
+
     static async uploadImage(image: string, public_id?: string) {
         var uploadedImage;
         if (!public_id) {

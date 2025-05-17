@@ -7,6 +7,7 @@ import UserModel from '@/models/user.model';
 import authService from './auth.service';
 import ProductVariantModel from '@/models/productVariant.model';
 import { mailQueue } from '@/queue/mail.queue';
+import CouponModel, { Coupon } from '@/models/coupon.model';
 
 class OrderService {
     // Tìm kiếm đơn hàng theo các tiêu chí
@@ -271,6 +272,7 @@ class OrderService {
         }
 
         // Kiểm tra coupon_code nếu có
+        let coupon: any = null;
         if (coupon_code) {
             const { total: totalCoupons, response: coupons } = await elasticsearchService.searchDocuments('coupons', {
                 query: {
@@ -297,7 +299,7 @@ class OrderService {
                 throw new BadRequestError('Invalid coupon code');
             }
 
-            const coupon: any = coupons[0]._source;
+            coupon = coupons[0]._source;
 
             if (coupon.usage_count >= coupon.usage_limit) {
                 throw new BadRequestError('Coupon usage limit has been reached');
@@ -306,20 +308,45 @@ class OrderService {
             discountAmount = coupon.discount_amount || 0;
         }
 
-        let loyalty_points_used: any = 0.0;
+        let currentLoyaltyPoints: any = 0.0;
         if (user_id) {
             const user = await UserModel.findById(user_id);
 
-            loyalty_points_used = user?.loyalty_points || 0.0;
+            currentLoyaltyPoints = user?.loyalty_points || 0.0;
         }
 
         // Tính tổng tiền
-        const totalAmount = cartItems.reduce(
+        const shipping_fee = 0; // Ví dụ: phí vận chuyển là 0
+        const tax_rate = 0; // Ví dụ: thuế là 0%
+
+        const subtotal = cartItems.reduce(
             (sum: number, item: any) => sum + item.quantity * item.price * (1 - (item.discount || 0)),
             0
-        ) - discountAmount - (loyalty_points_used * 1000); // Giả sử 1 điểm thưởng = 1000đ
+        );
 
-        const loyalty_points_earned = totalAmount * 0.1; // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
+        const tax = subtotal * tax_rate; // Tính thuế dựa trên tổng tiền hàng
+        let totalAmount = subtotal + shipping_fee + tax
+
+        // Nếu số tiền giảm giá lớn hơn tổng tiền hàng, thì không cho phép
+        if (totalAmount - discountAmount < 0) {
+            throw new BadRequestError('Mã giảm giá không hợp lệ');
+        }
+
+        // Nếu số tiền giảm giá bằng số điểm thưởng lớn hơn 50% tổng tiền hàng, thì chỉ được giảm tối đa 50% tổng tiền hàng
+        let discountAmoutLoyaltyPointsMax = currentLoyaltyPoints * 1000; // 1 điểm thưởng = 1000đ
+
+        let discountAmoutLoyaltyPoints = discountAmoutLoyaltyPointsMax;
+        if (discountAmoutLoyaltyPoints > totalAmount * 0.5) {
+            discountAmoutLoyaltyPoints = totalAmount * 0.5;
+        }
+        const loyalty_points_used = discountAmoutLoyaltyPoints / 1000; // Số điểm thưởng được sử dụng
+
+        // Tính tổng tiền sau khi áp dụng mã giảm giá
+        totalAmount = totalAmount - discountAmount - discountAmoutLoyaltyPoints;
+
+        const loyalty_points_remaining = currentLoyaltyPoints - loyalty_points_used; // Số điểm thưởng còn lại
+
+        const loyalty_points_earned = totalAmount * 0.0001; // 10% số tiền đơn hàng sẽ được quy đổi thành điểm thưởng
 
 
         // Tạo tài khoản người dùng nếu không có
@@ -411,12 +438,29 @@ class OrderService {
         // Cập nhật lại số điểm thưởng cho người dùng
         if (user_id) {
             await UserModel.findByIdAndUpdate(user_id, {
-                loyalty_points: loyalty_points_earned,
+                loyalty_points: loyalty_points_earned + loyalty_points_remaining,
             });
 
             await elasticsearchService.updateDocument('users', user_id, {
-                loyalty_points: loyalty_points_earned,
+                loyalty_points: loyalty_points_earned + loyalty_points_remaining,
             });
+        }
+
+        // Cập nhật lại số lần sử dụng mã giảm giá
+        if (coupon_code) {
+            // Cập nhật lại số lần sử dụng mã giảm giá trong MongoDB
+            const updatedCoupon = await CouponModel.findOneAndUpdate(
+                { code: coupon_code },
+                { $inc: { usage_count: 1 } },
+                { new: true }
+            );
+
+            // Cập nhật lại số lần sử dụng mã giảm giá trong Elasticsearch
+            if (updatedCoupon) {
+                await elasticsearchService.updateDocument('coupons', coupon_code, {
+                    usage_count: updatedCoupon.usage_count + 1,
+                });
+            }
         }
 
         // Dùng message queue để gửi email thông báo đơn hàng

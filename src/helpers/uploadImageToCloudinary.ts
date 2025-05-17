@@ -8,8 +8,8 @@ export class Cloudinary {
                 url: result.secure_url,
                 public_id: result.public_id,
             };
-        } catch (error) {
-            throw new Error('Failed to upload image to Cloudinary');
+        } catch (error: any) {
+            throw new Error('Failed to upload image to Cloudinary' + error.message);
         }
     }
     static async deleteImage(publicId: string) {
