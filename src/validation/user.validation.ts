@@ -21,10 +21,6 @@ export class UserValidation {
         return {
             body: z.object({
                 fullName: z.string().optional(),
-                phone: z
-                    .string()
-                    .regex(/^[0-9]{10,11}$/, 'Invalid phone number')
-                    .optional(),
                 address: z.string().optional(),
                 avatar: z
                     .object({
@@ -32,6 +28,9 @@ export class UserValidation {
                         public_id: z.string().optional(),
                     })
                     .optional(),
+                isActive: z
+                    .boolean()
+                    .optional()
             }).strict('Invalid field'),
         };
     }

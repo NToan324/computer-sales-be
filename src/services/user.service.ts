@@ -8,12 +8,17 @@ class UserService {
     // Lấy hồ sơ người dùng
     async getUserProfile(user_id: string) {
         // Tìm người dùng trong MongoDB
-        const user = await elasticsearchService.getDocumentById('users', user_id);
+        const user: any = await elasticsearchService.getDocumentById('users', user_id);
         if (!user) {
             throw new BadRequestError('User not found');
         }
 
-        return new OkResponse('Get user profile successfully', user);
+        const { password, role, isActive, ...userWithoutSensitiveField } = user;
+
+        return new OkResponse('Get user profile successfully', {
+            _id: user_id,
+            ...userWithoutSensitiveField,
+        });
     }
 
     // Đổi mật khẩu
@@ -80,6 +85,45 @@ class UserService {
         return new OkResponse('User information updated successfully', {
             _id: _id,
             ...userWithoutSensitiveField,
+        });
+    }
+
+    // Lấy danh sách người dùng
+    async getUsers({
+        page = 1,
+        limit = 10,
+    }: {
+        page?: number;
+        limit?: number;
+    }) {
+        const from = (page - 1) * limit;
+        // Lấy danh sách người dùng từ Elasticsearch
+        const { total, response } = await elasticsearchService.searchDocuments('users', {
+            from: from,
+            size: limit,
+            query: {
+                match_all: {}
+            }
+        });
+
+        if (total === 0) {
+            throw new OkResponse('No users found', []);
+        }
+
+        const users = response.map((user: any) => {
+            const { password, role, ...userWithoutSensitiveFields } = user._source;
+            return {
+                _id: user._id,
+                ...userWithoutSensitiveFields,
+            };
+        });
+
+        return new OkResponse('Get users successfully', {
+            total: total,
+            page: page,
+            limit: limit,
+            totalPage: Math.ceil((total ?? 0) / limit),
+            users,
         });
     }
 

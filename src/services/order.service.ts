@@ -607,7 +607,7 @@ class OrderService {
             ...hit._source,
         }));
 
-        return new OkResponse('Get orders by user id successfully', orders);
+        return new OkResponse('Get orders successfully', orders);
     }
 
     async updateOrderStatus(order_id: string, status: string) {

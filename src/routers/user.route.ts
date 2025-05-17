@@ -9,16 +9,16 @@ import verifyRole from '@/middleware/verifyRoles';
 
 const router = Router();
 
-// Lấy order theo user_id
-router.get('/orders',
-    verifyJWT,
-    asyncHandler(userController.getOrdersByUserId));
-
-// Xem chi tiết người dùng
-router.get('/:id',
+// Lấy danh sách người dùng
+router.get('/',
     verifyJWT,
     verifyRole(['ADMIN']),
-    asyncHandler(userController.getUserProfile));
+    asyncHandler(userController.getUsers));
+
+// Xem danh sách đơn hàng của bản thân (USER)
+router.get('/orders',
+    verifyJWT,
+    asyncHandler(userController.getOrders));
 
 // Lấy hồ sơ người dùng
 router.get('/profile',
@@ -31,6 +31,12 @@ router.put('/change-password',
     validationRequest(UserValidation.changePassword()),
     asyncHandler(userController.changePassword));
 
+// Cập nhật thông tin người dùng (bản thân) với quyền USER
+router.put('/profile',
+    verifyJWT,
+    validationRequest(UserValidation.updateUserInfo()),
+    asyncHandler(userController.updateProfile));
+
 // Cập nhật thông tin người dùng với quyền ADMIN
 router.put('/:id',
     verifyJWT,
@@ -38,11 +44,17 @@ router.put('/:id',
     validationRequest(UserValidation.updateUserInfo()),
     asyncHandler(userController.updateUserInfo));
 
-// Cập nhật thông tin người dùng với quyền USER
-router.put('/profile',
+// Lấy orders theo user_id
+router.get('/:id/orders',
     verifyJWT,
-    validationRequest(UserValidation.updateUserInfo()),
-    asyncHandler(userController.updateUserInfo));
+    verifyRole(['ADMIN']),
+    asyncHandler(userController.getOrdersByUserId));
+
+// Xem chi tiết người dùng (ADMIN)
+router.get('/:id',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    asyncHandler(userController.getUserProfileById));
 
 // tải lên avatar
 router.post(

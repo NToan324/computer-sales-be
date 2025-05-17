@@ -5,9 +5,45 @@ import { CreatedResponse, OkResponse } from '@/core/success.response';
 import { UploadService } from '@/services/upload.service';
 
 class UserController {
+
+    // Lấy danh sách người dùng
+    async getUsers(req: Request, res: Response) {
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string;
+            limit?: string;
+        };
+
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
+
+        res.send(await userService.getUsers({
+            page: pageNumber,
+            limit: limitNumber,
+        }));
+    }
+
+    // Lấy danh sách đơn hàng của bản thân (USER)
+    async getOrders(req: Request, res: Response) {
+        const { id } = req.user as { id: string };
+        const { page = '1', limit = '10' } = req.query as {
+            page?: string;
+            limit?: string;
+        };
+
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
+
+        res.send(await orderService.getOrderByUserId({
+            user_id: id,
+            page: pageNumber,
+            limit: limitNumber,
+        }));
+    }
+
     // Lấy danh sách đơn hàng theo user_id
     async getOrdersByUserId(req: Request, res: Response) {
-        const { id } = req.user as { id: string };
+        const { id } = req.params as { id: string };
+
         const { page = '1', limit = '10' } = req.query as {
             page?: string;
             limit?: string;
@@ -29,6 +65,12 @@ class UserController {
         res.send(await userService.getUserProfile(id));
     }
 
+    // Xem chi tiết người dùng (ADMIN)
+    async getUserProfileById(req: Request, res: Response) {
+        const { id } = req.params as { id: string };
+        res.send(await userService.getUserProfile(id));
+    }
+
     // Đổi mật khẩu
     async changePassword(req: Request, res: Response) {
         const { id } = req.user as { id: string };
@@ -37,12 +79,54 @@ class UserController {
         res.send(await userService.changePassword(id, oldPassword, newPassword));
     }
 
-    // Cập nhật thông tin người dùng
-    async updateUserInfo(req: Request, res: Response) {
+    // Cập nhật thông tin bản thân
+    async updateProfile(req: Request, res: Response) {
         const { id } = req.user as { id: string };
-        const updatedData = req.body;
-        const updatedUser = await userService.updateUserInfo(id, updatedData);
-        res.send(new OkResponse('User information updated successfully', updatedUser));
+        const {
+            fullName,
+            address,
+            avatar,
+        }: {
+            fullName?: string;
+            address?: string;
+            avatar?: {
+                url?: string;
+                public_id?: string;
+            };
+        } = req.body;
+        res.send(await userService.updateUserInfo({
+            user_id: id,
+            fullName,
+            address,
+            avatar,
+        }));
+    }
+
+    // Cập nhật thông tin người dùng với quyền ADMIN
+    async updateUserInfo(req: Request, res: Response) {
+        const { id } = req.params as { id: string };
+        const {
+            fullName,
+            address,
+            avatar,
+            isActive,
+        }: {
+            fullName?: string;
+            address?: string;
+            avatar?: {
+                url?: string;
+                public_id?: string;
+            };
+            isActive?: boolean;
+        } = req.body;
+
+        res.send(await userService.updateUserInfo({
+            user_id: id,
+            fullName,
+            address,
+            avatar,
+            isActive,
+        }));
     }
 
     // Tải lên ảnh avatar
