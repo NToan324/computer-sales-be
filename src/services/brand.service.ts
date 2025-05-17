@@ -80,7 +80,7 @@ class BrandService {
                 from,
                 size: limit,
                 query: {
-                    bool: {
+                    must: {
                         term: {
                             isActive: true,
                         },
