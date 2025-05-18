@@ -105,7 +105,15 @@ class UserService {
             from: from,
             size: limit,
             query: {
-                match_all: {}
+                bool: {
+                    filter: [
+                        {
+                            term: {
+                                role: 'CUSTOMER',
+                            },
+                        },
+                    ],
+                }
             }
         });
 
