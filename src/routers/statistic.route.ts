@@ -3,7 +3,8 @@ import { Router } from 'express'
 import { validationRequest } from '@/middleware/validationRequest'
 import verifyJWT from '@/middleware/verifyJWT'
 import verifyRole from '@/middleware/verifyRoles'
-import statisticController from '@/controllers/stattistic.controller'
+import statisticController from '@/controllers/statistic.controller'
+import { StatisticValidation } from '@/validation/statistic.validation'
 
 const router = Router()
 
@@ -14,10 +15,10 @@ router.get('/overview',
     asyncHandler(statisticController.getOverview))
 
 // // Lấy thống kê nâng cao
-// router.get('/advanced',
-//   verifyJWT,
-//   verifyRole(['ADMIN']),
-//   validationRequest(statisticController.getAdvancedStatistics()),
-//   asyncHandler(statisticController.getAdvancedStatistics))
+router.get('/advanced',
+    verifyJWT,
+    verifyRole(['ADMIN']),
+    validationRequest(StatisticValidation.getAdvancedStatistics()),
+    asyncHandler(statisticController.getAdvancedStatistics))
 
 export default router

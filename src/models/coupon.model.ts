@@ -34,7 +34,7 @@ const couponSchema = new Schema(
         },
 
     },
-    { timestamps: true, _id: false }
+    { timestamps: true }
 )
 
 const CouponModel = mongoose.model('coupons', couponSchema)
