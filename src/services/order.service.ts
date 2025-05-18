@@ -365,7 +365,7 @@ class OrderService {
         ) // Số điểm thưởng được sử dụng
 
         // Tính tổng tiền sau khi áp dụng mã giảm giá
-        totalAmount = totalAmount - discountAmount - discountAmoutLoyaltyPoints
+        totalAmount = Math.floor(totalAmount - discountAmount - discountAmoutLoyaltyPoints)
 
         const loyalty_points_remaining =
             currentLoyaltyPoints - loyalty_points_used // Số điểm thưởng còn lại
