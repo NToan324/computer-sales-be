@@ -6,6 +6,7 @@ export class StatisticValidation {
             query: z.object({
                 from_date: z.string().date('Invalid date format'),
                 to_date: z.string().date('Invalid date format'),
+                interval: z.enum(['day', 'week', 'month', 'year']).optional(),
             }).strict('Invalid field'),
         }
     }

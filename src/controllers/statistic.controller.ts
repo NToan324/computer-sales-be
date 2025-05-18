@@ -8,12 +8,13 @@ class StatisticController {
     }
 
     async getAdvancedStatistics(req: Request, res: Response) {
-        const { from_date, to_date } = req.query as
+        const { from_date, to_date, interval } = req.query as
             {
                 from_date: string
                 to_date: string
+                interval: 'day' | 'week' | 'month' | 'year'
             }
-        res.send(await statisticService.getAdvancedStatistics({ from_date, to_date }))
+        res.send(await statisticService.getAdvancedStatistics({ from_date, to_date, interval }))
     }
 }
 
