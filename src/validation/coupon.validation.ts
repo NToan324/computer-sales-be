@@ -29,12 +29,11 @@ export class CouponValidation {
                     .string()
                     .regex(/^[A-Z0-9]{5}$/, 'Invalid coupon code format')
                     .optional(),
-                discount_amount: z
+                discount_amount: z.coerce
                     .number()
                     .min(0, 'Discount amount must be at least 0')
-                    .max(100, 'Discount amount must not exceed 100')
                     .optional(),
-                usage_limit: z
+                usage_limit: z.coerce
                     .number()
                     .int('Usage limit must be an integer')
                     .min(1, 'Usage limit must be at least 1')
