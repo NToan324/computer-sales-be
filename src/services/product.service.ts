@@ -628,7 +628,7 @@ class ProductService {
         let response: any[] = [];
         try {
             ({ total, response } = await elasticsearchService.searchDocuments(
-                'products',
+                'product_variants',
                 {
                     from,
                     size: limit,
@@ -756,8 +756,6 @@ class ProductService {
                 },
             })
 
-        console.log(bestSellingProducts)
-
         // Lấy danh sách product_variant_id từ kết quả aggregation
         const buckets =
             bestSellingProducts?.aggregations?.best_selling_products?.buckets ||
@@ -769,7 +767,6 @@ class ProductService {
         }
 
 
-        console.log(productVariantIds)
 
         // Bước 2: Tìm kiếm thông tin chi tiết từ chỉ mục product_variants
         const { total, response } = await elasticsearchService.searchDocuments(
@@ -797,8 +794,6 @@ class ProductService {
                 },
             }
         )
-
-        console.log(response)
 
         if (total === 0) {
             return new OkResponse('No product variants found', [])
