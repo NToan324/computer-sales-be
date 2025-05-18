@@ -400,7 +400,7 @@ class ProductService {
                                 isActive: true,
                             },
                         },
-                    }
+                    },
                 },
             }
         )
@@ -447,11 +447,16 @@ class ProductService {
         }
 
         // Lấy thông tin của biến thể sản phẩm được tìm thấy
-        const productVariant = { _id: response[0]._id, ...(response[0]._source || {}) }
+        const productVariant = {
+            _id: response[0]._id,
+            ...(response[0]._source || {}),
+        }
 
-        return new OkResponse('Get product variant successfully', productVariant)
+        return new OkResponse(
+            'Get product variant successfully',
+            productVariant
+        )
     }
-
 
     //Lấy biến thể sản phẩm theo id (User)
     async getProductVariantById(id: string) {
@@ -624,8 +629,8 @@ class ProductService {
 
         // Tìm kiếm biến thể sản phẩm mới nhất trong Elasticsearch
 
-        let total: any;
-        let response: any[] = [];
+        let total: any
+        let response: any[] = []
         try {
             ({ total, response } = await elasticsearchService.searchDocuments(
                 'product_variants',
@@ -645,11 +650,9 @@ class ProductService {
                         },
                     ],
                 }
-            ));
-        }
-        catch (error: any) {
-            return new OkResponse(
-                'No new products found', []);
+            ))
+        } catch (error: any) {
+            return new OkResponse('No new products found', [])
         }
 
         const products = response.map((hit: any) => ({
@@ -755,6 +758,8 @@ class ProductService {
                     },
                 },
             })
+
+        console.log('Best Selling Products:', bestSellingProducts)
 
         // Lấy danh sách product_variant_id từ kết quả aggregation
         const buckets =
@@ -1154,10 +1159,10 @@ class ProductService {
         }
 
         // Tìm kiếm biến thể sản phẩm trong Elasticsearch
-        let total: any;
+        let total: any
         let response: any[] = []
         try {
-            ({ total, response } = await elasticsearchService.searchDocuments(
+            ;({ total, response } = await elasticsearchService.searchDocuments(
                 'product_variants',
                 query
             ))
@@ -1185,7 +1190,6 @@ class ProductService {
             data: productVariants,
         })
     }
-
 }
 
 const productService = new ProductService()

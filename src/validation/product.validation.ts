@@ -222,9 +222,9 @@ export class ProductValidation {
                             'Maximum price must be greater than or equal to 0'
                         )
                         .optional(),
-                    ratings: z
-                        .coerce
-                        .number().int('Ratings must be an integer')
+                    ratings: z.coerce
+                        .number()
+                        .int('Ratings must be an integer')
                         .min(0, 'Ratings must be greater than or equal to 0')
                         .max(5, 'Ratings must be less than or equal to 5')
                         .optional(),
