@@ -10,6 +10,7 @@ import verifyJWT from '@/middleware/verifyJWT'
 import cartRouter from '@/routers/cart.route'
 import couponRouter from '@/routers/coupon.route'
 import chatRouter from '@/routers/chat.route'
+import statisticRouter from '@/routers/statistic.route'
 
 const router = Router()
 router.use('/auth', authRouter)
@@ -22,6 +23,7 @@ router.use('/order', orderRouter)
 router.use('/user', userRouter)
 router.use('/coupon', couponRouter)
 router.use('/chat', chatRouter)
+router.use('/statistic', statisticRouter)
 router.use(verifyJWT)
 
 export default router

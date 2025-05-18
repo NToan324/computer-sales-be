@@ -53,6 +53,26 @@ class ElasticsearchService {
         }
     }
 
+    async searchAggregations(index: string, query: any) {
+        try {
+            const response = await this.client.search({
+                index,
+                body: query,
+            });
+
+            const total =
+                typeof response.hits.total === 'object'
+                    ? response.hits.total.value
+                    : response.hits.total;
+
+            return { total, aggregations: response.aggregations };
+        } catch (error) {
+            throw new BadRequestError(
+                'Error searching documents: ' + (error as any).message
+            )
+        }
+    }
+
     async updateDocument(index: string, id: string, document: any) {
         try {
             const response = await this.client.update({

@@ -628,7 +628,7 @@ class ProductService {
         let response: any[] = [];
         try {
             ({ total, response } = await elasticsearchService.searchDocuments(
-                'products',
+                'product_variants',
                 {
                     from,
                     size: limit,
@@ -736,7 +736,7 @@ class ProductService {
 
         // Bước 1: Lấy danh sách các sản phẩm bán chạy từ chỉ mục orders
         const bestSellingProducts: any =
-            await elasticsearchService.searchDocuments('orders', {
+            await elasticsearchService.searchAggregations('orders', {
                 size: 0,
                 aggs: {
                     best_selling_products: {
@@ -766,6 +766,8 @@ class ProductService {
             return new OkResponse('No best-selling product variants found', [])
         }
 
+
+
         // Bước 2: Tìm kiếm thông tin chi tiết từ chỉ mục product_variants
         const { total, response } = await elasticsearchService.searchDocuments(
             'product_variants',
@@ -773,13 +775,21 @@ class ProductService {
                 from,
                 size: limit,
                 query: {
-                    terms: {
-                        _id: productVariantIds, // Tìm kiếm theo danh sách product_variant_id
-                    },
-                    filter: {
-                        term: {
-                            isActive: true,
-                        },
+                    bool: {
+                        must: [
+                            {
+                                terms: {
+                                    _id: productVariantIds, // Tìm kiếm theo danh sách product_variant_id
+                                },
+                            },
+                        ],
+                        filter: [
+                            {
+                                term: {
+                                    isActive: true,
+                                },
+                            },
+                        ],
                     },
                 },
             }
