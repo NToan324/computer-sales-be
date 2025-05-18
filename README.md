@@ -1,0 +1,5 @@
+-   Mở terminal ở thư mục chứa file docker-compose.yml
+-   Chạy lệnh npm install
+-   Chạy câu lệnh: docker compose up -d
+-   Chạy lệnh: npx ts-node src/queue/mail.worker.ts
+-   Khởi chạy backend với lệnh: npm run dev
