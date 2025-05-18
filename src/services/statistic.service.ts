@@ -12,11 +12,17 @@ class StatisticService {
         // Số lượng người dùng mới (trong 30 ngày qua)
         const newUsers = await elasticsearchService.countDocuments('users', {
             query: {
-                range: {
-                    createdAt: {
-                        gte: 'now-30d/d',
-                        lte: 'now/d',
-                    },
+                bool: {
+                    must: [
+                        {
+                            range: {
+                                createdAt: {
+                                    gte: 'now-30d/d',
+                                    lte: 'now/d',
+                                },
+                            },
+                        },
+                    ],
                 },
             },
         });
@@ -30,25 +36,28 @@ class StatisticService {
         const totalRevenueAgg = await elasticsearchService.searchAggregations('orders', {
             size: 0,
             query: {
-                range: {
-                    createdAt: {
-                        gte: 'now-30d/d',
-                        lte: 'now/d',
-                    },
-                },
-                aggs: {
-                    totalRevenue: {
-                        sum: {
-                            field: 'total_amount',
+                bool: {
+                    filter: [
+                        {
+                            range: {
+                                createdAt: {
+                                    gte: 'now-30d/d',
+                                    lte: 'now/d',
+                                },
+                            },
                         },
+                    ],
+                },
+            },
+            aggs: {
+                totalRevenue: {
+                    sum: {
+                        field: 'total_amount',
                     },
                 },
             },
         });
         const totalRevenue = (totalRevenueAgg?.aggregations?.totalRevenue as { value?: number })?.value || 0;
-
-        // Tổng lợi nhuận
-        console.log('totalRevenue', totalRevenue);
 
         return new OkResponse('Overview statistics retrieved successfully', {
             totalUsers,
@@ -59,82 +68,113 @@ class StatisticService {
     }
 
     // // Thống kê nâng cao theo thời gian
-    // async getAdvancedStatistics({
-    //     startDate,
-    //     endDate,
-    //     interval = 'month', // 'year', 'quarter', 'month', 'week', 'day'
-    // }: {
-    //     startDate?: string;
-    //     endDate?: string;
-    //     interval?: 'year' | 'quarter' | 'month' | 'week' | 'day';
-    // }) {
-    //     const query: any = {
-    //         range: {
-    //             createdAt: {
-    //                 ...(startDate && { gte: startDate }),
-    //                 ...(endDate && { lte: endDate }),
-    //             },
-    //         },
-    //     };
+    async getAdvancedStatistics({
+        from_date,
+        to_date,
+        interval = 'day', // Mặc định là 'day', có thể là 'week', 'month', hoặc 'year'
+    }: {
+        from_date: string;
+        to_date: string;
+        interval?: 'day' | 'week' | 'month' | 'year';
+    }) {
+        // Chuyển đổi định dạng ngày tháng
+        const from = from_date ? new Date(from_date) : undefined;
+        const to = to_date ? new Date(to_date) : undefined;
 
-    //     // Tổng doanh thu và lợi nhuận
-    //     const revenueAndProfitAgg = await elasticsearchService.searchAggregations('orders', {
-    //         size: 0,
-    //         query,
-    //         aggs: {
-    //             revenueAndProfit: {
-    //                 date_histogram: {
-    //                     field: 'createdAt',
-    //                     calendar_interval: interval,
-    //                 },
-    //                 aggs: {
-    //                     totalRevenue: {
-    //                         sum: {
-    //                             field: 'totalAmount',
-    //                         },
-    //                     },
-    //                     totalProfit: {
-    //                         sum: {
-    //                             field: 'profit',
-    //                         },
-    //                     },
-    //                 },
-    //             },
-    //         },
-    //     });
+        const fromISO = from ? from.toISOString() : undefined;
+        const toISO = to ? to.toISOString() : undefined;
 
-    //     // Số lượng sản phẩm và chủng loại sản phẩm
-    //     const productStatsAgg = await elasticsearchService.searchAggregations('orders', {
-    //         size: 0,
-    //         query,
-    //         aggs: {
-    //             productStats: {
-    //                 date_histogram: {
-    //                     field: 'createdAt',
-    //                     calendar_interval: interval,
-    //                 },
-    //                 aggs: {
-    //                     totalProducts: {
-    //                         sum: {
-    //                             field: 'items.quantity',
-    //                         },
-    //                     },
-    //                     productCategories: {
-    //                         terms: {
-    //                             field: 'items.category_id.keyword',
-    //                             size: 10,
-    //                         },
-    //                     },
-    //                 },
-    //             },
-    //         },
-    //     });
+        // Tạo query với khoảng thời gian
+        const query: any = {
+            range: {
+                createdAt: {
+                    ...(from_date && { gte: fromISO }),
+                    ...(to_date && { lte: toISO }),
+                },
+            },
+        };
 
-    //     return new OkResponse('Advanced statistics retrieved successfully', {
-    //         revenueAndProfit: revenueAndProfitAgg?.aggregations?.revenueAndProfit?.buckets || [],
-    //         productStats: productStatsAgg?.aggregations?.productStats?.buckets || [],
-    //     });
-    // }
+        // Tổng doanh thu
+        const totalRevenueAgg = await elasticsearchService.searchAggregations('orders', {
+            size: 0,
+            query,
+            aggs: {
+                totalRevenue: {
+                    sum: {
+                        field: 'total_amount',
+                    },
+                },
+            },
+        });
+        const totalRevenue = (totalRevenueAgg?.aggregations?.totalRevenue as { value?: number })?.value || 0;
+
+        // Tổng số lượng đơn hàng
+        const totalOrders = await elasticsearchService.countDocuments('orders', {
+            query,
+        });
+
+        // Tổng số lượng sản phẩm
+        const productStatsAgg = await elasticsearchService.searchAggregations('orders', {
+            size: 0,
+            query,
+            aggs: {
+                totalProducts: {
+                    sum: {
+                        field: 'items.quantity',
+                    },
+                },
+            },
+        });
+        const totalProducts = (productStatsAgg?.aggregations?.totalProducts as { value?: number })?.value || 0;
+
+        // Doanh thu, số lượng đơn hàng, và số lượng sản phẩm theo khoảng thời gian (interval)
+        const intervalStatsAgg = await elasticsearchService.searchAggregations('orders', {
+            size: 0,
+            query,
+            aggs: {
+                statsByInterval: {
+                    date_histogram: {
+                        field: 'createdAt',
+                        calendar_interval: interval, // 'day', 'week', 'month', hoặc 'year'
+                    },
+                    aggs: {
+                        totalRevenue: {
+                            sum: {
+                                field: 'total_amount',
+                            },
+                        },
+                        totalOrders: {
+                            value_count: {
+                                field: 'user_id.keyword', // Đếm số lượng đơn hàng
+                            },
+                        },
+                        totalProducts: {
+                            sum: {
+                                field: 'items.quantity',
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Xử lý kết quả trả về từ interval
+        const statsByInterval = ((intervalStatsAgg?.aggregations?.statsByInterval as { buckets: any[] })?.buckets || []).map(
+            (bucket: any) => ({
+                date: bucket.key_as_string, // Ngày hoặc khoảng thời gian (dạng chuỗi)
+                totalRevenue: bucket.totalRevenue.value || 0, // Tổng doanh thu
+                totalOrders: bucket.totalOrders.value || 0, // Tổng số lượng đơn hàng
+                totalProducts: bucket.totalProducts.value || 0, // Tổng số lượng sản phẩm
+            })
+        );
+
+        return new OkResponse('Advanced statistics retrieved successfully', {
+            totalRevenue, // Tổng doanh thu trong khoảng thời gian
+            totalOrders, // Tổng số lượng đơn hàng trong khoảng thời gian
+            totalProducts, // Tổng số lượng sản phẩm trong khoảng thời gian
+            statsByInterval, // Thống kê theo khoảng thời gian (ngày, tuần, tháng, năm)
+        });
+    }
 }
 
 const statisticService = new StatisticService();

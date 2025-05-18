@@ -87,20 +87,8 @@ export class OrderValidation {
                     payment_status: z
                         .enum(['PENDING', 'PAID', 'FAILED'])
                         .optional(),
-                    from_date: z
-                        .string()
-                        .regex(
-                            /^\d{4}-\d{2}-\d{2}$/,
-                            'Invalid date format (YYYY-MM-DD)'
-                        )
-                        .optional(),
-                    to_date: z
-                        .string()
-                        .regex(
-                            /^\d{4}-\d{2}-\d{2}$/,
-                            'Invalid date format (YYYY-MM-DD)'
-                        )
-                        .optional(),
+                    from_date: z.string().date('Invalid date format').optional(),
+                    to_date: z.string().date('Invalid date format').optional(),
                     page: z.coerce
                         .number()
                         .int('Page must be an integer')
