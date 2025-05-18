@@ -51,6 +51,7 @@ const orderSchema = new Schema(
                         required: true,
                     }
                 },
+                _id: false
             },
         ],
         discount_amount: {

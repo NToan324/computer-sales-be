@@ -48,9 +48,8 @@ router.put(
     asyncHandler(userController.updateUserInfo)
 )
 
-// Lấy orders theo user_id
-router.get(
-    '/:id/orders',
+// Lấy orders theo user_id (ADMIN)
+router.get('/:id/orders',
     verifyJWT,
     verifyRole(['ADMIN']),
     asyncHandler(userController.getOrdersByUserId)
