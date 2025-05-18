@@ -1,5 +1,5 @@
 import { mailQueue } from './mail.queue'
-import emailService from '@/services/sendEmail.service'
+import emailService from '../services/sendEmail.service'
 
 console.log('Mail worker started')
 mailQueue.process(async (job) => {

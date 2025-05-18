@@ -1,4 +1,4 @@
-import emailConfig, { EmailPayload } from '@/config/email'
+import emailConfig, { EmailPayload } from '../config/email'
 import { BadRequestError } from '../core/error.response'
 import { OkResponse } from '../core/success.response'
 
