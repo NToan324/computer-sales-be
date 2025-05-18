@@ -1,5 +1,22 @@
 version: '3.8'
 services:
+    nodeapp:
+        build: .
+        container_name: nodeapp
+        ports:
+            - '3000:3000'  # nếu app Node.js chạy ở port 3000
+        depends_on:
+            - elasticsearch
+            - redis
+        env_file:
+            - .env.docker   
+        networks:
+            - elastic-network
+        environment:
+            - ELASTIC_URL=http://elasticsearch:9200
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
         container_name: elasticsearch

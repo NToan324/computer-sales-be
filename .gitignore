@@ -2,6 +2,7 @@
 .env.local
 .env.development
 .env.production
+.env.docker
 
 node_modules/
 
