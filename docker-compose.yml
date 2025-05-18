@@ -40,7 +40,7 @@ services:
     #     depends_on:
     #     - redis
     #     env_file:
-    #     - .env
+    #     - .env.docker
     #     networks:
     #     - elastic-network
 
