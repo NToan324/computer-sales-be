@@ -31,7 +31,7 @@ class CouponService {
             throw new BadRequestError('Failed to create coupon');
         }
 
-        const { code: createdCode, ...couponWithoutId } = newCoupon.toObject();
+        const { _id, code: createdCode, ...couponWithoutId } = newCoupon.toObject();
 
         // Lưu coupon vào Elasticsearch
         await elasticsearchService.indexDocument(
@@ -70,7 +70,7 @@ class CouponService {
             throw new NotFoundError('Coupon not found');
         }
 
-        const { code: updatedCode, ...couponWithoutId } = updatedCoupon.toObject();
+        const { _id, code: updatedCode, ...couponWithoutId } = updatedCoupon.toObject();
 
         // Cập nhật Elasticsearch
         await elasticsearchService.updateDocument(
