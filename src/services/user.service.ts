@@ -109,7 +109,7 @@ class UserService {
                     filter: [
                         {
                             term: {
-                                role: 'CUSTOMER',
+                                'role.keyword': 'CUSTOMER',
                             },
                         },
                     ],
