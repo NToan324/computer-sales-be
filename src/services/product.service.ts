@@ -736,7 +736,7 @@ class ProductService {
 
         // Bước 1: Lấy danh sách các sản phẩm bán chạy từ chỉ mục orders
         const bestSellingProducts: any =
-            await elasticsearchService.searchDocuments('orders', {
+            await elasticsearchService.searchAggregations('orders', {
                 size: 0,
                 aggs: {
                     best_selling_products: {
@@ -756,6 +756,8 @@ class ProductService {
                 },
             })
 
+        console.log(bestSellingProducts)
+
         // Lấy danh sách product_variant_id từ kết quả aggregation
         const buckets =
             bestSellingProducts?.aggregations?.best_selling_products?.buckets ||
@@ -766,6 +768,9 @@ class ProductService {
             return new OkResponse('No best-selling product variants found', [])
         }
 
+
+        console.log(productVariantIds)
+
         // Bước 2: Tìm kiếm thông tin chi tiết từ chỉ mục product_variants
         const { total, response } = await elasticsearchService.searchDocuments(
             'product_variants',
@@ -773,17 +778,27 @@ class ProductService {
                 from,
                 size: limit,
                 query: {
-                    terms: {
-                        _id: productVariantIds, // Tìm kiếm theo danh sách product_variant_id
-                    },
-                    filter: {
-                        term: {
-                            isActive: true,
-                        },
+                    bool: {
+                        must: [
+                            {
+                                terms: {
+                                    _id: productVariantIds, // Tìm kiếm theo danh sách product_variant_id
+                                },
+                            },
+                        ],
+                        filter: [
+                            {
+                                term: {
+                                    isActive: true,
+                                },
+                            },
+                        ],
                     },
                 },
             }
         )
+
+        console.log(response)
 
         if (total === 0) {
             return new OkResponse('No product variants found', [])
