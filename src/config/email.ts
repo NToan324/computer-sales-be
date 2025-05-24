@@ -88,18 +88,34 @@ class EmailConfig {
         email: string
         orderDetails: any
     }) => {
-        const { orderId, customerName, items, total, address, paymentMethod } =
-            orderDetails
+        const currency = (amount: number) =>
+            amount.toLocaleString('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            })
 
-        const itemsHtml = items
+        const itemsHtml = orderDetails.items
             .map(
                 (item: any) => `
-          <tr>
-            <td>${item.name}</td>
-            <td>${item.quantity}</td>
-            <td>${item.price.toLocaleString()}đ</td>
-          </tr>
-        `
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 10px;"><img src="${item.images.url}" alt="${
+                    item.product_variant_name
+                }" width="80"/></td>
+              <td style="padding: 10px;">${item.product_variant_name}</td>
+              <td style="padding: 10px; text-align: center;">${
+                  item.quantity
+              }</td>
+              <td style="padding: 10px; text-align: right;">${currency(
+                  item.unit_price
+              )}</td>
+              <td style="padding: 10px; text-align: right;">${(
+                  item.discount * 100
+              ).toFixed(0)}%</td>
+              <td style="padding: 10px; text-align: right;">${currency(
+                  item.unit_price * (1 - item.discount) * item.quantity
+              )}</td>
+            </tr>
+          `
             )
             .join('')
 
@@ -108,34 +124,44 @@ class EmailConfig {
             to: email,
             subject: '📦 Xác nhận đơn hàng',
             replyTo: EMAIL_USER,
-            text: `Cảm ơn bạn đã đặt hàng! Mã đơn: ${orderId}`,
+            text: `Cảm ơn bạn đã đặt hàng! Đơn hàng sẽ được giao đến: ${orderDetails.address}`,
             html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; color: #333;">
-            <h2 style="color: #2e7d32;">Cảm ơn bạn đã đặt hàng, ${
-                customerName || 'quý khách'
-            }!</h2>
-            <p>Đơn hàng của bạn đã được ghi nhận thành công với mã đơn hàng <strong>${orderId}</strong>.</p>
-            
-            <h3>🛒 Chi tiết đơn hàng:</h3>
-            <table style="width: 100%; border-collapse: collapse;">
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+            <h2>🎉 Cảm ơn bạn, ${orderDetails.user_name}, đã đặt hàng!</h2>
+            <p><strong>Địa chỉ giao hàng:</strong> ${orderDetails.address}</p>
+            <p><strong>Phương thức thanh toán:</strong> ${
+                orderDetails.payment_method === 'CASH'
+                    ? 'Tiền mặt khi nhận hàng'
+                    : orderDetails.payment_method
+            }</p>
+            <h3>🧾 Chi tiết đơn hàng:</h3>
+            <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
               <thead>
-                <tr>
-                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Sản phẩm</th>
-                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Số lượng</th>
-                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Giá</th>
+                <tr style="background-color: #f8f8f8; text-align: left;">
+                  <th style="padding: 10px;">Ảnh</th>
+                  <th style="padding: 10px;">Sản phẩm</th>
+                  <th style="padding: 10px; text-align: center;">SL</th>
+                  <th style="padding: 10px; text-align: right;">Đơn giá</th>
+                  <th style="padding: 10px; text-align: right;">Giảm giá</th>
+                  <th style="padding: 10px; text-align: right;">Thành tiền</th>
                 </tr>
               </thead>
               <tbody>
                 ${itemsHtml}
               </tbody>
             </table>
-    
-            <p><strong>Tổng cộng:</strong> ${total.toLocaleString()}đ</p>
-            <p><strong>Địa chỉ giao hàng:</strong> ${address}</p>
-            <p><strong>Phương thức thanh toán:</strong> ${paymentMethod}</p>
-    
-            <p style="margin-top: 30px;">Nếu có bất kỳ thắc mắc nào, vui lòng phản hồi email này.</p>
-            <p>Trân trọng,<br/>Đội ngũ cửa hàng</p>
+            <br/>
+            <p><strong>Tổng cộng:</strong> ${currency(
+                orderDetails.total_amount
+            )}</p>
+            <p><strong>Điểm tích lũy sử dụng:</strong> ${
+                orderDetails.loyalty_points_used
+            }</p>
+            <p><strong>Điểm tích lũy nhận được:</strong> ${
+                orderDetails.loyalty_points_earned
+            }</p>
+            <p style="margin-top: 20px;">Chúng tôi sẽ sớm liên hệ với bạn để xác nhận và giao hàng.</p>
+            <p>Chúc bạn một ngày tốt lành! 🌟</p>
           </div>
         `,
         }

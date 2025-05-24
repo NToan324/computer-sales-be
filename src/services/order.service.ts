@@ -332,7 +332,7 @@ class OrderService {
         if (user_id) {
             const user = await UserModel.findById(user_id)
 
-            currentLoyaltyPoints = (user?.loyalty_points) as number || 0.0
+            currentLoyaltyPoints = (user?.loyalty_points as number) || 0.0
         }
 
         // Tính tổng tiền
@@ -341,7 +341,8 @@ class OrderService {
 
         const subtotal = cartItems.reduce(
             (sum: number, item: any) =>
-                sum + item.quantity * item.unit_price * (1 - (item.discount || 0.0)),
+                sum +
+                item.quantity * item.unit_price * (1 - (item.discount || 0.0)),
             0
         )
 
@@ -350,7 +351,7 @@ class OrderService {
 
         // Nếu số tiền giảm giá lớn hơn tổng tiền hàng, thì không cho phép
         if (totalAmount - discountAmount < 0) {
-            throw new BadRequestError('Mã giảm giá không hợp lệ');
+            throw new BadRequestError('Mã giảm giá không hợp lệ')
         }
 
         // Nếu số tiền giảm giá bằng số điểm thưởng lớn hơn 50% tổng tiền hàng, thì chỉ được giảm tối đa 50% tổng tiền hàng
@@ -365,7 +366,9 @@ class OrderService {
         ) // Số điểm thưởng được sử dụng
 
         // Tính tổng tiền sau khi áp dụng mã giảm giá
-        totalAmount = Math.floor(totalAmount - discountAmount - discountAmoutLoyaltyPoints)
+        totalAmount = Math.floor(
+            totalAmount - discountAmount - discountAmoutLoyaltyPoints
+        )
 
         const loyalty_points_remaining =
             currentLoyaltyPoints - loyalty_points_used // Số điểm thưởng còn lại
@@ -520,6 +523,7 @@ class OrderService {
         }
 
         // Dùng message queue để gửi email thông báo đơn hàng
+        console.log('Sending email to:', email)
         await mailQueue.add({
             type: 'order_confirmation',
             email,
@@ -555,7 +559,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ; ({ total, response } = await elasticsearchService.searchDocuments(
+            ;({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
@@ -630,7 +634,7 @@ class OrderService {
         let total: any
         let response: any[] = []
         try {
-            ; ({ total, response } = await elasticsearchService.searchDocuments(
+            ;({ total, response } = await elasticsearchService.searchDocuments(
                 'orders',
                 {
                     from,
